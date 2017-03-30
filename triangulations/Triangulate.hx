@@ -52,6 +52,38 @@ class triangulate {
       return out;
     }
     
+    public static inline function findDeepestInside( a: Vector2, b: Vector2, c: Vector2)
+                            : Array<Vector2> -> NodeInt -> NodeInt -> NodeInt -> NodeInt {
+      
+      var inabc     = Geom2.pointInTriangle(a, b, c);
+      var acDistSq  = Geom2.pointToEdgeDistSq(a, c);
+      
+      return 
+          function (vertices: Array<Vector2>, nodeBeg: NodeInt, nodeEnd: NodeInt, bestNode: NodeInt ): NodeInt {
+              var v: NodeInt; 
+              var maxDepthSq = 
+              if( bestNode != undefined ){
+                  v = bestNode.value;
+                  acDistSq( vertices[ v ] )
+              } else {
+                -1;
+              }
+              var node = nodeBeg;
+              do {
+                  var v = vertices[ node.value ];
+                  if(v !== a && v !== b && v !== c && inabc(v)) {
+                      var depthSq = acDistSq( v );
+                      if( depthSq > maxDepthSq ) {
+                          maxDepthSq = depthSq;
+                          bestNode = node;
+                      }
+                  }
+                  node = node.next;
+               } while (node !== nodeEnd);
+               return bestNode;
+           };
+    }
+
     //TODO: continue port
     public inline static function faces( vertices: Array<Vertex>, faces: Array<Vector2D> ){
     
