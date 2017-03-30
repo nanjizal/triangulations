@@ -1,20 +1,20 @@
 package triangulations;
 
-import khaMath.Vector2D;
+import khaMath.Vector2;
 
 // static inline functions related to multiple Vector2D and triangulation
 // https://github.com/mkacz91/Triangulations/blob/master/js/geometry.js
 
-class Geom2D {
+class Geom2 {
     
-    public static inline function triangleArea(a: Vector2D, b: Vector2D, c: Vector2D ): Float {
+    public static inline function triangleArea(a: Vector2, b: Vector2, c: Vector2 ): Float {
         return ( a.x * (b.y - c.y)
          + b.x * (c.y - a.y])
          + c.x * (a.y - b.y) ) / 2;
     }  
     
     // Return the center of the circumscribed circle of triangle abc.
-    public static inline function circumcenter(a: Vector2D, b: Vector2D, c: Vector2D ): Vector2D {
+    public static inline function circumcenter(a: Vector2, b: Vector2, c: Vector2 ): Vector2 {
         // Taken from https://www.ics.uci.edu/~eppstein/junkyard/circumcenter.html
         var xa = a.x;
         var ya = a.y;
@@ -27,17 +27,17 @@ class Geom2D {
         var kb = ((xb - xc) * (xb + xc) + (yb - yc) * (yb + yc))
         var xp = ka * (yb - yc) - kb * (ya - yc);
         var yp = kb * (xa - xc) - ka * (xb - xc);
-        return new Vector2D( dxp / d, yp / d );
+        return new Vector2( dxp / d, yp / d );
     }    
     
     // Check whether v is strictly in the interior of the circumcircle of the
     // triangle abc.
-    public static inline function pointInCircumcircle(a: Vector2D, b: Vector2D, c: Vector2D, v: Vector2D): Bool {
+    public static inline function pointInCircumcircle(a: Vector2, b: Vector2, c: Vector2, v: Vector2): Bool {
         var p = circumcenter(a, b, c);
         return p.distSq(v) < a.distSq(p);
     }
     
-    public static inline function edgeVSRay( u: Vector2D, v: Vector2D, y: Float ): Null<Float> {
+    public static inline function edgeVSRay( u: Vector2, v: Vector2, y: Float ): Null<Float> {
         var val: Float;
         if(u.y > v.y) {
             var tmp = u;
@@ -54,7 +54,7 @@ class Geom2D {
     }   
     
     // Returns boolean indicating whether edges ab and cd intersect.
-    public static inline function edgesIntersect (a, b, c, d) {
+    public static inline function edgesIntersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2 ): Bool {
         // The edges intersect only if the endpoints of one edge are on the opposite
         // sides of the other (both ways).
         var out = true;
