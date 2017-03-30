@@ -1,5 +1,5 @@
 package triangulations;
-
+typedef NodeInt = Node<Int>;
 class Node<T> {
     public var prev: Node<T>;
     public var next: Node<T>;
