@@ -85,7 +85,7 @@ class Geom2 {
     /*
     // Given a polygon a point, determines whether the point lies strictly inside
     // the polygon using the even-odd rule.
-    public static function pointInPolygon (vertices: Array<Vector, poly, w) {
+    public static function pointInPolygon (vertices: Array<Vector2, poly, w) {
         var v = vertices[poly[poly.length - 1]];
         var result = false;
         var l = poly.length;
@@ -111,12 +111,12 @@ class Geom2 {
     //// Functions that return a function. ////
     
     // Check wether point p is within triangle abc or on its border.
-    public static inline function pointInTriangle(a: Vector2D, b: Vector2D, c: Vector2D): Vector2D -> Float {
+    public static inline function pointInTriangle(a: Vector2, b: Vector2, c: Vector2): Vector2 -> Float {
         var u = a.span(b);
         var v = a.span(c);
         var vxu = v.cross(u);
         var uxv = -vxu;
-        return function(p: Vector2d ): Float {
+        return function(p: Vector2): Float {
             var w = a.span(p);
             var vxw = v.cross(w);
             if (vxu * vxw < 0) return false;
@@ -126,10 +126,10 @@ class Geom2 {
         };
     }
     
-    public static inline function pointToEdgeDistSq(u: Vector2D, v: Vector2D): Vector2D -> Float {
+    public static inline function pointToEdgeDistSq(u: Vector2, v: Vector2): Vector2 -> Float {
         var uv = span(u, v);
         var uvLenSq = lenSq(uv);
-        return function( p: Vector2D ){
+        return function(p: Vector2){
             var uvxpu = uv.cross(span(p, u));
             return uvxpu * uvxpu / uvLenSq;
         };
@@ -139,10 +139,10 @@ class Geom2 {
     // Given an origin c and direction defining vertex d, returns a comparator for
     // points. The points are compared according to the angle they create with
     // the vector cd.
-    public static inline function angleCompare(c: Vector2D, d: Vector2D ): Vector2D -> Vector2D -> Int {
+    public static inline function angleCompare(c: Vector2, d: Vector2 ): Vector2 -> Vector2 -> Int {
         var cd = span(c, d);
         // Compare angles ucd and vcd
-        return function (u: Vector2D, v: Vector2D): Int {
+        return function (u: Vector2, v: Vector2): Int {
             var cu = c.span(u);
             var cv = c.span(v);
             var cvxcu = cv.cross(cu)
