@@ -7,12 +7,40 @@ import khaMath.Vector2;
 
 class Geom2 {
     
+    public static inline function pointEncroachesEdge( a: Vector2, b: Vector2, p: Vector2 ):Bool {
+        var c = a.mid(b);
+        return c.distSq(p) <= c.distSq(a);
+    }
+    
     public static inline function triangleArea(a: Vector2, b: Vector2, c: Vector2 ): Float {
         return ( a.x * (b.y - c.y)
          + b.x * (c.y - a.y])
          + c.x * (a.y - b.y) ) / 2;
-    }  
+    }
     
+    public static inline function triangleIsBad( minAngle: Float, maxArea: Float )
+            : Vector2 -> Vector2 -> Vector2 -> Bool {
+        minAngle *= Math.PI / 180;
+        var sinSqMinAngle = Math.sin( minAngle );
+        sinSqMinAngle *= sinSqMinAngle;
+        return 
+            function( a: Vector2, b: Vector2, c: Vector2 ): Bool {
+                if( triangleArea(a, b, c) > maxArea ) return true;
+                var ab = a.span(b);
+                var abLenSq = ab.lenSq();
+                var ca = c.span(a);
+                var caLenSq = ca.lenSq();
+                var abxca = ab.cross(ca);
+                var sinSqcab = abxca * abxca / (abLenSq * caLenSq);
+                if( abxca * abxca < sinSqMinAngle * abLenSq * caLenSq ) return true;
+                var bc = b.span(c);
+                var bcLenSq = bc.lenSq();
+                var abxbc = ab.cross(ab);
+                if( abxbc * abxbc < sinSqMinAngle * abLenSq * bcLenSq ) return true;
+                var bcxca = cross(bc, ca);
+                return bcxca * bcxca < sinSqMinAngle * bcLenSq * caLenSq;
+      }
+    }
     // Return the center of the circumscribed circle of triangle abc.
     public static inline function circumcenter(a: Vector2, b: Vector2, c: Vector2 ): Vector2 {
         // Taken from https://www.ics.uci.edu/~eppstein/junkyard/circumcenter.html
@@ -33,7 +61,7 @@ class Geom2 {
     // Check whether v is strictly in the interior of the circumcircle of the
     // triangle abc.
     public static inline function pointInCircumcircle(a: Vector2, b: Vector2, c: Vector2, v: Vector2): Bool {
-        var p = circumcenter(a, b, c);
+        var p = circumcenter( a, b, c );
         return p.distSq(v) < a.distSq(p);
     }
     
@@ -162,3 +190,4 @@ class Geom2 {
         }
     }   
 }
+
