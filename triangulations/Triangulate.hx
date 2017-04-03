@@ -786,7 +786,7 @@ class Triangulate {
               traceEntry.split = [];
             while (forceSplit.length > 0 && steinerLeft > 0) {
               var j = forceSplit.pop();
-              var affectedEdgesPart = splitEdge(vertices, edges, coEdges, sideEdges, j);
+              var affectedEdgesPart = splitEdge( vertices, edges, coEdges, sideEdges, j );
               Array.prototype.push.apply(affectedEdges, affectedEdgesPart);
               --steinerLeft;
               traceEntry.split.push(j);
@@ -834,41 +834,41 @@ class Triangulate {
               // Prepare datas tructures for fast graph traversal.
               var coEdges = [];
               var sideEdges = [];
-              for (var j = 0; j < edges.length; ++j) {
-                coEdges[j] = [];
-                sideEdges[j] = [];
+              for( j in 0...edges.length ){
+                coEdges[ j ] = [];
+                sideEdges[ j ] = [];
               }
 
               // Find the outgoing edges for each vertex
               var outEdges = [];
-              for (var i = 0; i < vertices.length; ++i)
-                outEdges[i] = [];
-              for (var j = 0; j < edges.length; ++j) {
-                var e = edges[j];
-                outEdges[e[0]].push(j);
-                outEdges[e[1]].push(j);
+              for( i in 0...vertices.length )
+                outEdges[ i ] = [];
+              for( j in 0...edges.length ){
+                var e = edges[ j ];
+                outEdges[ e.p ].push(j);
+                outEdges[ e.q ].push(j);
               }
 
               // Process edges around each vertex.
-              for (var i = 0; i < vertices.length; ++i) {
+              for( i in 0...vertices.length ){
                 var v = vertices[i];
                 var js = outEdges[i];
 
                 // Reverse edges, so that they point outward and sort them angularily.
-                for (var k = 0; k < js.length; ++k) {
-                  var e = edges[js[k]];
-                  if (e[0] != i) {
-                    e[1] = e[0];
-                    e[0] = i;
+                for( k = 0 in js.length ){
+                  var e = edges[ js[k] ];
+                  if (e.p != i) {
+                    e.q = e.p;
+                    e.p = i;
                   }
                 }
-                var angleCmp = geom.angleCompare(v, vertices[edges[js[0]][1]]);
+                var angleCmp = Geom.angleCompare( v, vertices[ edges[ js[0] ].q ] );
                 js.sort(function (j1, j2) {
-                  return angleCmp(vertices[edges[j1][1]], vertices[edges[j2][1]]);
+                  return angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]);
                 });
 
                 // Associate each edge with neighbouring edges appropriately.
-                for (var k = 0; k < js.length; ++k) {
+                for( k = 0 in js.length ) {
                   var jPrev = js[(js.length + k - 1) % js.length];
                   var j     = js[k];
                   var jNext = js[(k + 1) % js.length];
@@ -876,28 +876,28 @@ class Triangulate {
                   // we choose to push only the endpoint edges[jPrev][1]. The other end,
                   // i.e., edges[jNext][1] will be, or already was, put while processing the
                   // edges of the opporite vertex, i.e., edges[j][1].
-                  coEdges[j].push(edges[jPrev][1]);
-                  sideEdges[j].push(jPrev, jNext);
+                  coEdges[j].push( edges[ jPrev ].q );
+                  sideEdges[j].push( jPrev, jNext );
                 }
               }
 
               // Amend external edges
-              function disjoint (i, j) { return edges[j][0] !== i && edges[j][1] !== i }
-              for (var j = 0; j < edges.length; ++j) {
-                if (!edges[j].external)
-                  continue;
-                var ce = coEdges[j], ses = sideEdges[j];
+              function disjoint (i, j) { return edges[j].p !== i && edges[j].q !== i }
+              for( j in 0...edges.length ){
+                if( !edges[j].external ) continue;
+                var ce = coEdges[ j ]; 
+                var ses = sideEdges[ j ];
 
                 // If the whole mesh is a triangle, just remove one of the duplicate entries
-                if (ce[0] === ce[1]) {
-                  ce[1] = ses[1] = ses[2] = undefined;
+                if( ce.p === ce.q ) {
+                  ce.q = ses.b = ses.c = null;
                   continue;
                 }
                 // If the arms of a supported triangle are also external, remove.
-                if (edges[ses[0]].external && edges[ses[3]].external)
-                  ce[0] = ses[0] = ses[3] = undefined;
-                if (edges[ses[1]].external && edges[ses[2]].external)
-                  ce[1] = ses[1] = ses[2] = undefined;
+                if( edges[ ses.a ].external && edges[ ses.d ].external)
+                  ce.p = ses.a = ses.d = null;
+                if( edges[ ses.b ].external && edges[ ses.c ].external)
+                  ce.q = ses.b = ses.c = null;
               }
 
               return { coEdges: coEdges, sideEdges: sideEdges };
