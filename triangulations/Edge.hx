@@ -3,8 +3,10 @@ package triangulations;
 class Edge {
     public var p: Int;
     public var q: Int;
-    public var fixed: Bool;
-    public function new( p_: Int, q_: Int, fixed_: Bool = false ){
+    // Defaults false?
+    public var fixed: Bool = false;
+    public var external: Bool = false;
+    public function new( p_: Int, q_: Int ){
         p = p_;
         q = q_;
         fixed = fixed_;
