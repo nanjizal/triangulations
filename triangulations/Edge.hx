@@ -9,7 +9,6 @@ class Edge {
     public function new( p_: Int, q_: Int ){
         p = p_;
         q = q_;
-        fixed = fixed_;
     }
     public static inline
     function substitute( x: Int, y: Int ) {
