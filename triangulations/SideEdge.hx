@@ -13,15 +13,18 @@ class SideEdge {
         c = c_;
         d = d_;
     }
-    public static inline
+    
+    public inline
     function iterator ():Iterator<Int> { 
         count = 0;
         return this;
     }
-    public static inline
+    
+    public inline
     public function hasNext(): Bool {
         return count < length;
     }
+    
     public static inline
     function next(): Int { 
         var out: Int;
@@ -37,9 +40,29 @@ class SideEdge {
             default:
                 out = a;
         }
-        return return out; 
+        count++;
+        return out; 
     }
-    public static inline
+    
+    public inline 
+    function getByIndex( i: Int ){
+        var out: Int;
+        switch( count ){
+            case 0:
+                out = a;
+            case 1:
+                out = b;
+            case 2:
+                out = c;
+            case 3:
+                out = d;
+            default:
+                out = a;
+        }
+        return out;
+    }
+    
+    public inline
     function substitute( x: Int, y: Int ) {
         switch( x ){
             case a:
