@@ -799,91 +799,93 @@ class Triangulate {
             
         // "NOT OK ??"
             
-            // Given a triangulation graph, produces the quad-edge datastructure for fast
-            // local traversal. The result consists of two arrays: coEdges and sideEdges
-            // with one entry per edge each. The coEdges array is returned as list of vertex
-            // index pairs, whereas sideEdges are represented by edge index quadruples.
-            //
-            // Consider edge ac enclosed by the quad abcd. Then its co-edge is bd and the
-            // side edges are: bc, cd, da, ab, in that order. Although the graph is not
-            // directed, the edges have direction implied by the implementation. The order
-            // of side edges is determined by the de facto orientation of the primary edge
-            // ac and its co-edge bd, but the directions of the side edges are arbitrary.
-            //
-            // External edges are handled by setting indices describing one supported
-            // triangle to undefined. Which triangle it will be is not determined.
-            //
-            // WARNING: The procedure will change the orientation of edges.
-            function makeQuadEdge (vertices, edges) {
-              // Prepare datas tructures for fast graph traversal.
-              var coEdges = [];
-              var sideEdges = [];
-              for( j in 0...edges.length ){
-                coEdges[ j ] = [];
-                sideEdges[ j ] = [];
-              }
+    // Given a triangulation graph, produces the quad-edge datastructure for fast
+    // local traversal. The result consists of two arrays: coEdges and sideEdges
+    // with one entry per edge each. The coEdges array is returned as list of vertex
+    // index pairs, whereas sideEdges are represented by edge index quadruples.
+    //
+    // Consider edge ac enclosed by the quad abcd. Then its co-edge is bd and the
+    // side edges are: bc, cd, da, ab, in that order. Although the graph is not
+    // directed, the edges have direction implied by the implementation. The order
+    // of side edges is determined by the de facto orientation of the primary edge
+    // ac and its co-edge bd, but the directions of the side edges are arbitrary.
+    //
+    // External edges are handled by setting indices describing one supported
+    // triangle to undefined. Which triangle it will be is not determined.
+    //
+    // WARNING: The procedure will change the orientation of edges.
+    // 
+    function makeQuadEdge (vertices: Array<Vector2>, edges: Array<Edge>, coEdges: Array<Edge>, sideEdges: Array<SideEdge> ) {
+      // Prepare datas tructures for fast graph traversal.  
+      // !!!! pass coEdges and SideEdges in rather than return obect of them.  !!!
+      //var coEdges = [];
+      //var sideEdges = [];
+      for( j in 0...edges.length ){
+        coEdges[ j ] = [];
+        sideEdges[ j ] = [];
+      }
 
-              // Find the outgoing edges for each vertex
-              var outEdges = [];
-              for( i in 0...vertices.length )
-                outEdges[ i ] = [];
-              for( j in 0...edges.length ){
-                var e = edges[ j ];
-                outEdges[ e.p ].push(j);
-                outEdges[ e.q ].push(j);
-              }
+      // Find the outgoing edges for each vertex
+      var outEdges = [];
+      for( i in 0...vertices.length )
+        outEdges[ i ] = [];
+      for( j in 0...edges.length ){
+        var e = edges[ j ];
+        outEdges[ e.p ].push(j);
+        outEdges[ e.q ].push(j);
+      }
 
-              // Process edges around each vertex.
-              for( i in 0...vertices.length ){
-                var v = vertices[i];
-                var js = outEdges[i];
+      // Process edges around each vertex.
+      for( i in 0...vertices.length ){
+        var v = vertices[i];
+        var js = outEdges[i];
 
-                // Reverse edges, so that they point outward and sort them angularily.
-                for( k = 0 in js.length ){
-                  var e = edges[ js[k] ];
-                  if (e.p != i) {
-                    e.q = e.p;
-                    e.p = i;
-                  }
-                }
-                var angleCmp = Geom.angleCompare( v, vertices[ edges[ js[0] ].q ] );
-                js.sort(function (j1, j2) {
-                  return angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]);
-                });
+        // Reverse edges, so that they point outward and sort them angularily.
+        for( k = 0 in js.length ){
+          var e = edges[ js[k] ];
+          if (e.p != i) {
+            e.q = e.p;
+            e.p = i;
+          }
+        }
+        var angleCmp = Geom.angleCompare( v, vertices[ edges[ js[0] ].q ] );
+        js.sort(function (j1, j2) {
+          return angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]);
+        });
 
-                // Associate each edge with neighbouring edges appropriately.
-                for( k = 0 in js.length ) {
-                  var jPrev = js[(js.length + k - 1) % js.length];
-                  var j     = js[k];
-                  var jNext = js[(k + 1) % js.length];
-                  // Node that although we could determine the whole co-edge just now, we
-                  // we choose to push only the endpoint edges[jPrev][1]. The other end,
-                  // i.e., edges[jNext][1] will be, or already was, put while processing the
-                  // edges of the opporite vertex, i.e., edges[j][1].
-                  coEdges[j].push( edges[ jPrev ].q );
-                  sideEdges[j].push( jPrev, jNext );
-                }
-              }
+        // Associate each edge with neighbouring edges appropriately.
+        for( k = 0 in js.length ) {
+          var jPrev = js[(js.length + k - 1) % js.length];
+          var j     = js[k];
+          var jNext = js[(k + 1) % js.length];
+          // Node that although we could determine the whole co-edge just now, we
+          // we choose to push only the endpoint edges[jPrev][1]. The other end,
+          // i.e., edges[jNext][1] will be, or already was, put while processing the
+          // edges of the opporite vertex, i.e., edges[j][1].
+          coEdges[j].push( edges[ jPrev ].q );
+          sideEdges[j].push( jPrev, jNext );
+        }
+      }
 
-              // Amend external edges
-              function disjoint (i, j) { return edges[j].p !== i && edges[j].q !== i }
-              for( j in 0...edges.length ){
-                if( !edges[j].external ) continue;
-                var ce = coEdges[ j ]; 
-                var ses = sideEdges[ j ];
+      // Amend external edges
+      function disjoint (i, j) { return edges[j].p !== i && edges[j].q !== i }
+      for( j in 0...edges.length ){
+        if( !edges[j].external ) continue;
+        var ce = coEdges[ j ]; 
+        var ses = sideEdges[ j ];
 
-                // If the whole mesh is a triangle, just remove one of the duplicate entries
-                if( ce.p === ce.q ) {
-                  ce.q = ses.b = ses.c = null;
-                  continue;
-                }
-                // If the arms of a supported triangle are also external, remove.
-                if( edges[ ses.a ].external && edges[ ses.d ].external)
-                  ce.p = ses.a = ses.d = null;
-                if( edges[ ses.b ].external && edges[ ses.c ].external)
-                  ce.q = ses.b = ses.c = null;
-              }
+        // If the whole mesh is a triangle, just remove one of the duplicate entries
+        if( ce.p === ce.q ) {
+          ce.q = ses.b = ses.c = null;
+          continue;
+        }
+        // If the arms of a supported triangle are also external, remove.
+        if( edges[ ses.a ].external && edges[ ses.d ].external)
+          ce.p = ses.a = ses.d = null;
+        if( edges[ ses.b ].external && edges[ ses.c ].external)
+          ce.q = ses.b = ses.c = null;
+      }
 
-              return { coEdges: coEdges, sideEdges: sideEdges };
-            }
+      //return { coEdges: coEdges, sideEdges: sideEdges };
+    }
 }
