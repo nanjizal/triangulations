@@ -312,10 +312,10 @@ class Triangulate {
     
     // "Maybe OK"
     public static inline
-    function splitEdge(     vertices: Array<Vector2>
-                        ,   edges: NodeInt
-                        ,   coEdges: NodeInt
-                        ,   sideEdges
+    function splitEdge(     vertices:   Array<Vector2>
+                        ,   edges:      Edge
+                        ,   coEdges:    Edge
+                        ,   sideEdges:  SideEdge
                         ,   j ) {
       var edge   = edges[j];
       var coEdge = coEdges[j];
@@ -323,7 +323,7 @@ class Triangulate {
       var ic = edge.q;
       var ib = coEdge.p;
       var id = coEdge.q;
-      var p = vertices[ia].mid( vertices[ic] ) ;
+      var p = (vertices[ia]).mid( vertices[ic] ) ;
       var unsureEdges = [];
       verticies.push( p );
       var ip = verticies.length - 1;
@@ -337,7 +337,7 @@ class Triangulate {
       var jb;
       var j0;
       var j3;
-      if (ib != null) {
+      if( ib != null ){
         edges.push( new Edge( ib, ip ) )
         jb =  edges.length - 1;
         j0 = sideEdges[j].a; 
@@ -497,7 +497,8 @@ class Triangulate {
     }
     
     // "NOT OK - needs a lot more thought and work."
-    var maintainDelaunay = (function () {
+    public static /* inline */ 
+    function maintainDelaunay() {
     var unsure = Array<Bool>;
     var tried = Array<Bool>;
     var cookie: Int = 0;
@@ -823,8 +824,8 @@ class Triangulate {
       //var coEdges = [];
       //var sideEdges = [];
       for( j in 0...edges.length ){
-        coEdges[ j ] = [];
-        sideEdges[ j ] = [];
+        coEdges[ j ] = new Edge( null, null );
+        sideEdges[ j ] = SideEdge.Null();
       }
 
       // Find the outgoing edges for each vertex
