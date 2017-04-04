@@ -1,19 +1,23 @@
-package triangulations
+package triangulations;
 
 class SideEdge {
     public var length: Int = 4;
-    public var a: Int;
-    public var b: Int;
-    public var c: Int;
-    public var d: Int;
+    public var a: Null<Int>;
+    public var b: Null<Int>;
+    public var c: Null<Int>;
+    public var d: Null<Int>;
     public var curr: a;
-    public function new( a_: Int, b_: Int, c_: Int, d_: Int ){
+    public function new( a_: Null<Int>, b_: Null<Int>, c_: Null<Int>, d_: Null<Int> ){
         a = a_;
         b = b_;
         c = c_;
         d = d_;
     }
-    
+    public static inline
+    function Null(): SideEdge
+    {
+        return new SideEdge( null, null, null, null );
+    }
     public inline
     function iterator ():Iterator<Int> { 
         count = 0;
@@ -26,8 +30,8 @@ class SideEdge {
     }
     
     public static inline
-    function next(): Int { 
-        var out: Int;
+    function next(): Null<Int> { 
+        var out: Null<Int>;
         switch( count ){
             case 0:
                 out = a;
@@ -45,7 +49,7 @@ class SideEdge {
     }
     
     public inline 
-    function getByIndex( i: Int ){
+    function getByIndex( i: Int ): Null<Int> {
         var out: Int;
         switch( count ){
             case 0:
@@ -63,7 +67,7 @@ class SideEdge {
     }
     
     public inline
-    function substitute( x: Int, y: Int ) {
+    function substitute( x: Null<Int>, y: Null<Int> ) {
         switch( x ){
             case a:
                 a = y;
