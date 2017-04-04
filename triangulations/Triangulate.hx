@@ -1,6 +1,6 @@
 package triangulations;
 
-import mathKha.Vector2D;
+import mathKha.Vector2;
 import triangulations.Node;
 import triangulations.SideEdge;
 import triangulations.Edge;
@@ -162,7 +162,7 @@ class Triangulate {
     
     // "ok"
     public static inline
-    function aux( a: Vector2D, b: Vector2D, node: NodeInt ): Bool {
+    function aux( a: Vector2, b: Vector2, node: NodeInt ): Bool {
         var c = vertices[ node.value ];
         var d = vertices[ node.next.value ];
         return c !== a && c !== b && d !== a && d !== b && Geom2.edgesIntersect( a, b, c, d );
@@ -174,9 +174,9 @@ class Triangulate {
     // the whole cycle is tested. Edges spanned on equal (===) vertices are not
     // considered intersecting.
     public static inline
-    function intersects(    a:          Vector2D
-                        ,   b:          Vector2D
-                        ,   vertices:   Array<Vector2D>
+    function intersects(    a:          Vector2
+                        ,   b:          Vector2
+                        ,   vertices:   Array<Vector2>
                         ,   nodeBeg:    NodeInt
                         ,   nodeEnd:    NodeInt ): Bool {
        var out = false;
@@ -568,9 +568,9 @@ class Triangulate {
 
             // First we find a locally convex vertex.
             var node = poly;
-            var a: Vector2D;
-            var b: Vector2D;
-            var c: Vector2D;
+            var a: Vector2;
+            var b: Vector2;
+            var c: Vector2;
             var convex = false;
             do {
                 a = vertices[ node.prev.value ];
