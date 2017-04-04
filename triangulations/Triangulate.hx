@@ -8,28 +8,7 @@ import triangulations.Queue;
 
 class Triangulate {
     
-    // functions ported.
-    // key of status
-    //      notStarted - not attempted porting.
-    //      partial - partially ported still trying to understand details.
-    //      untested - looks reasonable haxe.
-    //      compiles - compiles with Haxe but may not function properly.
-    //      functions - compiles and seems to function ok.
-    //
-    // triangulateFaces - partial
-    // makeLinkedPoly - untested
-    // makeArrayPoly - untested
-    // intersects ( split out aux ) - untested
-        // aux - untested
-    // findDeepestInside - untested
-    // triangleSimple - partial not sure on inputs
-    // makeQuadEdge - notStarted
-    // arraySubst2 - moved to Edge class
-    // arraySubst4 - moved to SideEdge class
-    // flipEdge - not quite sure on types
-    
-    // still analysing
-    
+    // "ok"
     public static inline 
     function arrToBack( a:Array<Int>, i: Int ){
         var tmp = a[ i ];
@@ -37,6 +16,7 @@ class Triangulate {
         a[ a.length - 1 ] = tmp;
     } 
     
+    // "ok"
     public static inline
     function triangulateSimple( vertices:Array<Vector2>, edges:Array<Edge>, faces /*, trace */ ) {
         for ( k in 0...faces.length ) {
@@ -46,25 +26,7 @@ class Triangulate {
         }
     }
     
-    /*
-    public static inline
-    function arraySubst2( a: Array<Int>, x: Float, y: Float ) {
-        if( a[0] === x ){
-            a[0] = y;
-        } else {
-            a[1] = y;
-        }
-    }
-        */
-    /*
-    public static inline
-    function arraySubst4( a: Array<Int>, x: Float, y: Float ) {
-        if( a[0] === x ) a[0] = y; else
-        if( a[1] === x ) a[1] = y; else
-        if (a[2] === x ) a[2] = y;
-        else            a[3] = y;
-    }
-    */
+    // "ok"
     // Given edges along with their quad-edge datastructure, flips the chosen edge
     // j, maintaining the quad-edge structure integrity.
     public static inline
@@ -108,6 +70,7 @@ class Triangulate {
       sideEdges[j].c = tmp;
     }
     
+    // "ok"
     public static inline
     function isDelaunayEdge(    vertices:   Array<Vector2>
                             ,   edge:       Array<Edge>
@@ -120,6 +83,7 @@ class Triangulate {
              !Geom.pointInCircumcircle( a, c, d, b );
     }
     
+    // "ok"
     // Given edges along with their quad-edge datastructure, flips the chosen edge
     // j if it doesn't form a Delaunay triangulation with its enclosing quad.
     // Returns true if a flip was performed.
@@ -139,6 +103,8 @@ class Triangulate {
       return out;
     }
     
+    
+    // "ok"  - unsure of fixed
     // Refines the given triangulation graph to be a Conforming Delaunay
     // Triangulation (abr. CDT). Edges with property fixed = true are not altered.
     //
@@ -162,6 +128,7 @@ class Triangulate {
     }
     
     
+    // "ok"
     // Given a polygon as a list of vertex indices, returns it in a form of
     // a doubly linked list.
     public static inline
@@ -179,6 +146,7 @@ class Triangulate {
         return linkedPoly;
     }
     
+    // "ok"
     public static inline
     function makeArrayPoly( linkedPoly: NodeInt ): NodeInt {
         var poly = [];
@@ -192,6 +160,7 @@ class Triangulate {
         return poly;
     }
     
+    // "ok"
     public static inline
     function aux( a: Vector2D, b: Vector2D, node: NodeInt ): Bool {
         var c = vertices[ node.value ];
@@ -199,6 +168,7 @@ class Triangulate {
         return c !== a && c !== b && d !== a && d !== b && Geom2.edgesIntersect( a, b, c, d );
     }
     
+    // "ok"
     // Checks wether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
     // If nodeEnd is not provided, nodeBeg is interpreted as lying on a cycle and
     // the whole cycle is tested. Edges spanned on equal (===) vertices are not
@@ -211,7 +181,7 @@ class Triangulate {
                         ,   nodeEnd:    NodeInt ): Bool {
        var out = false;
        if( nodeEnd === null ) {
-         if( aux(a,b,nodeBeg)){
+         if( aux( a, b, nodeBeg ) ){
              out = true;
          } else {
              nodeEnd = nodeBeg;
@@ -232,6 +202,7 @@ class Triangulate {
       return out;
     }
     
+    // "ok"
     public static inline
     function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
                             : Array<Vector2> -> NodeInt -> NodeInt -> NodeInt -> NodeInt {
@@ -271,6 +242,8 @@ class Triangulate {
            };
     }
     
+    // "NOT OK - requires more work and thought"
+    
     // Finds the triangle enclosing the given point p. The quad-edge datastructure
     // has to be provided. The search is started from the triangles adjecent to
     // edge j0 and proceeds to to neighboring triangles. Falling through fixed
@@ -297,34 +270,37 @@ class Triangulate {
       // ambiguous -- each triangle has three indices. To prevent multiple visits,
       // all three are marked as already enqueued. Trianglea already enqueued and
       // Invalid triangles supported by external edges are rejected.
-      function tryEnqueue (j, k) {
+      function tryEnqueue( j: Int, k: Int ) {
         var t = 2 * j + k;
-        if( enqueued[t] === cookie || coEdges[j][k] === undefined )
-          return;
+        if( enqueued[ t ] === cookie || coEdges[ j ][ k ] === null ) return;
         queue.enqueue(t);
-        var j0 = sideEdges[j][0 + k];
-        var j1 = sideEdges[j][3 - k];
+        var j0 = sideEdges[j].getByIndex( k );
+        var j1 = sideEdges[j].getByIndex( 3 - k );
         enqueued[t] = enqueued[2 * j0 + ( coEdges[j0].p === edges[j].p ? 0 : 1)]
                     = enqueued[2 * j1 + ( coEdges[j1].p === edges[j].q ? 0 : 1)]
                     = cookie;
       }
 
       // We start at two triangles adjecent to edge j.
-      tryEnqueue(j0, 0); tryEnqueue( j0, 1);
-      while (!queue.isEmpty()) {
+      tryEnqueue( j0, 0); 
+      tryEnqueue( j0, 1);
+      while( !queue.isEmpty() ){
         var t = queue.dequeue();
         var k = t % 2, j = (t - k) / 2;
-        var ai = edges[j][0],   a = vertices[ai];
-        var bi = coEdges[j][k], b = vertices[bi];
-        var ci = edges[j][1],   c = vertices[ci];
+        var ai = edges[j].p;  
+        var a = vertices[ai];
+        var bi = coEdges[j][k]; // :(
+        var b = vertices[bi];
+        var ci = edges[j].q,   
+        var c = vertices[ci];
 
-        if (geom.pointInTriangle(a, b, c)(p))
-          return t;
+        if( geom.pointInTriangle(a, b, c)(p) ) return t;
 
         // Continue search to triangles adjecent to edges opposite to vertices a and
         // c. The other triangle, adjecent to edge j, i.e., oppisite to b, is not
         // further examined as this is the direction we are coming from.
-        var ja = sideEdges[j].getByIndex( k ), jc = sideEdges[j].getByIndex( 3 - k );
+        var ja = sideEdges[j].getByIndex( k );
+        var jc = sideEdges[j].getByIndex( 3 - k );
         // Falling through a fixed edge is not allowed.
         if (!edges[ja].fixed)
           tryEnqueue(ja, coEdges[ja].p == ai ? 1 : 0);
@@ -333,6 +309,8 @@ class Triangulate {
       }
     }})();
     
+    
+    // "Maybe OK"
     public static inline
     function splitEdge(     vertices: Array<Vector2>
                         ,   edges: NodeInt
@@ -349,7 +327,7 @@ class Triangulate {
       var unsureEdges = [];
       verticies.push( p );
       var ip = verticies.length - 1;
-      edges[ j ] = [ia, ip]; 
+      edges[ j ] = new Edge( ia, ip ); 
       var ja = j; // Reuse the index
       edges.push( new Edge( ip, ic ) );
       var jc = edges.length - 1;
@@ -379,9 +357,11 @@ class Triangulate {
         if( !edges[j0].fixed ) unsureEdges.push( j0 );
         if (!edges[j3].fixed)  unsureEdges.push( j3 );
       }
-      var jd = undefined;
-      var j1 = undefined, j2 = undefined;
-      if (id !== undefined) {
+      var jd = null;
+      var j1 = null, 
+      var j2 = null;
+      
+      if (id !== null ) {
         edges.push( new Edge( ip, id) );
         jd = edges.length - 1;
         j1 = sideEdges[j].b; 
@@ -428,28 +408,29 @@ class Triangulate {
       if (jd !== null ) affectedEdges.push( jd );
       return affectedEdges;
     }
+    
     function tryInsertPoint (vertices, edges, coEdges, sideEdges, p, j0) {
       var t = findEnclosingTriangle(vertices, edges, coEdges, sideEdges, p, j0);
       if (t === undefined)
         throw "impossibru";//return { success: true, affectedEdges: [] };
 
       var k = t % 2, j = (t - k) / 2;
-      var edge = edges[j]
-      var coEdge = coEdges[j];
+      var edge = edges[ j ]
+      var coEdge = coEdges[ j ];
       var ai = edge.p;
-      var a = vertices[ai];
-      var bcj = sideEdges[j].getByIndex( k );
-      var bi = coEdge[k];
-      var b = vertices[bi];
+      var a = vertices[ ai ];
+      var bcj = sideEdges[ j ].getByIndex( k );
+      var bi = coEdge[ k ];
+      var b = vertices[ bi ];
       var caj = j;
       var ci = edge.q;
-      var c = vertices[ci]; 
-      var abj = sideEdges[j].getByIndex( 3 - k );
+      var c = vertices[ ci ]; 
+      var abj = sideEdges[ j ].getByIndex( 3 - k );
 
       var encroachedEdges = [];
-      if (edges[bcj].fixed && pointEncroachesEdge(b, c, p)) encroachedEdges.push(bcj);
-      if (edges[caj].fixed && pointEncroachesEdge(c, a, p)) encroachedEdges.push(caj);
-      if (edges[abj].fixed && pointEncroachesEdge(a, b, p)) encroachedEdges.push(abj);
+      if( edges[bcj].fixed && pointEncroachesEdge( b, c, p ) ) encroachedEdges.push( bcj );
+      if( edges[caj].fixed && pointEncroachesEdge( c, a, p ) ) encroachedEdges.push( caj );
+      if( edges[abj].fixed && pointEncroachesEdge( a, b, p ) ) encroachedEdges.push( abj );
       if (encroachedEdges.length > 0)
         return { success: false, encroachedEdges: encroachedEdges };
 
@@ -498,8 +479,7 @@ class Triangulate {
       };
     }
     
-    
-    // TODO: Really needs more checking work.
+    // "ok?"
     public static inline 
     function edgeIsEncroached(  vertices: Array<Vertex>
                             ,   edges:    Array<Vector2>
@@ -512,15 +492,21 @@ class Triangulate {
       var c = vertices[ edge.q ];
       var p = a.mid(c);
       var rSq = p.distSq(a);
-      return ( coEdge.p !== null && p.distSq( vertices[ coEdge.p ] ) <= rSq) ||
-             ( coEdge.q !== null && p.distSq( vertices[ coEdge.q ] ) <= rSq);
+      return ( coEdge.p !== null && p.distSq( vertices[ coEdge.p ] ) <= rSq ) ||
+             ( coEdge.q !== null && p.distSq( vertices[ coEdge.q ] ) <= rSq );
     }
     
+    // "NOT OK - needs a lot more thought and work."
     var maintainDelaunay = (function () {
-    var unsure = [];
-    var tried = [];
-    var cookie = 0;
-    return function (vertices, edges, coEdges, sideEdges, unsureEdges, trace) {
+    var unsure = Array<Bool>;
+    var tried = Array<Bool>;
+    var cookie: Int = 0;
+    return function(    vertices:   Array<Vector2>
+                    ,   edges:      Array<Edge>
+                    ,   coEdges:    Array<Edge>
+                    ,   sideEdges:  Array<SideEdge>
+                    ,   unsureEdges: Array<Int>
+                    ) {
       ++cookie;
       var triedEdges = unsureEdges.slice();
       for (var l = 0; l < unsureEdges.length; ++l) {
@@ -535,37 +521,33 @@ class Triangulate {
         var j = unsureEdges.pop();
         unsure[j] = false;
 
-        var traceEntry = { ensured: j };
-        if (
-          !edges[j].fixed &&
-          ensureDelaunayEdge(vertices, edges, coEdges, sideEdges, j)
-        ) {
+        //var traceEntry = { ensured: j };
+        if ( !edges[j].fixed && ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j ) ) {
           traceEntry.flippedTo = edges[j].slice();
           var newUnsureCnt = 0;
           for (var k = 0; k < 4; ++k) {
-            var jk = sideEdges[j][k];
+            var jk = sideEdges[j].getIndexBy( k );
             if (!unsure[jk]) {
               if (tried[jk] !== cookie) {
                 triedEdges.push(jk);
-                tried[jk] = cookie;
+                tried[ jk ] = cookie;
               }
               if (!edges[jk].fixed) {
                 unsureEdges.push(jk);
-                unsure[jk] = true;
+                unsure[ jk ] = true;
                 ++newUnsureCnt;
               }
             }
           }
-          if (newUnsureCnt > 0)
-            traceEntry.markedUnsure = unsureEdges.slice(-newUnsureCnt);
+          //if (newUnsureCnt > 0) traceEntry.markedUnsure = unsureEdges.slice(-newUnsureCnt);
         }
-        if (trace !== undefined)
-          trace.push(traceEntry);
       }
 
       return triedEdges;
     }})();
     
+    
+    // "Maybe OK?"
     public static inline
     function triangulateFaces(  vertices:   Array<Vertex>
                             ,   faces:      Array<Vector2> ){
@@ -581,7 +563,7 @@ class Triangulate {
         // to come because of splitting. The holes are eventually merged in.
         // In each iteration a diagonal is added.
         var diagonals = [];
-        while (polies.length > 0) {
+        while( polies.length > 0 ){
             var poly = polies.pop();
 
             // First we find a locally convex vertex.
@@ -612,8 +594,8 @@ class Triangulate {
             // whole polygon is inside the triangle abc. Therefore we early reject the
             // case when the immediate neighbors of vertices a and c are inside abc.
             // Note that if ac is already an edge, it will also be rejected.
-            var inabc = Geom2.pointInTriangle(a, b, c);
-            acOK = !inabc( vertices[ aNode.prev.i ] ) && !inabc( vertices[ cNode.next.i ] );
+            var inabc = Geom2.pointInTriangle( a, b, c );
+            acOK = !inabc( vertices[ aNode.prev.value ] ) && !inabc( vertices[ cNode.next.value ] );
             
             // Now we proceed with checking the intersections with ac.
             if( acOK ) acOK = !intersects( a, c, vertices, cNode.next, aNode.prev );
@@ -704,7 +686,7 @@ class Triangulate {
                  
         }
         
-        
+        // "NOT OK!"
         public static inline 
         function refineToRuppert( vertices:     Array<Vector2>
                                 , edges:        Array<Edge>
@@ -743,19 +725,19 @@ class Triangulate {
               arrToBack(encroachedEdges, s);
               var j = encroachedEdges.pop();
               encroached[j] = false;
-              if (edgeIsEncroached(vertices, edges, coEdges, j)) {
-                affectedEdges = splitEdge(vertices, edges, coEdges, sideEdges, j);
+              if( edgeIsEncroached( vertices, edges, coEdges, j ) ) {
+                affectedEdges = splitEdge( vertices, edges, coEdges, sideEdges, j );
                 --steinerLeft;
                 traceEntry.split = [j];
               }
             } else if (badTriangles.length > 0) {
               var s = Math.floor(Math.random() * badTriangles.length);
-              arrToBack(badTriangles, s);
+              arrToBack( badTriangles, s );
               var j = badTriangles[badTriangles.length - 1];
               var edge = edges[j], coEdge = coEdges[j];
               var a = vertices[edge[0]], c = vertices[edge[1]];
               var okCnt = 0;
-              for (var k = 0; k < 2; ++k) {
+              for( k in 0...2 ) { // NOT Ideal!!
                 if (coEdge[k] === undefined) {
                   ++okCnt;
                   continue;
@@ -814,6 +796,8 @@ class Triangulate {
           }
         }})();
             
+            
+        // "NOT OK ??"
             
             // Given a triangulation graph, produces the quad-edge datastructure for fast
             // local traversal. The result consists of two arrays: coEdges and sideEdges
