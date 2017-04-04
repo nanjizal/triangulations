@@ -704,7 +704,7 @@ class Triangulate {
             var encroachedEdges = [];
             var badTriangles = [];
 
-          for (var j = 0; j < edges.length; ++j) {
+          for( j = 0...edges.length ){
             if (edges[j].fixed) {
               encroachedEdges.push(j);
               encroached[j] = true;
@@ -734,8 +734,10 @@ class Triangulate {
               var s = Math.floor(Math.random() * badTriangles.length);
               arrToBack( badTriangles, s );
               var j = badTriangles[badTriangles.length - 1];
-              var edge = edges[j], coEdge = coEdges[j];
-              var a = vertices[edge[0]], c = vertices[edge[1]];
+              var edge = edges[j];
+              var coEdge = coEdges[j];
+              var a = vertices[ edge.p ];
+              var c = vertices[ edge.q ];
               var okCnt = 0;
               for( k in 0...2 ) { // NOT Ideal!!
                 if (coEdge[k] === undefined) {
@@ -828,20 +830,20 @@ class Triangulate {
       // Find the outgoing edges for each vertex
       var outEdges = [];
       for( i in 0...vertices.length )
-        outEdges[ i ] = [];
+        outEdges[ i ] = new Edge( null, null );// null null?
       for( j in 0...edges.length ){
         var e = edges[ j ];
-        outEdges[ e.p ].push(j);
-        outEdges[ e.q ].push(j);
+        outEdges[ e.p ].p = j;
+        outEdges[ e.q ].q = j;
       }
-
+      
       // Process edges around each vertex.
       for( i in 0...vertices.length ){
         var v = vertices[i];
         var js = outEdges[i];
 
         // Reverse edges, so that they point outward and sort them angularily.
-        for( k = 0 in js.length ){
+        for( k in 0...js.length ){
           var e = edges[ js[k] ];
           if (e.p != i) {
             e.q = e.p;
@@ -849,12 +851,12 @@ class Triangulate {
           }
         }
         var angleCmp = Geom.angleCompare( v, vertices[ edges[ js[0] ].q ] );
-        js.sort(function (j1, j2) {
+        js.sort(function (j1: Int, j2: Int) {
           return angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]);
         });
 
         // Associate each edge with neighbouring edges appropriately.
-        for( k = 0 in js.length ) {
+        for( k in 0...js.length ) {
           var jPrev = js[(js.length + k - 1) % js.length];
           var j     = js[k];
           var jNext = js[(k + 1) % js.length];
@@ -863,12 +865,14 @@ class Triangulate {
           // i.e., edges[jNext][1] will be, or already was, put while processing the
           // edges of the opporite vertex, i.e., edges[j][1].
           coEdges[j].push( edges[ jPrev ].q );
-          sideEdges[j].push( jPrev, jNext );
+          sideEdges[j].push( jPrev, jNext );  
         }
       }
 
       // Amend external edges
-      function disjoint (i, j) { return edges[j].p !== i && edges[j].q !== i }
+      function disjoint (i: Int, j: Int) { 
+          return edges[j].p != i && edges[j].q != i;
+      }
       for( j in 0...edges.length ){
         if( !edges[j].external ) continue;
         var ce = coEdges[ j ]; 
