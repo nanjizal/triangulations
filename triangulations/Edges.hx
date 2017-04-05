@@ -6,7 +6,10 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     inline public function new( v: Array<Edge> ) {
       this = v;
     }
-    
+    public inline static 
+    function getEmpty(){
+        return new Edges( new Array<Edge>() );
+    }
     public /*inline*/ function set_fixedExternal( val: Bool ){
         for( e in this ) {
             e.fixed = val;
@@ -47,5 +50,11 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         var el = e.length;
         for( i in 0...el ) this[ l + i ] = e[ i ];
     }
-    
+    @:from
+    static public function fromArrayArray( arr:Array<Array<Null<Int>>> ) {
+        var edges: Edges = getEmpty();
+        var l = arr.length;
+        for( i in 0...l ) edges[ i ] = Edge.fromArray( arr[ i ] );
+        return edges;
+    }
 }
