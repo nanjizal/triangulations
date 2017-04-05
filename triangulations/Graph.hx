@@ -14,8 +14,9 @@ class Graph {
         faces       = faces_;
     }
     
+    // return 1, +1, 0
     public inline
-    function faceOrientation( k: int) {
+    function faceOrientation( k: int): Int {
         var face = faces[ k ];
         // The outermost polygon is the one with the leftmost vertex. This may not
         // be true if there are tangent polygons, but we don't bother.
