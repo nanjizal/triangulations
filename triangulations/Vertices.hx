@@ -6,6 +6,10 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
       this = v;
     }
     
+    public inline static 
+    function getEmpty(){
+        return new Vertices( new Array<Vector2>() );
+    }
     // Given a simple polygon, returns its orientation, namely 1, if it's clockwise,
     // -1, if it's counter-clockwise, and 0 if the orientation is undefined, i.e.,
     // the area is 0.
@@ -100,5 +104,16 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
           v.x = marginX + scale * (v.x - xMin);
           v.y = marginY + scale * (v.y - yMin)
         }
+    }
+    @:from
+    static public function fromArrayArray( arr:Array<Array<Float>> ) {
+        var v: Vertices = getEmpty();
+        var arr2: Array<Float>;
+        var l = arr.length;
+        for( i in 0...l ) {
+            arr2 = arr[i];
+            v[ i ] = new Vector2( arr2[0], arr2[1] );
+        }
+        return v;
     }
 }
