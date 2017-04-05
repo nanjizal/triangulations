@@ -3,7 +3,7 @@ typedef NodeInt = Node<Int>;
 class Node<T> {
     public var prev: Node<T>;
     public var next: Node<T>;
-    public var value: T = Null<T>;
+    public var value: Null<T>;
     public function new( value_: T ){
         value = value_;
     }
