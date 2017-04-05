@@ -14,7 +14,7 @@ class Geom2 {
     
     public static inline function triangleArea(a: Vector2, b: Vector2, c: Vector2 ): Float {
         return ( a.x * (b.y - c.y)
-         + b.x * (c.y - a.y])
+         + b.x * (c.y - a.y)
          + c.x * (a.y - b.y) ) / 2;
     }
     
@@ -37,7 +37,7 @@ class Geom2 {
                 var bcLenSq = bc.lenSq();
                 var abxbc = ab.cross(ab);
                 if( abxbc * abxbc < sinSqMinAngle * abLenSq * bcLenSq ) return true;
-                var bcxca = cross(bc, ca);
+                var bcxca = bc.cross(ca);
                 return bcxca * bcxca < sinSqMinAngle * bcLenSq * caLenSq;
       }
     }
@@ -52,10 +52,10 @@ class Geom2 {
         var yc = c.y;
         var d = 2 * ((xa - xc) * (yb - yc) - (xb - xc) * (ya - yc));
         var ka = ((xa - xc) * (xa + xc) + (ya - yc) * (ya + yc));
-        var kb = ((xb - xc) * (xb + xc) + (yb - yc) * (yb + yc))
+        var kb = ((xb - xc) * (xb + xc) + (yb - yc) * (yb + yc));
         var xp = ka * (yb - yc) - kb * (ya - yc);
         var yp = kb * (xa - xc) - ka * (xb - xc);
-        return new Vector2( dxp / d, yp / d );
+        return new Vector2( xp / d, yp / d );
     }    
     
     // Check whether v is strictly in the interior of the circumcircle of the
@@ -93,14 +93,14 @@ class Geom2 {
         if (su > 0) {
             out = false;
         } else {
-            var v = span(c, d);
+            var v = c.span(d);
             var sv = v.cross(c.span(a)) * v.cross(c.span(b));
             if (sv > 0) {
                 out = false;
             } else {
                 // We still have to check for collinearity.
                 if (su == 0 && sv == 0) {
-                    var abLenSq = distSq(a, b);
+                    var abLenSq = a.distSq(b);
                     out = a.distSq(c) <= abLenSq || a.distSq(d) <= abLenSq;
                 }
             }
@@ -111,12 +111,12 @@ class Geom2 {
     //// Functions that return a function. ////
     
     // Check wether point p is within triangle abc or on its border.
-    public static inline function pointInTriangle(a: Vector2, b: Vector2, c: Vector2): Vector2 -> Float {
+    public static inline function pointInTriangle(a: Vector2, b: Vector2, c: Vector2): Vector2 -> Bool {
         var u = a.span(b);
         var v = a.span(c);
         var vxu = v.cross(u);
         var uxv = -vxu;
-        return function( p: Vector2 ): Float {
+        return function( p: Vector2 ): Bool {
             var w = a.span(p);
             var vxw = v.cross(w);
             if (vxu * vxw < 0) return false;
@@ -127,25 +127,25 @@ class Geom2 {
     }
     
     public static inline function pointToEdgeDistSq(u: Vector2, v: Vector2): Vector2 -> Float {
-        var uv = span(u, v);
-        var uvLenSq = lenSq(uv);
+        var uv = u.span(v);
+        var uvLenSq = uv.lenSq();
         return function(p: Vector2){
-            var uvxpu = uv.cross(span(p, u));
+            var uvxpu = uv.cross(p.span(u));
             return uvxpu * uvxpu / uvLenSq;
         };
     }
     
-// TODO: check if Int is ideal return.
+// TODO: check if Float is ideal return.
     // Given an origin c and direction defining vertex d, returns a comparator for
     // points. The points are compared according to the angle they create with
     // the vector cd.
-    public static inline function angleCompare(c: Vector2, d: Vector2 ): Vector2 -> Vector2 -> Int {
-        var cd = span(c, d);
+    public static inline function angleCompare(c: Vector2, d: Vector2 ): Vector2 -> Vector2 -> Float {
+        var cd = c.span(d);
         // Compare angles ucd and vcd
-        return function (u: Vector2, v: Vector2): Int {
+        return function (u: Vector2, v: Vector2): Float {
             var cu = c.span(u);
             var cv = c.span(v);
-            var cvxcu = cv.cross(cu)
+            var cvxcu = cv.cross(cu);
             // Check if they happen to be equal
             if(cvxcu == 0 && cu.dot(cv) >= 0) return 0;
             var cuxcd = cu.cross(cd);
@@ -153,7 +153,7 @@ class Geom2 {
             // If one of the angles has magnitude 0, it must be strictly smaller than
             // the other one.
             if(cuxcd == 0 && cd.dot(cu) >= 0) return -1;
-            if(cvxcd == 0 && dot(cd, cv) >= 0) return 1;
+            if(cvxcd == 0 && cd.dot(cv) >= 0) return 1;
             // If the points u and v are on the same side of cd, the one that is on the
             // right side of the other must form a smaller angle.
             if(cuxcd * cvxcd >= 0) return cvxcu;
