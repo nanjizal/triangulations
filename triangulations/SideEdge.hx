@@ -6,7 +6,7 @@ class SideEdge {
     public var b: Null<Int>;
     public var c: Null<Int>;
     public var d: Null<Int>;
-    public var curr: a;
+    public var count: Int = 0;
     public function new( a_: Null<Int>, b_: Null<Int>, c_: Null<Int>, d_: Null<Int> ){
         a = a_;
         b = b_;
@@ -19,17 +19,17 @@ class SideEdge {
         return new SideEdge( null, null, null, null );
     }
     public inline
-    function iterator ():Iterator<Int> { 
+    function iterator<Int>():Iterator<Int> { 
         count = 0;
-        return this;
+        return cast this;
     }
     
     public inline
-    public function hasNext(): Bool {
+    function hasNext(): Bool {
         return count < length;
     }
     
-    public static inline
+    public inline
     function next(): Null<Int> { 
         var out: Null<Int>;
         switch( count ){
