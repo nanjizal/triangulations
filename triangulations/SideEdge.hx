@@ -68,15 +68,15 @@ class SideEdge {
     
     public inline
     function substitute( x: Null<Int>, y: Null<Int> ) {
-        switch( x ){
-            case a:
-                a = y;
-            case b:
-                b = y;
-            case c:
-                c = y;
-            default:
-                d = y;
+        if( x == a ){
+            a = y;
+        } else if( x == b ){
+            b = y;
+        } else if( x == c ){
+            c = y;
+        } else {
+            d = y;
         }
     }
 }
+
