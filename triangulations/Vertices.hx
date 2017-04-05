@@ -79,7 +79,7 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         var yMin = Math.POSITIVE_INFINITY;;
         var yMax = Math.NEGATIVE_INFINITY;
         var l = this.length;
-        for ( i in 0...vertices.length ) {
+        for ( i in 0...this.length ) {
             var v = this[i];
             var x = v.x
             var y = v.y;
@@ -95,7 +95,7 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         var scale = Math.min( scaleX, scaleY );
         var marginX = ( width - scale * xdif ) / 2;
         var marginY = ( height - scale * ydif ) / 2;
-        for( i in 0...vertices.length ) {
+        for( i in 0...this.length ) {
           var v = this[i];
           v.x = marginX + scale * (v.x - xMin);
           v.y = marginY + scale * (v.y - yMin)
