@@ -22,7 +22,7 @@ class Queue<T> {
         queue = new Array<T>();
     }
     // Returns the length of the queue.
-    function inline getLength():Int{
+    function getLength():Int{
         return ( queue.length - offset );
     }
 
@@ -43,7 +43,7 @@ class Queue<T> {
         var item:T = null;
         // if the queue is empty, return immediately
         if( queue.length == 0 ) {
-            out = null;
+            item = null;
         } else {
             // store the item at the front of the queue
             item = queue[ offset ];
