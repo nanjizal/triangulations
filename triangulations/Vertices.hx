@@ -53,6 +53,25 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         }
         return result;
     }
+    
+    public inline
+    function clone(): Vertices {
+        var v = new Vertices();
+        var l = this.length;
+        for( i in 0...l ){
+            v[ i ].x = this[ i ].x;
+            v[ i ].y = this[ i ].y;
+        }
+        return v;
+    }
+    
+    public inline
+    function fitClone( width: Float, height: Float, ?margin: Float = 10 ): Vertices {
+        var v = clone();
+        fit( width, height, margin );
+        return v;
+    }
+    
     public inline 
     function fit( width: Float, height: Float, ?margin: Float = 10 ){
         var xMin = Math.POSITIVE_INFINITY;
