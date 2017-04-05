@@ -15,6 +15,10 @@ class Edge {
         return new Edge( Null, Null );
     } 
     public inline
+    function clone(): Edge {
+        return new Edge( this.p, this.q );
+    }
+    public inline
     function substitute( x: Null<Int>, y: Null<Int> ) {
         if( p == x ){
             p = y;
