@@ -13,4 +13,14 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         return val;
     }
     public var fixedExternal( default, set ):Bool;
+    public inline
+    function clone(): Edges {
+        var e = new Edges();
+        var l = this.length;
+        for( i in 0...l ){
+            e[ i ].p = this[ i ].p;
+            e[ i ].q = this[ i ].q;
+        }
+        return v;
+    }
 }
