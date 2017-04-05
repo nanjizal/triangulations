@@ -17,7 +17,7 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         }
         return val;
     }
-    public var fixedExternal( default, set ):Bool;
+    public var fixedExternal( never, set ):Bool;
     
     public inline
     function clone(): Edges {
@@ -32,11 +32,11 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     
     public inline
     function getUnsure(): Array<Int> {
-        var unsureEdges = Array<Int>();
+        var unsureEdges = new Array<Int>();
         var l = this.length;
         var lu = 0;
         for( j in 0...l ){
-            if( !edges[j].fixed )
+            if( !edges[j].fixed ){
                 unsureEdges[ lu ] = j;
                 lu++;
             }
