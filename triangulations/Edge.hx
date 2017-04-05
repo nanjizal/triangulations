@@ -18,7 +18,7 @@ class Edge {
     function clone(): Edge {
         return new Edge( this.p, this.q );
     }
-    public static inline function fromArr( arr: Array<Int> ): Edge {
+    public static inline function fromArray( arr: Array<Int> ): Edge {
         return new Edge( arr[0], arr[1] );
     }
     public inline
