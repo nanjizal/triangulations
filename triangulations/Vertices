@@ -1,0 +1,57 @@
+package triangulations;
+import triangulations.Geom2;
+
+abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
+    inline public function new( v: Array<Vector2> ) {
+      this = v;
+    }
+    
+    // Given a simple polygon, returns its orientation, namely 1, if it's clockwise,
+    // -1, if it's counter-clockwise, and 0 if the orientation is undefined, i.e.,
+    // the area is 0.
+    public inline
+    function polygonOrientation( poly: Array<Int> ): Int {
+        var area = 0;
+        var l = poly.length;
+        var v = this[ poly[ l - 1 ] ];
+        for( i in 0...l ){
+            var u = v;
+            v = this[ poly[ i ] ];
+            area += ( u.x + v.x ) * ( u.y - v.y );
+        }
+        return if( area > 0 ){
+            return 1;
+        } else if( area < 0 ){
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+    
+    // Given a polygon a point, determines whether the point lies strictly inside
+    // the polygon using the even-odd rule.
+    // TODO: need to think about inline
+    public function pointInPolygon ( poly: Array<Int>, w: Vector2 ): Bool {
+        var l = poly.length;
+        var v = this[ poly[ l - 1 ] ];
+        var result = false;
+        for( i in 0...l ){
+            var u = v;
+            v = this[ poly[ i ] ];
+            if( u.y == v.y ){
+                var wux = w.x - u.x;
+                if( u.y == w.y && wux * wux <= 0 ){
+                    return false;
+                }
+                continue;
+            } else {
+                var x = Geom2.edgeVSRay( u, v, w.y );
+                if( x != null && w.x > x ){
+                    result = !result;
+                }
+            }
+        }
+        return result;
+    }
+    
+}
