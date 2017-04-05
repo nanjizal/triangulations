@@ -1,6 +1,6 @@
 package triangulations;
 import triangulations.Geom2;
-
+@:forward
 abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     
     inline public function new( v: Array<Edge> ) {
@@ -21,13 +21,13 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     
     public inline
     function clone(): Edges {
-        var e = new Edges();
+        var e = getEmpty();
         var l = this.length;
         for( i in 0...l ){
             e[ i ].p = this[ i ].p;
             e[ i ].q = this[ i ].q;
         }
-        return v;
+        return e;
     }
     
     public inline
@@ -36,7 +36,7 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         var l = this.length;
         var lu = 0;
         for( j in 0...l ){
-            if( !edges[j].fixed ){
+            if( !this[j].fixed ){
                 unsureEdges[ lu ] = j;
                 lu++;
             }
