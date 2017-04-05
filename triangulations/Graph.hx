@@ -1,14 +1,16 @@
 package triangulations;
 import mathKha.Vector2;
 import triangulations.Vectices;
+import triangulations.Edges;
 
 class Graph {
     public var vertices:    Vertices;
     public var edges:       Edges;
-    public var faces:       Array<Vector2>;
+    public var faces:       Array<Array<Int>>;
     public function new(    vertices_: Vectices   = new Vectices()
                         ,   edges_: Edges         = new Edges()
-                        ,   faces_: Array<Int>    = new Array<Int> ){
+                        ,   faces_: Array<Int>    = new Array<Array<Int>> ){
+        if( faces_[0] == null ) faces_[0] = new Array<Int>();
         vertices   = vertices_;
         edges       = edges_;
         faces       = faces_;
