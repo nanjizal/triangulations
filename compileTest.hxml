@@ -1,0 +1,8 @@
+-js _.js 
+-main tests.MainTestSetup 
+-lib khaMath
+-D js-flatten 
+# -dce full
+--next
+-cmd echo '<!DOCTYPE html><meta charset="UTF-8"><html><body><script src="_.js"></script></body></html>' >index.html
+#-cmd open ./index.html
