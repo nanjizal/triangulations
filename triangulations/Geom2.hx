@@ -108,34 +108,6 @@ class Geom2 {
         return out;
     }    
     
-    
-    // TODO: unsure on vertices and poly structures, may require rethink or relocation?
-    /*
-    // Given a polygon a point, determines whether the point lies strictly inside
-    // the polygon using the even-odd rule.
-    public static function pointInPolygon (vertices: Array<Vector2, poly, w) {
-        var v = vertices[poly[poly.length - 1]];
-        var result = false;
-        var l = poly.length;
-        for( i in 0...l ) {
-            var u = v;
-            v = vertices[poly[i]];
-            if(u.y == v.y) {
-                if(u.y == w.y && (w.x - u.x) * (w.x - v.x) <= 0) {
-                    return false;
-                }
-                continue;
-            } else {
-                var x = edgeVSRay(u, v, w[1]);
-                if(x != null && w[0] > x) {
-                    result = !result;
-                }
-            }
-        }
-        return result;
-    }    
-    */
-    
     //// Functions that return a function. ////
     
     // Check wether point p is within triangle abc or on its border.
@@ -144,7 +116,7 @@ class Geom2 {
         var v = a.span(c);
         var vxu = v.cross(u);
         var uxv = -vxu;
-        return function(p: Vector2): Float {
+        return function( p: Vector2 ): Float {
             var w = a.span(p);
             var vxw = v.cross(w);
             if (vxu * vxw < 0) return false;
@@ -190,4 +162,3 @@ class Geom2 {
         }
     }   
 }
-
