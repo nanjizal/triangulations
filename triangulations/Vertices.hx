@@ -53,5 +53,33 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         }
         return result;
     }
-    
+    public inline 
+    function fit( width: Float, height: Float, ?margin: Float = 10 ){
+        var xMin = Math.POSITIVE_INFINITY;
+        var xMax = Math.NEGATIVE_INFINITY;
+        var yMin = Math.POSITIVE_INFINITY;;
+        var yMax = Math.NEGATIVE_INFINITY;
+        var l = this.length;
+        for ( i in 0...vertices.length ) {
+            var v = this[i];
+            var x = v.x
+            var y = v.y;
+            xMin = Math.min( x, xMin );
+            xMax = Math.max( x, xMax );
+            yMin = Math.min( y, yMin );
+            yMax = Math.max( y, yMax );
+        }
+        var xdif = xMax - xMin;
+        var ydif = yMax - yMin;
+        var scaleX = (width - 2 * margin) / xdif;
+        var scaleY = (height - 2 * margin) / ydif;
+        var scale = Math.min( scaleX, scaleY );
+        var marginX = ( width - scale * xdif ) / 2;
+        var marginY = ( height - scale * ydif ) / 2;
+        for( i in 0...vertices.length ) {
+          var v = this[i];
+          v.x = marginX + scale * (v.x - xMin);
+          v.y = marginY + scale * (v.y - yMin)
+        }
+    }
 }
