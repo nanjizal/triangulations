@@ -9,7 +9,7 @@ class Graph {
     public var faces:       Array<Array<Int>>;
     public function new(    vertices_: Vectices   = new Vectices()
                         ,   edges_: Edges         = new Edges()
-                        ,   faces_: Array<Int>    = new Array<Array<Int>> ){
+                        ,   faces_: Array<Array<Int>>    = new Array<Array<Int>> ){
         if( faces_[0] == null ) faces_[0] = new Array<Int>();
         vertices   = vertices_;
         edges       = edges_;
