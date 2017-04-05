@@ -4,7 +4,10 @@ import mathKha.Vector2;
 import triangulations.Node;
 import triangulations.SideEdge;
 import triangulations.Edge;
+import triangulations.Edges;
+import triangulations.Vertices;
 import triangulations.Queue;
+
 
 class Triangulate {
     
@@ -18,10 +21,10 @@ class Triangulate {
     
     // "ok"
     public static inline
-    function triangulateSimple( vertices:Array<Vector2>, edges:Array<Edge>, faces /*, trace */ ) {
+    function triangulateSimple( vertices: Vertices, edges: Edges, faces /*, trace */ ) {
         for ( k in 0...faces.length ) {
             var diags = triangulateFace( vertices, faces[ k ] /*, trace */ );
-            var len = edges.length;
+            var l = edges.length;
             for( i in 0...diags ) edges[ l + i ] = diags[ i ];// concat Array.prototype.push.apply(edges, diags);
         }
     }
@@ -30,7 +33,7 @@ class Triangulate {
     // Given edges along with their quad-edge datastructure, flips the chosen edge
     // j, maintaining the quad-edge structure integrity.
     public static inline
-    function flipEdge( edges: Array<Edge>, coEdges: Array<Edge>, sideEdges: Array<SideEdge>, j) {
+    function flipEdge( edges: Edges, coEdges: Edges, sideEdges: Array<SideEdge>, j) {
       var edge = edges[j];
       var coEdge = coEdges[j];
       var se = sideEdges[j];
@@ -62,7 +65,7 @@ class Triangulate {
 
       // Flip
       edges[j] = coEdges[j];
-      coEdges[j] = edge.slice(); // in order to not effect the input
+      coEdges[j] = edge.clone(); // in order to not effect the input
 
       // Amend primary edge
       var tmp = sideEdges[j].a;
@@ -72,15 +75,15 @@ class Triangulate {
     
     // "ok"
     public static inline
-    function isDelaunayEdge(    vertices:   Array<Vector2>
-                            ,   edge:       Array<Edge>
-                            ,   coEdge:     Array<Edge> ): Bool{
+    function isDelaunayEdge(    vertices:   Vertices
+                            ,   edge:       Edges
+                            ,   coEdge:     Edges ): Bool{
       var a = vertices[ edge.p ];
       var c = vertices[ edge.q ];
       var b = vertices[ coEdge.p ]
       var d = vertices[ coEdge.q ];
-      return !Geom.pointInCircumcircle( a, c, b, d ) &&
-             !Geom.pointInCircumcircle( a, c, d, b );
+      return !Geom2.pointInCircumcircle( a, c, b, d ) &&
+             !Geom2.pointInCircumcircle( a, c, d, b );
     }
     
     // "ok"
@@ -88,9 +91,9 @@ class Triangulate {
     // j if it doesn't form a Delaunay triangulation with its enclosing quad.
     // Returns true if a flip was performed.
     public static inline
-    function ensureDelaunayEdge(  vertices:     Array<Vector2>
-                                , edges:        Array<Edge>
-                                , coEdges:      Array<Edge>
+    function ensureDelaunayEdge(  vertices:     Vertices
+                                , edges:        Edges
+                                , coEdges:      Edges
                                 , sideEdges:    Array<SideEdge>
                                 , j:            Int ): Bool {
       var out: Bool;
@@ -112,18 +115,13 @@ class Triangulate {
     // flip. The flip was performed unless the edge was fixed. If a trace array is
     // provided, the algorithm will log key actions into it.
     public static inline
-    function refineToDelaunay(  vertices:   Array<Vector2>
-                            ,   edges:      Array<Edge>
-                            ,   coEdges:    Array<Edge>
+    function refineToDelaunay(  vertices:   Vertices
+                            ,   edges:      Edges
+                            ,   coEdges:    Edges
                             ,   sideEdges:  Array<SideEdge> ) {
       // We mark all edges as unsure, i.e., we don't know whether the enclosing
       // quads of those edges are properly triangulated.
-      var unsureEdges = Array<Int>();
-      for( j in 0...edges.length ){
-          if( !edges[j].fixed )
-              unsureEdges.push( j );
-          }
-      }
+      unsureEdges = edges.getUnsure();
       return maintainDelaunay( vertices, edges, coEdges, sideEdges, unsureEdges );
     }
     
@@ -176,7 +174,7 @@ class Triangulate {
     public static inline
     function intersects(    a:          Vector2
                         ,   b:          Vector2
-                        ,   vertices:   Array<Vector2>
+                        ,   vertices:   Vertices
                         ,   nodeBeg:    NodeInt
                         ,   nodeEnd:    NodeInt ): Bool {
        var out = false;
@@ -205,13 +203,13 @@ class Triangulate {
     // "ok"
     public static inline
     function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
-                            : Array<Vector2> -> NodeInt -> NodeInt -> NodeInt -> NodeInt {
+                            : Vertices -> NodeInt -> NodeInt -> NodeInt -> NodeInt {
       
       var inabc     = Geom2.pointInTriangle( a, b, c );
       var acDistSq  = Geom2.pointToEdgeDistSq( a, c );
       
       return 
-          function( vertices: Array<Vector2>
+          function( vertices: Vertices
                   , nodeBeg: NodeInt
                   , nodeEnd: NodeInt
                   , bestNode: NodeInt ): NodeInt {
@@ -255,9 +253,9 @@ class Triangulate {
     // Suppose the edge in question has number j, and k is 0 or 1 depending on which
     // co-edge vertex is chosen. Then the triangle index is t = 2 * j + k.
     public static inline 
-    function findEnclosingTriangle( vertices:   Array<Vector2>
-                                  , edges:      Array<Edge>
-                                  , coEdges:    Array<Edge>
+    function findEnclosingTriangle( vertices:   Vertices
+                                  , edges:      Edges
+                                  , coEdges:    Edges
                                   , sideEdges:  Array<SideEdge>
                                   , p:          NodeInt
                                   , j0:         Int ) {
@@ -294,7 +292,7 @@ class Triangulate {
         var ci = edges[j].q,   
         var c = vertices[ci];
 
-        if( geom.pointInTriangle(a, b, c)(p) ) return t;
+        if( Geom2.pointInTriangle(a, b, c)(p) ) return t;
 
         // Continue search to triangles adjecent to edges opposite to vertices a and
         // c. The other triangle, adjecent to edge j, i.e., oppisite to b, is not
@@ -312,7 +310,7 @@ class Triangulate {
     
     // "Maybe OK"
     public static inline
-    function splitEdge(     vertices:   Array<Vector2>
+    function splitEdge(     vertices:   Vertices
                         ,   edges:      Edge
                         ,   coEdges:    Edge
                         ,   sideEdges:  SideEdge
@@ -409,7 +407,7 @@ class Triangulate {
       return affectedEdges;
     }
     
-    function tryInsertPoint (vertices, edges, coEdges, sideEdges, p, j0) {
+    function tryInsertPoint ( vertices: Vertices, edges: Edges, coEdges: Edges, sideEdges, p, j0) {
       var t = findEnclosingTriangle(vertices, edges, coEdges, sideEdges, p, j0);
       if (t === undefined)
         throw "impossibru";//return { success: true, affectedEdges: [] };
@@ -481,9 +479,9 @@ class Triangulate {
     
     // "ok?"
     public static inline 
-    function edgeIsEncroached(  vertices: Array<Vertex>
-                            ,   edges:    Array<Vector2>
-                            ,   coEdges:  Array<Vector2>
+    function edgeIsEncroached(  vertices: Vertices
+                            ,   edges:    Edges
+                            ,   coEdges:  Edges
                             ,   j: Int    ): Bool
     {
       var edge = edges[j];
@@ -502,9 +500,9 @@ class Triangulate {
     var unsure = Array<Bool>;
     var tried = Array<Bool>;
     var cookie: Int = 0;
-    return function(    vertices:   Array<Vector2>
-                    ,   edges:      Array<Edge>
-                    ,   coEdges:    Array<Edge>
+    return function(    vertices:   Vertices
+                    ,   edges:      Edges
+                    ,   coEdges:    Edges
                     ,   sideEdges:  Array<SideEdge>
                     ,   unsureEdges: Array<Int>
                     ) {
@@ -550,7 +548,7 @@ class Triangulate {
     
     // "Maybe OK?"
     public static inline
-    function triangulateFaces(  vertices:   Array<Vertex>
+    function triangulateFaces(  vertices:   Vertices
                             ,   faces:      Array<Vector2> ){
         // Convert the polygon components into linked lists. We assume the first
         // polygon is the outermost, and the rest, if present, are holes.
@@ -689,9 +687,9 @@ class Triangulate {
         
         // "NOT OK!"
         public static inline 
-        function refineToRuppert( vertices:     Array<Vector2>
-                                , edges:        Array<Edge>
-                                , coEdges:      Array<Edge>
+        function refineToRuppert( vertices:     Vertices
+                                , edges:        Edges
+                                , coEdges:      Edges
                                 , sideEdges:    Array<SideEdge>
                                 , settings:     Settings ) {
             var encroached = [];
@@ -818,9 +816,12 @@ class Triangulate {
     //
     // WARNING: The procedure will change the orientation of edges.
     // 
-    function makeQuadEdge (vertices: Array<Vector2>, edges: Array<Edge>, coEdges: Array<Edge>, sideEdges: Array<SideEdge> ) {
+    function makeQuadEdge( vertices: Vertices
+                        ,  edges: Edges
+                        , coEdges: Edges
+                        , sideEdges: Array<SideEdge> ) {
       // Prepare datas tructures for fast graph traversal.  
-      // !!!! pass coEdges and SideEdges in rather than return obect of them.  !!!
+      // !!!! pass coEdges and SideEdges in rather than return object of them.  !!!
       //var coEdges = [];
       //var sideEdges = [];
       for( j in 0...edges.length ){
