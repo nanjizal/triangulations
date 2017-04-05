@@ -80,7 +80,7 @@ class Triangulate {
                             ,   coEdge:     Edges ): Bool{
       var a = vertices[ edge.p ];
       var c = vertices[ edge.q ];
-      var b = vertices[ coEdge.p ]
+      var b = vertices[ coEdge.p ];
       var d = vertices[ coEdge.q ];
       return !Geom2.pointInCircumcircle( a, c, b, d ) &&
              !Geom2.pointInCircumcircle( a, c, d, b );
@@ -154,7 +154,7 @@ class Triangulate {
             poly[ l ] = node.value;
             ++l;
             node = node.next;
-        } while (node !== linkedPoly);
+        } while (node != linkedPoly);
         return poly;
     }
     
@@ -163,7 +163,7 @@ class Triangulate {
     function aux( a: Vector2, b: Vector2, node: NodeInt ): Bool {
         var c = vertices[ node.value ];
         var d = vertices[ node.next.value ];
-        return c !== a && c !== b && d !== a && d !== b && Geom2.edgesIntersect( a, b, c, d );
+        return c != a && c != b && d != a && d != b && Geom2.edgesIntersect( a, b, c, d );
     }
     
     // "ok"
@@ -178,7 +178,7 @@ class Triangulate {
                         ,   nodeBeg:    NodeInt
                         ,   nodeEnd:    NodeInt ): Bool {
        var out = false;
-       if( nodeEnd === null ) {
+       if( nodeEnd == null ) {
          if( aux( a, b, nodeBeg ) ){
              out = true;
          } else {
