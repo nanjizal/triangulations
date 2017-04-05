@@ -1,6 +1,7 @@
 package triangulations;
 import triangulations.Geom2;
-
+import khaMath.Vector2;
+@:forward
 abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
     inline public function new( v: Array<Vector2> ) {
       this = v;
@@ -15,7 +16,7 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
     // the area is 0.
     public inline
     function polygonOrientation( poly: Array<Int> ): Int {
-        var area = 0;
+        var area = 0.;
         var l = poly.length;
         var v = this[ poly[ l - 1 ] ];
         for( i in 0...l ){
@@ -60,7 +61,7 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
     
     public inline
     function clone(): Vertices {
-        var v = new Vertices();
+        var v = getEmpty();
         var l = this.length;
         for( i in 0...l ){
             v[ i ].x = this[ i ].x;
@@ -80,12 +81,12 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
     function fit( width: Float, height: Float, ?margin: Float = 10 ){
         var xMin = Math.POSITIVE_INFINITY;
         var xMax = Math.NEGATIVE_INFINITY;
-        var yMin = Math.POSITIVE_INFINITY;;
+        var yMin = Math.POSITIVE_INFINITY;
         var yMax = Math.NEGATIVE_INFINITY;
         var l = this.length;
         for ( i in 0...this.length ) {
             var v = this[i];
-            var x = v.x
+            var x = v.x;
             var y = v.y;
             xMin = Math.min( x, xMin );
             xMax = Math.max( x, xMax );
@@ -102,7 +103,7 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         for( i in 0...this.length ) {
           var v = this[i];
           v.x = marginX + scale * (v.x - xMin);
-          v.y = marginY + scale * (v.y - yMin)
+          v.y = marginY + scale * (v.y - yMin);
         }
     }
     @:from
