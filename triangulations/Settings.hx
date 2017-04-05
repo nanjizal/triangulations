@@ -1,9 +1,11 @@
 package triangulations;
-import mathKha.Vector2D;
+import khaMath.Vector2;
+import triangulations.Vertices;
+import triangulations.Edges;
 // Unsure if this is needed, but added for refineForRupert
 class Settings {
-    public var vertices: Array<Vector2>;
-    public var edges: Array<Int>;
+    public var vertices: Vertices;
+    public var edges: Edges;
     public var k: Float;// Int?
     public var g: Float;// Int?
     public var d: Float;// Int?
@@ -13,12 +15,12 @@ class Settings {
     public var maxArea: Float; //Int?
 
     public function new(){
-        verticies = new Array<Vector2>();
-        edges = new Array<Int>();
-        default();
+        vertices = Vertices.getEmpty();
+        edges = Edges.getEmpty();
+        defaults();
     }
     
-    private var default(){
+    private function defaults(){
         k = 10;
         g = 10;
         d = 0.5;
