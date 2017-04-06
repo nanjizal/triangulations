@@ -218,7 +218,7 @@ class Triangulate {
               var maxDepthSq = 
                   if( bestNode != null ){
                       v = bestNode.value;
-                      acDistSq( vertices[ v ] )
+                      acDistSq( vertices[ v ] );
                   } else {
                     -1;
                   }
@@ -226,7 +226,7 @@ class Triangulate {
               var node = nodeBeg;
               do {
                   var v = vertices[ node.value ];
-                  if(v !== a && v !== b && v !== c && inabc( v )) {
+                  if(v != a && v != b && v != c && inabc( v )) {
                       var depthSq = acDistSq( v );
                       if( depthSq > maxDepthSq ) {
                           maxDepthSq = depthSq;
@@ -234,7 +234,7 @@ class Triangulate {
                       }
                   }
                   node = node.next;
-               } while (node !== nodeEnd);
+               } while (node != nodeEnd);
                
                return bestNode;
            };
@@ -261,7 +261,7 @@ class Triangulate {
                                   , j0:         Int ) {
     var enqueued = [];
     var cookie = 0;
-    return function  {
+    return function() {
       var queue = new Queue();
       ++cookie;
       // We use a helper function to enqueue triangles since our indexing is
@@ -270,12 +270,12 @@ class Triangulate {
       // Invalid triangles supported by external edges are rejected.
       function tryEnqueue( j: Int, k: Int ) {
         var t = 2 * j + k;
-        if( enqueued[ t ] === cookie || coEdges[ j ][ k ] === null ) return;
+        if( enqueued[ t ] == cookie || coEdges[ j ][ k ] == null ) return;
         queue.enqueue(t);
         var j0 = sideEdges[j].getByIndex( k );
         var j1 = sideEdges[j].getByIndex( 3 - k );
-        enqueued[t] = enqueued[2 * j0 + ( coEdges[j0].p === edges[j].p ? 0 : 1)]
-                    = enqueued[2 * j1 + ( coEdges[j1].p === edges[j].q ? 0 : 1)]
+        enqueued[t] = enqueued[2 * j0 + ( coEdges[j0].p == edges[j].p ? 0 : 1)]
+                    = enqueued[2 * j1 + ( coEdges[j1].p == edges[j].q ? 0 : 1)]
                     = cookie;
       }
 
@@ -289,7 +289,7 @@ class Triangulate {
         var a = vertices[ai];
         var bi = coEdges[j][k]; // :(
         var b = vertices[bi];
-        var ci = edges[j].q,   
+        var ci = edges[j].q;  
         var c = vertices[ci];
 
         if( Geom2.pointInTriangle(a, b, c)(p) ) return t;
@@ -872,7 +872,7 @@ class Triangulate {
       }
 
       // Amend external edges
-      function disjoint (i: Int, j: Int) { 
+      function disjoint( i: Int, j: Int ) { 
           return edges[j].p != i && edges[j].q != i;
       }
       for( j in 0...edges.length ){
