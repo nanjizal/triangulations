@@ -3,9 +3,11 @@ import triangulations.Geom2;
 @:forward
 abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     
-    inline public function new( v: Array<Edge> ) {
-      this = v;
+    inline public function new( ?v: Array<Edge> ) {
+        if( v == null ) v = getEmpty();
+        this = v;
     }
+    
     public inline static 
     function getEmpty(){
         return new Edges( new Array<Edge>() );
