@@ -12,14 +12,6 @@ import triangulations.Queue;
 class Triangulate {
     
     // "ok"
-    public static inline 
-    function arrToBack( a:Array<Int>, i: Int ){
-        var tmp = a[ i ];
-        a[ i ] = a[ a.length - 1 ];
-        a[ a.length - 1 ] = tmp;
-    } 
-    
-    // "ok"
     public static inline
     function triangulateSimple( vertices: Vertices, edges: Edges, faces /*, trace */ ) {
         for ( k in 0...faces.length ) {
@@ -27,50 +19,6 @@ class Triangulate {
             var l = edges.length;
             for( i in 0...diags ) edges[ l + i ] = diags[ i ];// concat Array.prototype.push.apply(edges, diags);
         }
-    }
-    
-    // "ok"
-    // Given edges along with their quad-edge datastructure, flips the chosen edge
-    // j, maintaining the quad-edge structure integrity.
-    public static inline
-    function flipEdge( edges: Edges, coEdges: Edges, sideEdges: Array<SideEdge>, j) {
-      var edge = edges[j];
-      var coEdge = coEdges[j];
-      var se = sideEdges[j];
-      var j0 = se.a;
-      var j1 = se.b;
-      var j2 = se.c;
-      var j3 = se.d;
-
-      // Amend side edges 
-      coEdges[j0].substitute( edge.p, coEdge.q);
-      se = sideEdge[j0];
-      se.substitute( j, j1 );
-      se.substitute( j3, j );
-
-      coEdges[j1].substitute( edge.p, coEdge.p);
-      se = sideEdges[j1];
-      se.substitute( j , j0);
-      se.substitute( j2, j );
-
-      coEdges[j2].substitute( edge.q, coEdge.p);
-      se = sideEdge[j2];
-      se.substitute( j , j3);
-      se.substitute( j1, j );
-
-      coEdges[j3].substitute( edge.q, coEdge.q);
-      se = sideEdge[j3];
-      se.substitute( j , j2);
-      se.substitute( j0, j );
-
-      // Flip
-      edges[j] = coEdges[j];
-      coEdges[j] = edge.clone(); // in order to not effect the input
-
-      // Amend primary edge
-      var tmp = sideEdges[j].a;
-      sideEdges[j].a = sideEdges[j].c;
-      sideEdges[j].c = tmp;
     }
     
     // "ok"
@@ -259,25 +207,26 @@ class Triangulate {
                                   , sideEdges:  Array<SideEdge>
                                   , p:          NodeInt
                                   , j0:         Int ) {
-    var enqueued = [];
-    var cookie = 0;
-    return function() {
-      var queue = new Queue();
-      ++cookie;
-      // We use a helper function to enqueue triangles since our indexing is
-      // ambiguous -- each triangle has three indices. To prevent multiple visits,
-      // all three are marked as already enqueued. Trianglea already enqueued and
-      // Invalid triangles supported by external edges are rejected.
-      function tryEnqueue( j: Int, k: Int ) {
-        var t = 2 * j + k;
-        if( enqueued[ t ] == cookie || coEdges[ j ][ k ] == null ) return;
-        queue.enqueue(t);
-        var j0 = sideEdges[j].getByIndex( k );
-        var j1 = sideEdges[j].getByIndex( 3 - k );
-        enqueued[t] = enqueued[2 * j0 + ( coEdges[j0].p == edges[j].p ? 0 : 1)]
+
+        var enqueued = [];
+        var cookie = 0;
+        return function() {
+            var queue = new Queue();
+            ++cookie;
+            // We use a helper function to enqueue triangles since our indexing is
+            // ambiguous -- each triangle has three indices. To prevent multiple visits,
+            // all three are marked as already enqueued. Trianglea already enqueued and
+            // Invalid triangles supported by external edges are rejected.
+            function tryEnqueue( j: Int, k: Int ) {
+                var t = 2 * j + k;
+                if( enqueued[ t ] == cookie || coEdges[ j ][ k ] == null ) return;
+                queue.enqueue(t);
+                var j0 = sideEdges[j].getByIndex( k );
+                var j1 = sideEdges[j].getByIndex( 3 - k );
+                enqueued[t] = enqueued[2 * j0 + ( coEdges[j0].p == edges[j].p ? 0 : 1)]
                     = enqueued[2 * j1 + ( coEdges[j1].p == edges[j].q ? 0 : 1)]
                     = cookie;
-      }
+        }
 
       // We start at two triangles adjecent to edge j.
       tryEnqueue( j0, 0); 
@@ -305,7 +254,8 @@ class Triangulate {
         if (!edges[jc].fixed)
           tryEnqueue(jc, coEdges[jc].p == ci ? 1 : 0);
       }
-    }})();
+    }
+}
     
     
     // "Maybe OK"
@@ -407,75 +357,6 @@ class Triangulate {
       return affectedEdges;
     }
     
-    function tryInsertPoint ( vertices: Vertices, edges: Edges, coEdges: Edges, sideEdges, p, j0) {
-      var t = findEnclosingTriangle(vertices, edges, coEdges, sideEdges, p, j0);
-      if (t === undefined)
-        throw "impossibru";//return { success: true, affectedEdges: [] };
-
-      var k = t % 2, j = (t - k) / 2;
-      var edge = edges[ j ]
-      var coEdge = coEdges[ j ];
-      var ai = edge.p;
-      var a = vertices[ ai ];
-      var bcj = sideEdges[ j ].getByIndex( k );
-      var bi = coEdge[ k ];
-      var b = vertices[ bi ];
-      var caj = j;
-      var ci = edge.q;
-      var c = vertices[ ci ]; 
-      var abj = sideEdges[ j ].getByIndex( 3 - k );
-
-      var encroachedEdges = [];
-      if( edges[bcj].fixed && pointEncroachesEdge( b, c, p ) ) encroachedEdges.push( bcj );
-      if( edges[caj].fixed && pointEncroachesEdge( c, a, p ) ) encroachedEdges.push( caj );
-      if( edges[abj].fixed && pointEncroachesEdge( a, b, p ) ) encroachedEdges.push( abj );
-      if (encroachedEdges.length > 0)
-        return { success: false, encroachedEdges: encroachedEdges };
-
-      var pi = vertices.push(p) - 1;
-      edges.push( new Edge( pi, ai ) );
-      var paj = edges.length - 1;
-      edges.push( new Edge( pi, bi ) );
-      var pbj = edges.length - 1;
-      edges.push( new Edge( pi, ci ));
-      var pcj = edges.length - 1;
-
-      coEdges[ paj ] = new Edge( bi, ci );
-      sideEdges[ paj ] = new SideEdge( abj, caj, pcj, pbj );
-
-      coEdges[ pbj ] = new Edge( ci, ai );
-      sideEdges[ pbj ] = new SideEdge( bcj, abj, paj, pcj );
-
-      coEdges[ pcj ] = new Edge( ai, bi );
-      sideEdges[ pcj ] = new SideEdge( caj, bcj, pbj, paj );
-
-      coEdges[bcj].substitute( ai, pi );
-      sideEdges[bcj].substitute( caj, pcj );
-      sideEdges[bcj].substitute( abj, pbj );
-
-      coEdges[caj].substitute( bi, pi );
-      sideEdges[caj].substitute( abj, paj );
-      sideEdges[caj].substitute( bcj, pcj );
-
-      arraySubst2(
-      coEdges[abj].substitute( ci, pi );
-      sideEdges[abj].substitute( bcj, pbj );
-      sideEdges[abj].substitute( caj, paj );
-
-      var unsureEdges = [];
-      if( !edges[bcj].fixed ) unsureEdges.push(bcj);
-      if( !edges[caj].fixed ) unsureEdges.push(caj);
-      if( !edges[abj].fixed ) unsureEdges.push(abj);
-
-      return {
-        success: true,
-        affectedEdges: maintainDelaunay(    vertices
-                                        ,   edges
-                                        ,   coEdges
-                                        ,   sideEdges
-                                        ,   unsureEdges )
-      };
-    }
     
     // "ok?"
     public static inline 
@@ -684,118 +565,7 @@ class Triangulate {
             return diagonals;
                  
         }
-        
-        // "NOT OK!"
-        public static inline 
-        function refineToRuppert( vertices:     Vertices
-                                , edges:        Edges
-                                , coEdges:      Edges
-                                , sideEdges:    Array<SideEdge>
-                                , settings:     Settings ) {
-            var encroached = [];
-            var bad = [];
-            if( settings == null ) settings = new Settings();
-            if( settings.maxSteinerPoints = null ) settings.makeSteinerPonts = 50;
-            steinerLeft = settings.maxSteinerPoints;
-            minAngle = settings.minAngle;
-            maxArea = settings.maxArea;
-            var isBad = triangleIsBad(minAngle, maxArea);
-            var encroachedEdges = [];
-            var badTriangles = [];
 
-          for( j = 0...edges.length ){
-            if (edges[j].fixed) {
-              encroachedEdges.push(j);
-              encroached[j] = true;
-            }
-            badTriangles.push(j);
-            bad[j] = true;
-          }
-
-          while (
-            steinerLeft > 0 &&
-            (encroachedEdges.length > 0 || badTriangles.length > 0)
-          ) {
-            var affectedEdges = 0;
-            var forceSplit = [];
-            var traceEntry = {};
-            if (encroachedEdges.length > 0) {
-              var s = Math.floor(Math.random() * encroachedEdges.length);
-              arrToBack(encroachedEdges, s);
-              var j = encroachedEdges.pop();
-              encroached[j] = false;
-              if( edgeIsEncroached( vertices, edges, coEdges, j ) ) {
-                affectedEdges = splitEdge( vertices, edges, coEdges, sideEdges, j );
-                --steinerLeft;
-                traceEntry.split = [j];
-              }
-            } else if (badTriangles.length > 0) {
-              var s = Math.floor(Math.random() * badTriangles.length);
-              arrToBack( badTriangles, s );
-              var j = badTriangles[badTriangles.length - 1];
-              var edge = edges[j];
-              var coEdge = coEdges[j];
-              var a = vertices[ edge.p ];
-              var c = vertices[ edge.q ];
-              var okCnt = 0;
-              for( k in 0...2 ) { // NOT Ideal!!
-                if (coEdge[k] === undefined) {
-                  ++okCnt;
-                  continue;
-                }
-                var b = vertices[coEdge[k]];
-                if (!isBad(a, b, c)) {
-                  ++okCnt;
-                  continue;
-                }
-                var p = geom.circumcenter(a, b, c);
-                var insert = tryInsertPoint(vertices, edges, coEdges, sideEdges, p, j);
-                if (insert.success) {
-                  affectedEdges = insert.affectedEdges;
-                  --steinerLeft;
-                  traceEntry.insert = 2 * j + k;
-                } else {
-                  forceSplit = insert.encroachedEdges;
-                }
-                break;
-              }
-              if (okCnt == 2) {
-                badTriangles.pop();
-                bad[j] = false;
-              }
-            }
-
-            if (forceSplit.length > 0)
-              traceEntry.split = [];
-            while (forceSplit.length > 0 && steinerLeft > 0) {
-              var j = forceSplit.pop();
-              var affectedEdgesPart = splitEdge( vertices, edges, coEdges, sideEdges, j );
-              Array.prototype.push.apply(affectedEdges, affectedEdgesPart);
-              --steinerLeft;
-              traceEntry.split.push(j);
-            }
-
-            while (affectedEdges.length > 0) {
-              var j = affectedEdges.pop();
-              if (edges[j].fixed && !encroached[j]) {
-                encroachedEdges.push(j);
-                encroached[j] = true;
-              }
-              if (!bad[j]) {
-                badTriangles.push(j);
-                bad[j] = true;
-              }
-            }
-
-            if (
-              settings.trace !== undefined &&
-              (traceEntry.split !== undefined || traceEntry.insert !== undefined)
-            ) {
-              traceEntry.edgeCnt = edges.length;
-              settings.trace.push(traceEntry);
-            }
-          }
-        }})();
             
             
         // "NOT OK ??"
