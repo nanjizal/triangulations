@@ -3,8 +3,9 @@ import triangulations.Geom2;
 import khaMath.Vector2;
 @:forward
 abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
-    inline public function new( v: Array<Vector2> ) {
-      this = v;
+    inline public function new( ?v: Array<Vector2> ) {
+        if( v == null ) v = getEmpty();
+        this = v;
     }
     
     public inline static 
