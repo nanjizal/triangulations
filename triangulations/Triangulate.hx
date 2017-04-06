@@ -7,25 +7,187 @@ import triangulations.Edge;
 import triangulations.Edges;
 import triangulations.Vertices;
 import triangulations.Queue;
-
+import triangulations.Face;
 
 class Triangulate {
     
     // "ok"
     public static inline
-    function triangulateSimple( vertices: Vertices, edges: Edges, faces /*, trace */ ) {
-        for ( k in 0...faces.length ) {
-            var diags = triangulateFace( vertices, faces[ k ] /*, trace */ );
+    function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> /*, trace */ ) {
+        for ( k in 0...face.length ) {
+            var diags = triangulateFace( vertices, face[ k ] /*, trace */ );
             var l = edges.length;
-            for( i in 0...diags ) edges[ l + i ] = diags[ i ];// concat Array.prototype.push.apply(edges, diags);
+            for( i in 0...l ) edges[ l + i ] = diags[ i ];// concat Array.prototype.push.apply(edges, diags);
         }
+    }
+    
+    
+    // "Maybe OK?"
+    public static //inline
+    function triangulateFace(  vertices:   Vertices
+                            ,  face:      Array<Face> ){
+        // Convert the polygon components into linked lists. We assume the first
+        // polygon is the outermost, and the rest, if present, are holes.
+        var polies = [ makeLinkedPoly( face[ 0 ] ) ];
+        var holes = [];
+        var l = face.length;
+        for ( k in 1...l ){
+          holes.push( makeLinkedPoly( face[ k ] ) );
+        }
+        
+        // We handle only the outer polygons. We start with only one, but more are
+        // to come because of splitting. The holes are eventually merged in.
+        // In each iteration a diagonal is added.
+        var diagonals = new Edges();
+        while( polies.length > 0 ){
+            var poly = polies.pop();
+
+            // First we find a locally convex vertex.
+            var node = poly;
+            var a: Vector2;
+            var b: Vector2;
+            var c: Vector2;
+            var convex = false;
+            do {
+                a = vertices[ node.prev.value ];
+                b = vertices[ node.value ];
+                c = vertices[ node.next.value ];
+                convex = (a.span(b)).cross(b.span(c)) < 0;
+                node = node.next;
+            } while( !convex && node != poly);
+
+            if(!convex) continue;
+            var aNode = node.prev.prev;
+            var bNode = node.prev;
+            var cNode = node;
+
+            // We try to make a diagonal out of ac. This is possible only if it lies
+            // completely inside the polygon.
+            var acOK = true;
+
+            // Ensuring there are no intersections of ac with other edges doesn't
+            // guarantee that ac lies within the poly. It is also possible that the
+            // whole polygon is inside the triangle abc. Therefore we early reject the
+            // case when the immediate neighbors of vertices a and c are inside abc.
+            // Note that if ac is already an edge, it will also be rejected.
+            var inabc = Geom2.pointInTriangle( a, b, c );
+            acOK = !inabc( vertices[ aNode.prev.value ] ) && !inabc( vertices[ cNode.next.value ] );
+            
+            // Now we proceed with checking the intersections with ac.
+            if( acOK ) acOK = !intersects( a, c, vertices, cNode.next, aNode.prev );
+            
+            var holesLen = holes.length;
+            for( l in 0...holesLen ){
+                if( !acOK ) break;
+                acOK = !intersects( a, c, vertices, holes[ l ] );
+            }
+            
+            var split;
+            var fromNode;
+            var toNode;
+            
+            if (acOK) {
+              // No intersections. We can easily connect a and c.
+              fromNode = cNode;
+              toNode = aNode;
+              split = true;
+            } else {
+              // If there are intersections, we have to find the closes vertex to b in
+              // the direction perpendicular to ac, i.e., furthest from ac. It is
+              // guaranteed that such a vertex forms a legal diagonal with b.
+              var findBest = findDeepestInside(a, b, c);
+              var best = 
+                  if( cNode.next != aNode ){
+                      findBest( vertices, cNode.next, aNode );
+                  } else {
+                      null; 
+                  }
+              var lHole = -1;
+              var holesLen = holes.length;// TODO: check if need to redefine does findBest effect?
+              for( l in 0...holesLen ) {
+                  var newBest = findBest( vertices, holes[l], holes[l], best );
+                  if( newBest != best ) lHole = l;
+                  best = newBest;
+              }
+            
+              fromNode = bNode;
+              toNode = best;
+
+              if( lHole < 0 ){
+                // The nearest vertex does not come from a hole. It is lies on the outer
+                // polygon itself (or is undefined).
+                split = true;
+              } else {
+                // The nearest vertex is found on a hole. The hole will be merged into
+                // the currently processed poly, so we remove it from the hole list.
+                holes.splice( lHole, 1 );
+                split = false;
+              }
+              
+              if( toNode == null ) {
+                // It was a triangle all along!
+                continue;
+              }
+
+              diagonals.push( new Edge( fromNode.value, toNode.value ) );
+              //if (trace !== undefined) {
+                //trace.push({
+                  //selectFace: makeArrayPoly( poly ),
+                  //addDiag: [fromNode.value, toNode.value ]
+                //});
+              //}
+
+              // TODO: Elaborate
+              var poly1 = new Node( fromNode.value );
+              poly1.next = fromNode.next; 
+              var tempNode = new Node( toNode.value );
+              tempNode.prev = toNode.prev;
+              tempNode.next = poly1;
+              poly1.prev = tempNode;
+              fromNode.next.prev = poly1;
+              toNode.prev.next = poly1.prev;
+
+              fromNode.next = toNode;
+              toNode.prev = fromNode;
+              var poly2 = fromNode;
+
+              if( split ){
+                  polies.push( poly1 );
+                  polies.push( poly2 );
+              } else {
+                  polies.push( poly2 );
+              }
+            }
+            
+                 
+        }
+        return diagonals;
+    }
+    
+    // "ok"
+    // Given a polygon as a list of vertex indices, returns it in a form of
+    // a doubly linked list.
+    public static inline
+    function makeLinkedPoly( face: Array<Int> ): NodeInt {
+        var linkedPoly = new NodeInt( face[ 0 ] );
+        var node = linkedPoly;
+        var l = face.length;
+        for( i in 1...l ) {
+            var prevNode = node;
+            node = new NodeInt( face[ i ] );
+            prevNode.next = node;
+            node.prev = prevNode;
+        }
+        node.next = linkedPoly;
+        linkedPoly.prev = node;
+        return linkedPoly;
     }
     
     // "ok"
     public static inline
     function isDelaunayEdge(    vertices:   Vertices
-                            ,   edge:       Edges
-                            ,   coEdge:     Edges ): Bool{
+                            ,   edge:       Edge
+                            ,   coEdge:     Edge ): Bool{
       var a = vertices[ edge.p ];
       var c = vertices[ edge.q ];
       var b = vertices[ coEdge.p ];
@@ -34,6 +196,91 @@ class Triangulate {
              !Geom2.pointInCircumcircle( a, c, d, b );
     }
     
+    // "ok"
+    // Checks wether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
+    // If nodeEnd is not provided, nodeBeg is interpreted as lying on a cycle and
+    // the whole cycle is tested. Edges spanned on equal (===) vertices are not
+    // considered intersecting.
+    public static inline
+    function intersects(    a:          Vector2
+                        ,   b:          Vector2
+                        ,   vertices:   Vertices
+                        ,   nodeBeg:    NodeInt
+                        ,   ?nodeEnd:    NodeInt = null ): Bool {
+       var out = false;
+       if( nodeEnd == null ) {
+         if( aux( vertices, a, b, nodeBeg ) ){
+             out = true;
+         } else {
+             nodeEnd = nodeBeg;
+             nodeBeg = nodeBeg.next;
+         }
+      }
+      if( out!= true ){
+          var node = nodeBeg;
+          while( node!= nodeEnd ){
+              if( aux( vertices, a, b, node ) ){ 
+                  out = true;
+                  break;
+              } else {
+                  node = node.next;
+              }
+          }
+      }
+      return out;
+    }
+    
+    // "ok"
+    public static inline
+    function aux( vertices: Vertices, a: Vector2, b: Vector2, node: NodeInt ): Bool {
+        var c = vertices[ node.value ];
+        var d = vertices[ node.next.value ];
+        return c != a && c != b && d != a && d != b && Geom2.edgesIntersect( a, b, c, d );
+    }
+    
+    // "ok"
+    public static inline
+    function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
+                            : Vertices -> NodeInt -> NodeInt -> ?NodeInt -> NodeInt {
+      
+      var inabc     = Geom2.pointInTriangle( a, b, c );
+      var acDistSq  = Geom2.pointToEdgeDistSq( a, c );
+      
+      return 
+          function( vertices: Vertices
+                  , nodeBeg: NodeInt
+                  , nodeEnd: NodeInt
+                  , ?bestNode: NodeInt = null ): NodeInt {
+                      
+              var v: Int; 
+              var maxDepthSq = 
+                  if( bestNode != null ){
+                      v = bestNode.value;
+                      acDistSq( vertices[ v ] );
+                  } else {
+                    -1;
+                  }
+              
+              var node = nodeBeg;
+              do {
+                  var v = vertices[ node.value ];
+                  if(v != a && v != b && v != c && inabc( v )) {
+                      var depthSq = acDistSq( v );
+                      if( depthSq > maxDepthSq ) {
+                          maxDepthSq = depthSq;
+                          bestNode = node;
+                      }
+                  }
+                  node = node.next;
+               } while (node != nodeEnd);
+               
+               return bestNode;
+           };
+    }
+    
+}
+    
+    /*
     // "ok"
     // Given edges along with their quad-edge datastructure, flips the chosen edge
     // j if it doesn't form a Delaunay triangulation with its enclosing quad.
@@ -74,23 +321,7 @@ class Triangulate {
     }
     
     
-    // "ok"
-    // Given a polygon as a list of vertex indices, returns it in a form of
-    // a doubly linked list.
-    public static inline
-    function makeLinkedPoly( face: Array<Int> ): NodeInt {
-        var linkedPoly = new NodeInt( face[ 0 ] );
-        var node = linkedPoly;
-        for( i in 1...poly.length ) {
-            var prevNode = node;
-            node = new NodeInt( face[ i ] );
-            prevNode.next = node;
-            node.prev = prevNode;
-        }
-        node.next = linkedPoly;
-        linkedPoly.prev = node;
-        return linkedPoly;
-    }
+
     
     // "ok"
     public static inline
@@ -106,87 +337,8 @@ class Triangulate {
         return poly;
     }
     
-    // "ok"
-    public static inline
-    function aux( a: Vector2, b: Vector2, node: NodeInt ): Bool {
-        var c = vertices[ node.value ];
-        var d = vertices[ node.next.value ];
-        return c != a && c != b && d != a && d != b && Geom2.edgesIntersect( a, b, c, d );
-    }
     
-    // "ok"
-    // Checks wether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
-    // If nodeEnd is not provided, nodeBeg is interpreted as lying on a cycle and
-    // the whole cycle is tested. Edges spanned on equal (===) vertices are not
-    // considered intersecting.
-    public static inline
-    function intersects(    a:          Vector2
-                        ,   b:          Vector2
-                        ,   vertices:   Vertices
-                        ,   nodeBeg:    NodeInt
-                        ,   nodeEnd:    NodeInt ): Bool {
-       var out = false;
-       if( nodeEnd == null ) {
-         if( aux( a, b, nodeBeg ) ){
-             out = true;
-         } else {
-             nodeEnd = nodeBeg;
-             nodeBeg = nodeBeg.next;
-         }
-      }
-      if( out!= true ){
-          var node = nodeBeg;
-          while( node!= nodeEnd ){
-              if( aux( a, b, node ) ){ 
-                  out = true;
-                  break;
-              } else {
-                  node = node.next;
-              }
-          }
-      }
-      return out;
-    }
-    
-    // "ok"
-    public static inline
-    function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
-                            : Vertices -> NodeInt -> NodeInt -> NodeInt -> NodeInt {
-      
-      var inabc     = Geom2.pointInTriangle( a, b, c );
-      var acDistSq  = Geom2.pointToEdgeDistSq( a, c );
-      
-      return 
-          function( vertices: Vertices
-                  , nodeBeg: NodeInt
-                  , nodeEnd: NodeInt
-                  , bestNode: NodeInt ): NodeInt {
-                      
-              var v: NodeInt; 
-              var maxDepthSq = 
-                  if( bestNode != null ){
-                      v = bestNode.value;
-                      acDistSq( vertices[ v ] );
-                  } else {
-                    -1;
-                  }
-              
-              var node = nodeBeg;
-              do {
-                  var v = vertices[ node.value ];
-                  if(v != a && v != b && v != c && inabc( v )) {
-                      var depthSq = acDistSq( v );
-                      if( depthSq > maxDepthSq ) {
-                          maxDepthSq = depthSq;
-                          bestNode = node;
-                      }
-                  }
-                  node = node.next;
-               } while (node != nodeEnd);
-               
-               return bestNode;
-           };
-    }
+
     
     // "NOT OK - requires more work and thought"
     
@@ -376,7 +528,7 @@ class Triangulate {
     }
     
     // "NOT OK - needs a lot more thought and work."
-    public static /* inline */ 
+    public static 
     function maintainDelaunay() {
     var unsure = new Array<Bool>();
     var tried = new Array<Bool>();
@@ -534,12 +686,12 @@ class Triangulate {
               }
 
               diagonals.push( [ fromNode.value, toNode.value ] );
-              /*if (trace !== undefined) {
-                trace.push({
-                  selectFace: makeArrayPoly( poly ),
-                  addDiag: [fromNode.value, toNode.value ]
-                });
-              }*/
+              //if (trace !== undefined) {
+                //trace.push({
+                  //selectFace: makeArrayPoly( poly ),
+                  //addDiag: [fromNode.value, toNode.value ]
+                //});
+              //}
 
               // TODO: Elaborate
               var poly1 = new Node( fromNode.value );
@@ -664,4 +816,4 @@ class Triangulate {
 
       //return { coEdges: coEdges, sideEdges: sideEdges };
     }
-    }}
+    }}*/
