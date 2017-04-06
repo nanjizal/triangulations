@@ -11,10 +11,10 @@ class Graph {
     public function new(    vertices_:  Vertices
                         ,   edges_:     Edges
                         ,   faces_:     Array<Array<Face>> ){
-        if( vertices_ == null ) vertices_ = new Vertices();
-        if( edges_ == null ) edges_ = new Edges();
-        if( faces_ == null ) faces_ = new Array<Array<Face>>();
-        if( faces_[0] == null ) faces_[0] = new Array<Face>();
+        if( vertices_ == null ) vertices_       = new Vertices();
+        if( edges_ == null ) edges_             = new Edges();
+        if( faces_ == null ) faces_             = new Array<Array<Face>>();
+        if( faces_[0] == null ) faces_[0]       = new Array<Face>();
         if( faces_[0][0] == null ) faces_[0][0] = new Array<Int>();
         vertices   = vertices_;
         edges       = edges_;
@@ -108,14 +108,14 @@ class Graph {
                  if (kBest < 0) kBest = 0;
                  
                  // Mark the next edge as taken.
-                 jBest = outEdges[i][kBest];
+                 var jBest = outEdges[i][kBest];
                  taken[jBest] = true;
                  outEdges[i][kBest] = outEdges[i].pop(); // Tricky array remove.
                  
                  // Proceed
                  poly.push(i);
                  iPrev = i;
-                 i = edges[jBest][1];
+                 i = edges[jBest].q;
             }
             polies.push(poly);
         }
@@ -127,7 +127,7 @@ class Graph {
         var faces = [];
         var holes = [];
         for( k in 0...polies.length ){
-            if( Geom2.polygonOrientation( vertices, polies[ k ] ) > 0){
+            if( vertices.polygonOrientation( polies[ k ] ) > 0){
                 faces.push([polies[k]]);
             } else {
               holes.push(polies[k]);
@@ -143,7 +143,7 @@ class Graph {
             var foundFace = false;
             for( k in 0...faces.length ){
                 var poly = faces[k][0];
-                if( Geom2.pointInPolygon( vertices, poly, v ) ){
+                if( vertices.pointInPolygon( poly, v ) ){
                     faces[ k ].push( hole );
                     foundFace = true;
                     break;
