@@ -57,4 +57,48 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         for( i in 0...l ) edges[ i ] = Edge.fromArray( arr[ i ] );
         return edges;
     }
+    
+    // "ok"
+    // Given edges along with their quad-edge datastructure, flips the chosen edge
+    // j, maintaining the quad-edge structure integrity.
+    public inline
+    function flipEdge( coEdges: Edges, sideEdges: Array<SideEdge>, j: Int ) {
+      var edge = this[j];
+      var coEdge = coEdges[j];
+      var se = sideEdges[j];
+      var j0 = se.a;
+      var j1 = se.b;
+      var j2 = se.c;
+      var j3 = se.d;
+
+      // Amend side edges 
+      coEdges[j0].substitute( edge.p, coEdge.q);
+      se = sideEdges[j0];
+      se.substitute( j, j1 );
+      se.substitute( j3, j );
+
+      coEdges[j1].substitute( edge.p, coEdge.p);
+      se = sideEdges[j1];
+      se.substitute( j , j0);
+      se.substitute( j2, j );
+
+      coEdges[j2].substitute( edge.q, coEdge.p);
+      se = sideEdges[j2];
+      se.substitute( j , j3);
+      se.substitute( j1, j );
+
+      coEdges[j3].substitute( edge.q, coEdge.q);
+      se = sideEdges[j3];
+      se.substitute( j , j2);
+      se.substitute( j0, j );
+
+      // Flip
+      this[j] = coEdges[j];
+      coEdges[j] = edge.clone(); // in order to not effect the input
+
+      // Amend primary edge
+      var tmp = sideEdges[j].a;
+      sideEdges[j].a = sideEdges[j].c;
+      sideEdges[j].c = tmp;
+    }
 }
