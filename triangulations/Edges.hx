@@ -7,7 +7,6 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         if( v == null ) v = getEmpty();
         this = v;
     }
-    
     public inline static 
     function getEmpty(){
         return new Edges( new Array<Edge>() );
@@ -23,7 +22,7 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     
     public inline
     function clone(): Edges {
-        var e = getEmpty();
+        var e = new Edges();
         var l = this.length;
         for( i in 0...l ){
             e[ i ].p = this[ i ].p;
@@ -53,10 +52,12 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         for( i in 0...el ) this[ l + i ] = e[ i ];
     }
     @:from
-    static public function fromArrayArray( arr:Array<Array<Null<Int>>> ) {
+    static public function fromArrayArray( arr: Array<Array<Null<Int>>> ) {
         var edges: Edges = getEmpty();
         var l = arr.length;
-        for( i in 0...l ) edges[ i ] = Edge.fromArray( arr[ i ] );
+        for( i in 0...l ) {
+            edges[ i ] = Edge.fromArray( arr[ i ] );
+        }
         return edges;
     }
     
