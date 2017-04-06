@@ -15,8 +15,8 @@ class Settings {
     public var maxArea: Float; //Int?
 
     public function new(){
-        vertices = Vertices.getEmpty();
-        edges = Edges.getEmpty();
+        vertices = new Vertices();
+        edges = new Edges();
         defaults();
     }
     
