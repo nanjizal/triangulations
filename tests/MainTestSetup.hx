@@ -7,6 +7,9 @@ import triangulations.Node;
 import triangulations.Queue;
 import triangulations.SideEdge;
 import triangulations.Settings;
+import triangulations.Graph;
+//import triangulations.Rupert;
+import triangulations.Triangulate;
 class MainTestSetup {
     
     static function main(){
