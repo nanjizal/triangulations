@@ -1,6 +1,6 @@
 package triangulations;
 
-import mathKha.Vector2;
+import khaMath.Vector2;
 import triangulations.Node;
 import triangulations.SideEdge;
 import triangulations.Edge;
@@ -286,7 +286,7 @@ class Triangulate {
       var j0;
       var j3;
       if( ib != null ){
-        edges.push( new Edge( ib, ip ) )
+        edges.push( new Edge( ib, ip ) );
         jb =  edges.length - 1;
         j0 = sideEdges[j].a; 
         j3 = sideEdges[j].d;
@@ -306,10 +306,10 @@ class Triangulate {
         if (!edges[j3].fixed)  unsureEdges.push( j3 );
       }
       var jd = null;
-      var j1 = null, 
+      var j1 = null;
       var j2 = null;
       
-      if (id !== null ) {
+      if (id != null ) {
         edges.push( new Edge( ip, id) );
         jd = edges.length - 1;
         j1 = sideEdges[j].b; 
@@ -352,8 +352,8 @@ class Triangulate {
                                           , unsureEdges );
       affectedEdges.push( ja );
       affectedEdges.push( jc );
-      if (jb !== null ) affectedEdges.push( jb );
-      if (jd !== null ) affectedEdges.push( jd );
+      if (jb != null ) affectedEdges.push( jb );
+      if (jd != null ) affectedEdges.push( jd );
       return affectedEdges;
     }
     
@@ -371,15 +371,15 @@ class Triangulate {
       var c = vertices[ edge.q ];
       var p = a.mid(c);
       var rSq = p.distSq(a);
-      return ( coEdge.p !== null && p.distSq( vertices[ coEdge.p ] ) <= rSq ) ||
-             ( coEdge.q !== null && p.distSq( vertices[ coEdge.q ] ) <= rSq );
+      return ( coEdge.p != null && p.distSq( vertices[ coEdge.p ] ) <= rSq ) ||
+             ( coEdge.q != null && p.distSq( vertices[ coEdge.q ] ) <= rSq );
     }
     
     // "NOT OK - needs a lot more thought and work."
     public static /* inline */ 
     function maintainDelaunay() {
-    var unsure = Array<Bool>;
-    var tried = Array<Bool>;
+    var unsure = new Array<Bool>();
+    var tried = new Array<Bool>();
     var cookie: Int = 0;
     return function(    vertices:   Vertices
                     ,   edges:      Edges
@@ -389,7 +389,7 @@ class Triangulate {
                     ) {
       ++cookie;
       var triedEdges = unsureEdges.slice();
-      for (var l = 0; l < unsureEdges.length; ++l) {
+      for( l in 0...unsureEdges.length ) {
         unsure[ unsureEdges[l] ] = true;
         tried[ unsureEdges[l] ] = cookie;
       }
@@ -405,10 +405,10 @@ class Triangulate {
         if ( !edges[j].fixed && ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j ) ) {
           traceEntry.flippedTo = edges[j].slice();
           var newUnsureCnt = 0;
-          for (var k = 0; k < 4; ++k) {
+          for( k in 0...4 ) {// TODO: refactor
             var jk = sideEdges[j].getIndexBy( k );
             if (!unsure[jk]) {
-              if (tried[jk] !== cookie) {
+              if (tried[jk] != cookie) {
                 triedEdges.push(jk);
                 tried[ jk ] = cookie;
               }
@@ -424,7 +424,7 @@ class Triangulate {
       }
 
       return triedEdges;
-    }})();
+    }}
     
     
     // "Maybe OK?"
@@ -435,7 +435,7 @@ class Triangulate {
         // polygon is the outermost, and the rest, if present, are holes.
         var polies = [ makeLinkedPoly( faces[ 0 ] ) ];
         var holes = [];
-        for (var k = 1; k < face.length; ++k) {
+        for ( k in 1...face.length ){
           holes.push( makeLinkedPoly( face[ k ] ) );
         }
         
@@ -458,7 +458,7 @@ class Triangulate {
                 c = vertices[ node.next.value ];
                 convex = (a.span(b)).cross(b.span(c)) < 0;
                 node = node.next;
-            } while(!convex && node !== poly);
+            } while( !convex && node != poly);
 
             if(!convex) continue;
             var aNode = node.prev.prev;
@@ -501,16 +501,16 @@ class Triangulate {
               // guaranteed that such a vertex forms a legal diagonal with b.
               var findBest = findDeepestInside(a, b, c);
               var best = 
-                  if( cNode.next !== aNode ){
+                  if( cNode.next != aNode ){
                       findBest( vertices, cNode.next, aNode );
                   } else {
-                      undefined; 
+                      null; 
                   }
               var lHole = -1;
               var holesLen = holes.length;// TODO: check if need to redefine does findBest effect?
               for( l in 0...holesLen ) {
                   var newBest = findBest( vertices, holes[l], holes[l], best );
-                  if( newBest !== best ) lHole = l;
+                  if( newBest != best ) lHole = l;
                   best = newBest;
               }
             
@@ -528,7 +528,7 @@ class Triangulate {
                 split = false;
               }
               
-              if (toNode == undefined) {
+              if( toNode == null ) {
                 // It was a triangle all along!
                 continue;
               }
@@ -651,7 +651,7 @@ class Triangulate {
         var ses = sideEdges[ j ];
 
         // If the whole mesh is a triangle, just remove one of the duplicate entries
-        if( ce.p === ce.q ) {
+        if( ce.p == ce.q ) {
           ce.q = ses.b = ses.c = null;
           continue;
         }
@@ -664,4 +664,4 @@ class Triangulate {
 
       //return { coEdges: coEdges, sideEdges: sideEdges };
     }
-}
+    }}
