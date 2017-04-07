@@ -14,7 +14,9 @@ import tests.fillShapes.Bannana;
 import tests.fillShapes.Guitar;
 import tests.fillShapes.Key;
 import tests.fillShapes.Sheet;
+import tests.fillShapes.Ty;
 import triangulations.FillShape;
+
 class MainTestSetup {
     
     static function main(){
@@ -27,6 +29,7 @@ class MainTestSetup {
         var fillShape: FillShape = new Guitar();
         var fillShape: FillShape = new Key();
         var fillShape: FillShape = new Sheet();
+        var fillShape: FillShape = new Ty();
     }
     
 }
