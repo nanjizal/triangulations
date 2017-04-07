@@ -16,7 +16,7 @@ import tests.fillShapes.Key;
 import tests.fillShapes.Sheet;
 import tests.fillShapes.Ty;
 import triangulations.FillShape;
-
+import khaMath.Vector2;
 // drawing specific
 import js.Browser;
 import khaMath.Matrix4;
@@ -47,14 +47,14 @@ class MainTestSetup {
         new MainTestSetup();
     }
     
-    public var bannana: FillShape;
+    public var banana: FillShape;
     public var guitar:  FillShape;
     public var key:     FillShape;
     public var sheet:   FillShape;
     public var ty:      FillShape;
     
     public function fillShapesCreate(){
-        bannana = new Bannana();
+        banana = new Bannana();
         guitar = new Guitar();
         key = new Key();
         sheet = new Sheet();
@@ -80,8 +80,17 @@ class MainTestSetup {
         var thick = 2;
         ctx = new PathContext( 1, 1000, 100, 100 );
         ctx.lineType = TriangleJoinCurve; // - default
-        ctx.moveTo( 50, 50 );
-        ctx.lineTo( 100, 100 );
+        drawBannana( ctx );
         ctx.render( thick, false ); 
+    }
+    public function drawBannana( ctx: PathContext ){
+        var v0 = banana.vertices[0];
+        var v: Vector2;
+        ctx.moveTo( v0.x, v0.y );
+        for( i in 1...banana.vertices.length ){
+            v = banana.vertices[i];
+            ctx.lineTo( v.x, v.y );
+        }
+        ctx.lineTo( v0.x, v0.y );
     }
 }
