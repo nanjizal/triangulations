@@ -2,7 +2,7 @@ package tests.fillShapes;
 import triangulations.FillShape;
 import triangulations.Face;
 
-abstract Bannana( FillShape ) from FillShape to FillShape {
+abstract Banana( FillShape ) from FillShape to FillShape {
     inline public function new(){
         this = new FillShape();
         this.vertices = [[132.84375, 99.5], [115.71875, 183.78125], [45.71875, 258.0625], [34.28125, 372.375], [60.0, 496.65625], [148.5625, 612.375], [308.5625, 653.78125], [432.84375, 613.78125], [505.71875, 525.21875], [480.0, 489.5], [315.71875, 459.5], [251.4375, 410.9375], [241.4375, 312.375], [215.71875, 225.21875], [177.15625, 189.5], [222.84375, 123.78125]];
