@@ -10,7 +10,8 @@ import triangulations.Settings;
 import triangulations.Graph;
 //import triangulations.Rupert;
 import triangulations.Triangulate;
-import tests.fillShapes.Bannana;
+import tests.fillShapes.Banana;
+import tests.fillShapes.Split;
 import tests.fillShapes.Guitar;
 import tests.fillShapes.Key;
 import tests.fillShapes.Sheet;
@@ -52,13 +53,15 @@ class MainTestSetup {
     public var key:     FillShape;
     public var sheet:   FillShape;
     public var ty:      FillShape;
+    public var split:   FillShape;
     
     public function fillShapesCreate(){
-        banana = new Bannana();
-        guitar = new Guitar();
-        key = new Key();
-        sheet = new Sheet();
-        ty = new Ty();
+        banana  = new Banana();
+        guitar  = new Guitar();
+        key     = new Key();
+        sheet   = new Sheet();
+        ty      = new Ty();
+        split   = new Split();
     }
     
     var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet ];   
@@ -80,15 +83,17 @@ class MainTestSetup {
         var thick = 2;
         ctx = new PathContext( 1, 1000, 100, 100 );
         ctx.lineType = TriangleJoinCurve; // - default
-        drawBannana( ctx );
+        drawVertices( banana, ctx );
         ctx.render( thick, false ); 
     }
-    public function drawBannana( ctx: PathContext ){
-        var v0 = banana.vertices[0];
+    public function drawVertices( fillShape: FillShape, ctx: PathContext ){
+        var verts = fillShape.vertices;
+        var v0 = verts[0];
         var v: Vector2;
         ctx.moveTo( v0.x, v0.y );
-        for( i in 1...banana.vertices.length ){
-            v = banana.vertices[i];
+        var l = verts.length;
+        for( i in 1...l ){
+            v = verts[i];
             ctx.lineTo( v.x, v.y );
         }
         ctx.lineTo( v0.x, v0.y );
