@@ -2,7 +2,7 @@ package tests.fillShapes;
 import triangulations.FillShape;
 import triangulations.Face;
 
-abstract TestAngle_compareShape( FillShape ) from FillShape to FillShape {
+abstract TestAngleCompareShape( FillShape ) from FillShape to FillShape {
     inline public function new(){
         this = new FillShape();
         this.vertices = [
