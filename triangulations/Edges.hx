@@ -25,8 +25,7 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         var e = new Edges();
         var l = this.length;
         for( i in 0...l ){
-            e[ i ].p = this[ i ].p;
-            e[ i ].q = this[ i ].q;
+            e[ i ] = new Edge( this[ i ].p, this[ i ].q );
         }
         return e;
     }
