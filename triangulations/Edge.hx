@@ -29,4 +29,10 @@ class Edge {
             p = y;
         }
     }
+    @:keep
+    public function toString() {
+        var p0 = p;
+        var q0 = q;
+        return 'Edge( $p0,$q0 )';
+    }
 }
