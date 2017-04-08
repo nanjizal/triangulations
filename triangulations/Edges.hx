@@ -104,4 +104,15 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
       sideEdges[j].a = sideEdges[j].c;
       sideEdges[j].c = tmp;
     }
+    public function toString() {
+        var out = 'Edges( ';
+        var e: Edge;
+        for( i in 0...this.length ){
+            e = this[i];
+            out += e.toString() + ',';
+        }
+        out = out.substr( 0, out.length - 1 );
+        out += ' )';
+        return out;
+    }
 }
