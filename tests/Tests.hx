@@ -53,11 +53,14 @@ class Tests {
     }
     
     function delaunayTest(){
-    
+        
     }
     
     function edgeIntersectTest(){
-    
+        var vert = edgeIntersectShape.vertices;
+        trace( 'Edge cross intersect ' + Geom2.edgesIntersect( vert[0], vert[1], vert[2], vert[3] ) );
+        trace( 'Edge parallel intersect ' + Geom2.edgesIntersect( vert[0], vert[2], vert[1], vert[3] ) );
+        trace( 'Edge parallel intersect ' + Geom2.edgesIntersect( vert[0], vert[2], vert[1], vert[3] ) );
     }
     
     function enclosingTriangleTest(){
