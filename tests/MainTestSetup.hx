@@ -88,15 +88,22 @@ class MainTestSetup {
         
     }
     
+    public static inline function drawPoint( ctx: PathContext, v: Vector2 ){
+        ctx.regularPoly( PolySides.hexacontagon, v.x, v.y, 5, 0 );
+        ctx.moveTo( v.x, v.y );
+    }
+    
     public function drawVertices( fillShape: FillShape, ctx: PathContext ){
         var verts = fillShape.vertices;
         var v0 = verts[0];
         var v: Vector2;
         ctx.moveTo( v0.x, v0.y );
+        drawPoint( ctx, v0 );
         var l = verts.length;
         for( i in 1...l ){
             v = verts[i];
             ctx.lineTo( v.x, v.y );
+            drawPoint( ctx, v );
         }
         ctx.lineTo( v0.x, v0.y );
     }
