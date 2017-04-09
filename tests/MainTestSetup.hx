@@ -11,11 +11,10 @@ import triangulations.Graph;
 //import triangulations.Rupert;
 import triangulations.Triangulate;
 import tests.fillShapes.Banana;
-import tests.fillShapes.Split;
 import tests.fillShapes.Guitar;
 import tests.fillShapes.Key;
 import tests.fillShapes.Sheet;
-import tests.fillShapes.Ty;
+import tests.fillShapes.Ty; 
 import triangulations.FillShape;
 import khaMath.Vector2;
 // drawing specific
@@ -31,6 +30,7 @@ import justTriangles.QuickPaths;
 import htmlHelper.tools.CSSEnterFrame;
 import justTriangles.SvgPath;
 import justTriangles.PathContextTrace;
+import tests.Tests;
 @:enum
 abstract RainbowColors( Int ){
     var Violet = 0x9400D3;
@@ -48,12 +48,12 @@ class MainTestSetup {
         new MainTestSetup();
     }
     
-    public var banana: FillShape;
-    public var guitar:  FillShape;
-    public var key:     FillShape;
-    public var sheet:   FillShape;
-    public var ty:      FillShape;
-    public var split:   FillShape;
+    var banana:  FillShape;
+    var guitar:  FillShape;
+    var key:     FillShape;
+    var sheet:   FillShape;
+    var ty:      FillShape;
+    var tests:   Tests;
     
     public function fillShapesCreate(){
         banana  = new Banana();
@@ -61,16 +61,16 @@ class MainTestSetup {
         key     = new Key();
         sheet   = new Sheet();
         ty      = new Ty();
-        split   = new Split();
     }
     
     var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet ];   
     public function new(){
+        trace( 'Testing Triangulations ');
         var webgl = Drawing.create( 570*2 );
         fillShapesCreate();
+        tests = new Tests();
         draw();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
-        trace( 'Testing Triangulations ');
     }
     
     public function draw(){
@@ -84,8 +84,10 @@ class MainTestSetup {
         ctx = new PathContext( 1, 1000, 100, 100 );
         ctx.lineType = TriangleJoinCurve; // - default
         drawVertices( banana, ctx );
-        ctx.render( thick, false ); 
+        ctx.render( thick, false );
+        
     }
+    
     public function drawVertices( fillShape: FillShape, ctx: PathContext ){
         var verts = fillShape.vertices;
         var v0 = verts[0];
