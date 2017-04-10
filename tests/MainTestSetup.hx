@@ -8,6 +8,7 @@ import triangulations.Queue;
 import triangulations.SideEdge;
 import triangulations.Settings;
 import triangulations.Graph;
+import triangulations.Face;
 //import triangulations.Rupert;
 import triangulations.Triangulate;
 import tests.fillShapes.Banana;
@@ -160,6 +161,7 @@ class MainTestSetup {
         ctx.fill = false; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
         drawVertices( banana, ctx );
+        //drawFaces( guitar, ctx );
         ctx.render( thick, false );
         webgl.clearVerticesAndColors();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
@@ -188,6 +190,35 @@ class MainTestSetup {
             v = verts[i];
             setVertexLimit( i, v.x, v.y );
         }
+    }
+    public function drawFaces( fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
+        var faces = guitar.faces;
+        var somefaces: Array<Face>;
+        var face: Face;
+        for( j in 0...faces.length ){
+            somefaces = faces[j];
+            for( k in 0...somefaces.length ){
+                face = somefaces[k];
+                for( i in 0...face.length ) drawFace( face, fillShape, ctx, showPoints );
+            }
+        }
+    }
+    public function drawFace( face: Face, fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
+        var verts = fillShape.vertices;
+        var l: Int = face.length;
+        var f0 = face[0];
+        var v0 = verts[f0];
+        var f: Int;
+        ctx.moveTo( v0.x, v0.y );
+        if( showPoints ) drawPoint( 0, ctx, v0 );
+        var v: Vector2;
+        for( i in 1...l ){
+            f = face[i];
+            v = verts[f];
+            ctx.lineTo( v.x, v.y );
+            if( showPoints ) drawPoint( f, ctx, v );
+        }
+        ctx.lineTo( v0.x, v0.y );
     }
     public function drawVertices( fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
         verts = fillShape.vertices;
