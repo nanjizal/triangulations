@@ -33,6 +33,7 @@ import htmlHelper.tools.CSSEnterFrame;
 import justTriangles.SvgPath;
 import justTriangles.PathContextTrace;
 import tests.Tests;
+import justTrianglesWebGL.InteractionSurface;
 // js Specifc
 import js.Browser;
 import js.html.HTMLDocument;
@@ -50,12 +51,7 @@ abstract RainbowColors( Int ){
     var Red    = 0xFF0000;
     var Black  = 0x000000;
 }
-typedef Limit = {
-    var left: Float;
-    var right: Float;
-    var top: Float;
-    var bottom: Float;
-}
+    
 class MainTestSetup {
     static function main(){
         new MainTestSetup();
@@ -66,13 +62,11 @@ class MainTestSetup {
     var sheet:   FillShape;
     var ty:      FillShape;
     var tests:   Tests;
-    var limits: Array<Limit> = [];
-    var doc: HTMLDocument;
-    var bg: DivElement;
-    var currVertex: Int; 
+
     var webgl: Drawing;
     var verts: Vertices;
     var ctx: PathContext;
+    var interactionSurface: InteractionSurface<Vector2>;
     public function fillShapesCreate(){
         banana  = new Banana();
         guitar  = new Guitar();
@@ -89,56 +83,8 @@ class MainTestSetup {
         dom.style.setProperty("pointer-events","none");
         tests = new Tests();
         draw();
-        createBackground();
-        initVerticesHits();
-    }
-    function createBackground(){
-        doc = Browser.document;
-        //doc.body.style.margin = '8px';
-        bg = doc.createDivElement();
-        bg.style.backgroundColor = '#cccccc';
-        bg.style.width = '1024px';
-        bg.style.height = '1024px';
-        bg.style.position = "absolute";
-        bg.style.left = '0px';
-        bg.style.top = '0px';
-        bg.style.zIndex = '-100';
-        bg.style.cursor = "default";
-        doc.body.appendChild( bg );
-        bg.addEventListener( 'mousedown', makePointsDragable );
-    }
-    function makePointsDragable( e: MouseEvent ){
-        var i: Int = hitVertex( e.clientX * 2, e.clientY * 2 );
-        if( i != null ) {
-            currVertex = i;
-            bg.style.cursor = "move";
-            bg.addEventListener( 'mousemove', repositionVertex );
-            bg.addEventListener( 'mouseup', killMouseMove );
-        }
-    }
-    function killMouseMove( e: MouseEvent ){
-        bg.style.cursor = "default";
-        bg.removeEventListener( 'mousemove', repositionVertex );
-        bg.removeEventListener( 'mouseup', killMouseMove );
-    }
-    function repositionVertex( e: MouseEvent ){
-        var x: Float = e.clientX ;
-        var y: Float = e.clientY ;
-        moveVertex( currVertex, x, y );
-    }
-    @:access( justTriangles.PathContext )
-    public function hitVertex( x: Float, y: Float ){
-        var aLimit: Limit;
-        var p = ctx.pt( x, y );
-        for( i in 0...limits.length ){
-            aLimit = limits[ i ];
-            if( p.x > aLimit.left && p.x < aLimit.right ){
-                if( p.y > aLimit.top && p.y < aLimit.bottom ){
-                    return i;
-                }
-            }
-        }
-        return null;
+        interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
+        interactionSurface.setup( banana.vertices, transform, draw );
     }
     public function draw(){
         trace('webgl drawing setup');
@@ -169,27 +115,11 @@ class MainTestSetup {
         ctx.regularPoly( PolySides.hexacontagon, v.x, v.y, 5, 0 );
         ctx.moveTo( v.x, v.y );
     }
-    function moveVertex( i: Int, x: Float, y: Float ){
-        setVertexLimit( i, x, y );
-        var v = verts[ i ];
-        v.x = (x ) * 2;
-        v.y = (y ) * 2;
-        draw();
-    }
     @:access( justTriangles.PathContext )
-    public inline function setVertexLimit( i: Int, x: Float, y: Float ){
-        var p0 = ctx.pt( x - 15, y - 15 );
-        var p1 = ctx.pt( x + 15, y + 15 );
-        limits[ i ] = cast { left: p0.x, top: p0.y, right: p1.x, bottom: p1.y };
+    public inline function transform( x: Float, y: Float ): Point {
+       return ctx.pt( x, y );
     }
-    public function initVerticesHits(){
-        var l = verts.length;
-        var v: Vector2;
-        for( i in 0...l ){
-            v = verts[i];
-            setVertexLimit( i, v.x, v.y );
-        }
-    }
+        
     public function drawFaces( fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
         var faces = guitar.faces;
         var somefaces: Array<Face>;
