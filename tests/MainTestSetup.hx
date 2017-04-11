@@ -39,6 +39,7 @@ import js.Browser;
 import js.html.HTMLDocument;
 import js.html.DivElement;
 import js.html.Event;
+import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 @:enum
 abstract RainbowColors( Int ){
@@ -85,20 +86,55 @@ class MainTestSetup {
         draw();
         interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
         interactionSurface.setup( banana.vertices, transform, draw );
+        //interactionSurface.setup( tests.edgeIntersectShape.vertices, transform, draw );
+        js.Browser.document.onkeydown = keyDownHandler;
+    }
+    function keyDownHandler( e: KeyboardEvent ) {
+        e.preventDefault();
+        if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
+            trace( "LEFT" );
+        } else if( e.keyCode == KeyboardEvent.DOM_VK_RIGHT ){
+            trace( "RIGHT" );
+        }
+        trace( e.keyCode );  
     }
     public function draw(){
-        trace('webgl drawing setup');
+        //trace('webgl drawing setup');
         Triangle.triangles = new Array<Triangle>();
+        bananaTest();
+        //edgeIntersectTest();
+        webgl.clearVerticesAndColors();
+        webgl.setTriangles( Triangle.triangles, cast rainbow );
+    }
+    
+    // not working??
+    function edgeIntersectTest(){
+        var vert = tests.edgeIntersectShape.vertices;
+        ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
+        ctx.fill = false;
+        var v0 = vert[0];
+        var v1 = vert[1];
+        var v2 = vert[2];
+        var v3 = vert[3];
+        if( Geom2.edgesIntersect( v0, v1, v2, v3 ) == true ){
+            ctx.setColor( 1 );
+        } else {
+            ctx.setColor( 3 );
+        }
+        drawEdges( tests.edgeIntersectShape.edges, tests.edgeIntersectShape, ctx, true );
+        ctx.render( thick, false );
+    }
+    
+    public function bananaTest(){
         
+        var thick = 4;
         var ctxFill = new PathContext( 2, 1024, 0, 0 );
         ctxFill.setColor( 0, 3 );
         ctxFill.fill = true; // with polyK
         ctxFill.lineType = TriangleJoinCurve;
         drawVertices( banana, ctxFill, false );
         ctxFill.render( thick, false );
-
-        
         ctx = new PathContext( 1, 1024, 0, 0 );
         ctx.setColor( 0 );
         ctx.fill = false; // with polyK 
@@ -107,10 +143,8 @@ class MainTestSetup {
         //drawFaces( guitar, ctx );
         drawVerticesPoints( banana, ctx, 6, 1 );
         ctx.render( thick, false );
-            
-        webgl.clearVerticesAndColors();
-        webgl.setTriangles( Triangle.triangles, cast rainbow );
     }
+    
     public static inline function drawPoint( i: Int, ctx: PathContext, v: Vector2 ){
         ctx.regularPoly( PolySides.hexacontagon, v.x, v.y, 5, 0 );
         ctx.moveTo( v.x, v.y );
@@ -148,6 +182,25 @@ class MainTestSetup {
             if( showPoints ) drawPoint( f, ctx, v );
         }
         ctx.lineTo( v0.x, v0.y );
+    }
+    public function drawEdges( edges: Edges, fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
+        var verts = fillShape.vertices;
+        var l: Int = edges.length;
+        var e: Edge;
+        var v: Vector2;
+        var p: Int;
+        var q: Int;
+        for( i in 0...l ){
+            e = edges[i];
+            p = e.p;
+            q = e.q;
+            v = verts[p];
+            ctx.moveTo( v.x, v.y );
+            if( showPoints ) drawPoint( p, ctx, v );
+            v = verts[q];
+            ctx.lineTo( v.x, v.y );
+            if( showPoints ) drawPoint( q, ctx, v );
+        }
     }
     public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int ){
         verts = fillShape.vertices;
