@@ -143,26 +143,25 @@ class MainTestSetup {
     public function draw(){
         trace('webgl drawing setup');
         Triangle.triangles = new Array<Triangle>();
-        Draw.colorFill_id = 3;
-        Draw.colorLine_id = 3;
-        Draw.extraLine_id = 3;
-        Draw.extraFill_id = 3;
         var thick = 4;
+        
         var ctxFill = new PathContext( 2, 1024, 0, 0 );
+        ctxFill.setColor( 0, 3 );
         ctxFill.fill = true; // with polyK
         ctxFill.lineType = TriangleJoinCurve;
         drawVertices( banana, ctxFill, false );
         ctxFill.render( thick, false );
-        Draw.colorFill_id = 0;
-        Draw.colorLine_id = 0;
-        Draw.extraLine_id = 0;
-        Draw.extraFill_id = 0;
+
+        
         ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setColor( 0 );
         ctx.fill = false; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
-        drawVertices( banana, ctx );
+        //drawVertices( banana, ctx );
         //drawFaces( guitar, ctx );
+        drawVerticesPoints( banana, ctx, 6, 1 );
         ctx.render( thick, false );
+            
         webgl.clearVerticesAndColors();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
     }
@@ -219,6 +218,29 @@ class MainTestSetup {
             if( showPoints ) drawPoint( f, ctx, v );
         }
         ctx.lineTo( v0.x, v0.y );
+    }
+    public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int ){
+        verts = fillShape.vertices;
+        var v0 = verts[0];
+        var v: Vector2;
+        if( specialPoint == 0 ){
+            ctx.setColor( 1 );
+            drawPoint( 0, ctx, v0 );
+            ctx.setColor( 0 );
+        } else {
+            drawPoint( 0, ctx, v0 );
+        }
+        var l = verts.length;
+        for( i in 1...l ){
+            v = verts[i];
+            if( specialPoint == i ){
+                ctx.setColor( 1 );
+                drawPoint( i, ctx, v );
+                ctx.setColor( 0 );
+            } else {
+                drawPoint( i, ctx, v );
+            }
+        }
     }
     public function drawVertices( fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
         verts = fillShape.vertices;
