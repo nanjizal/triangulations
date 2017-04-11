@@ -19,6 +19,7 @@ class Tests {
     
     public function new(){
         createFillData();
+        /*
         angleCompareTest();
         delaunayTest();
         edgeIntersectTest();
@@ -29,7 +30,7 @@ class Tests {
         quadEdgeTest();
         ruppertTest();
         splitTest();
-        triangulateTest();
+        triangulateTest();*/
     }
     
     public function createFillData(){
