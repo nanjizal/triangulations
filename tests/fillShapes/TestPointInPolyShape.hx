@@ -6,7 +6,7 @@ abstract TestPointInPolyShape( FillShape ) from FillShape to FillShape {
     inline public function new(){
         this = new FillShape();
         this.vertices = [
-                        [200., 300.],
+                        [500., 300.],
                         [100., 200.],
                         [100., 300.],
                         [300., 400.],
@@ -17,8 +17,8 @@ abstract TestPointInPolyShape( FillShape ) from FillShape to FillShape {
                         [200., 200.],
                         [200., 100.]
                         ];
-        this.edges = [];
-        var face: Face = [1, 2, 3, 4, 5, 6, 7, 8];
+        this.edges = [[]];
+        var face: Face = [1, 2, 3, 4, 5, 6, 7, 8, 9 ];
         this.faces = [[face]];
     }
 }
