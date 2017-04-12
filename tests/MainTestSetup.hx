@@ -84,9 +84,10 @@ class MainTestSetup {
         dom.style.setProperty("pointer-events","none");
         tests = new Tests();
         draw();
-        interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
-        interactionSurface.setup( banana.vertices, transform, draw );
+          interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
+        //interactionSurface.setup( banana.vertices, transform, draw );
         //interactionSurface.setup( tests.edgeIntersectShape.vertices, transform, draw );
+          interactionSurface.setup( tests.pointInPolyShape.vertices, transform, draw );
         js.Browser.document.onkeydown = keyDownHandler;
     }
     function keyDownHandler( e: KeyboardEvent ) {
@@ -98,16 +99,44 @@ class MainTestSetup {
         }
         trace( e.keyCode );  
     }
+    
     public function draw(){
         //trace('webgl drawing setup');
         Triangle.triangles = new Array<Triangle>();
-        bananaTest();
+        //bananaTest();
         //edgeIntersectTest();
+        pointInPolyTest();
         webgl.clearVerticesAndColors();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
     }
     
-    // not working??
+    function pointInPolyTest(){
+        var thick = 4;
+        var ctxFill = new PathContext( 2, 1024, 0, 0 );
+        ctxFill.setColor( 0, 3 );
+        ctxFill.fill = true; // with polyK
+        ctxFill.lineType = TriangleJoinCurve;
+        trace( tests.pointInPolyShape.vertices );
+        drawFaces( tests.pointInPolyShape, ctxFill, false );
+        ctxFill.render( thick, false );
+        
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setColor( 6 );
+        ctx.fill = false; // with polyK 
+        ctx.lineType = TriangleJoinCurve; // - default
+        var shape = tests.pointInPolyShape;
+        var col = if( shape.vertices.pointInPolygon( shape.faces[0][0], shape.vertices[0] )){
+            4;
+        } else {
+            1;
+        }
+        ctx.setColor( col );
+        drawSquare( 0, ctx, shape.vertices[0] );
+        trace( 'col ' + col );
+        drawVerticesPoints( tests.pointInPolyShape, ctx, 0, col, 5 );
+        ctx.render( thick, false );
+    }
+    
     function edgeIntersectTest(){
         var vert = tests.edgeIntersectShape.vertices;
         ctx = new PathContext( 1, 1024, 0, 0 );
@@ -135,17 +164,25 @@ class MainTestSetup {
         ctxFill.lineType = TriangleJoinCurve;
         drawVertices( banana, ctxFill, false );
         ctxFill.render( thick, false );
+        
         ctx = new PathContext( 1, 1024, 0, 0 );
         ctx.setColor( 0 );
         ctx.fill = false; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
         //drawVertices( banana, ctx );
         //drawFaces( guitar, ctx );
-        drawVerticesPoints( banana, ctx, 6, 1 );
+        drawVerticesPoints( banana, ctx, 0, 1, 4 );
         ctx.render( thick, false );
     }
     
+    public static inline function drawSquare( i: Int, ctx: PathContext, v: Vector2 ){
+        ctx.moveTo( v.x, v.y );
+        ctx.regularPoly( PolySides.square, v.x, v.y, 10, 0 );
+        ctx.moveTo( v.x, v.y );
+    }
+    
     public static inline function drawPoint( i: Int, ctx: PathContext, v: Vector2 ){
+        //ctx.moveTo( v.x, v.y );
         ctx.regularPoly( PolySides.hexacontagon, v.x, v.y, 5, 0 );
         ctx.moveTo( v.x, v.y );
     }
@@ -154,37 +191,39 @@ class MainTestSetup {
        return ctx.pt( x, y );
     }
         
-    public function drawFaces( fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
-        var faces = guitar.faces;
+    public function drawFaces( fillShape: FillShape, ctx_: PathContext, showPoints: Bool = true ){
+        var faces = fillShape.faces;
         var somefaces: Array<Face>;
         var face: Face;
         for( j in 0...faces.length ){
             somefaces = faces[j];
             for( k in 0...somefaces.length ){
                 face = somefaces[k];
-                for( i in 0...face.length ) drawFace( face, fillShape, ctx, showPoints );
+                trace( 'face.length ' + face.length );
+                for( i in 0...face.length ) drawFace( face, fillShape, ctx_, showPoints );
             }
         }
     }
-    public function drawFace( face: Face, fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
+    public function drawFace( face: Face, fillShape: FillShape, ctx_: PathContext, showPoints: Bool = true ){
         var verts = fillShape.vertices;
         var l: Int = face.length;
         var f0 = face[0];
         var v0 = verts[f0];
         var f: Int;
-        ctx.moveTo( v0.x, v0.y );
-        if( showPoints ) drawPoint( 0, ctx, v0 );
+        ctx_.moveTo( v0.x, v0.y );
+        if( showPoints ) drawPoint( f0, ctx_, v0 );
         var v: Vector2;
         for( i in 1...l ){
             f = face[i];
             v = verts[f];
-            ctx.lineTo( v.x, v.y );
-            if( showPoints ) drawPoint( f, ctx, v );
+            ctx_.lineTo( v.x, v.y );
+            if( showPoints ) drawPoint( f, ctx_, v );
         }
-        ctx.lineTo( v0.x, v0.y );
+        ctx_.lineTo( v0.x, v0.y );
     }
     public function drawEdges( edges: Edges, fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
         var verts = fillShape.vertices;
+        trace(' verts ' + verts );
         var l: Int = edges.length;
         var e: Edge;
         var v: Vector2;
@@ -202,25 +241,27 @@ class MainTestSetup {
             if( showPoints ) drawPoint( q, ctx, v );
         }
     }
-    public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int ){
+    public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int, normalColor: Int ){
         verts = fillShape.vertices;
-        var v0 = verts[0];
         var v: Vector2;
+        /*var v0 = verts[0];
+        trace( 'specialPoint ' + specialPoint );
         if( specialPoint == 0 ){
-            ctx.setColor( 1 );
+            ctx.setColor( specialColor );
             drawPoint( 0, ctx, v0 );
-            ctx.setColor( 0 );
         } else {
+            ctx.setColor( normalColor );
             drawPoint( 0, ctx, v0 );
-        }
+            }*/
         var l = verts.length;
         for( i in 1...l ){
             v = verts[i];
             if( specialPoint == i ){
-                ctx.setColor( 1 );
+                //ctx.setColor( specialColor );
                 drawPoint( i, ctx, v );
-                ctx.setColor( 0 );
+                
             } else {
+                ctx.setColor( normalColor );
                 drawPoint( i, ctx, v );
             }
         }
