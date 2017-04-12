@@ -7,6 +7,30 @@ import khaMath.Vector2;
 
 class Geom2 {
     
+    // Copyright 2001 softSurfer, 2012 Dan Sunday
+    // This code may be freely used and modified for any purpose
+    // providing that this copyright notice is included with it.
+    // SoftSurfer makes no warranty for this code, and cannot be held
+    // liable for any real or imagined damage resulting from its use.
+    // Users of this code must verify correctness for their application.
+    public static inline function inSegment( a: Vector2, b: Vector2, p: Vector2 ): Bool {
+        var out = false;
+        if( a.x != b.x ) {    // S is not  vertical
+            if( a.x <= p.x && p.x <= b.x ) { 
+                out = true;
+            } else if( a.x >= p.x && p.x >= b.x ) {
+                out = true;
+            }
+        } else {    // S is vertical, so test y  coordinate
+            if( a.y <= p.y && p.y <= b.y ) {
+                out = true;
+            } else if( a.y >= p.y && p.y >= b.y ){
+                out = true;
+            }
+        }
+        return out;
+    }
+    
     public static inline function pointEncroachesEdge( a: Vector2, b: Vector2, p: Vector2 ):Bool {
         var c = a.mid(b);
         return c.distSq(p) <= c.distSq(a);
