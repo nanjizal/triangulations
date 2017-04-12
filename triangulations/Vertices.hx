@@ -65,12 +65,11 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         var v = getEmpty();
         var l = this.length;
         for( i in 0...l ){
-            v[ i ].x = this[ i ].x;
-            v[ i ].y = this[ i ].y;
+            v[ i ] = new Vector2( this[ i ].x, this[ i ].y );
         }
         return v;
     }
-    
+
     public inline
     function fitClone( width: Float, height: Float, ?margin: Float = 10 ): Vertices {
         var v = clone();
@@ -119,3 +118,4 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         return v;
     }
 }
+
