@@ -83,29 +83,59 @@ class MainTestSetup {
         var dom = cast webgl.canvas;
         dom.style.setProperty("pointer-events","none");
         tests = new Tests();
-        draw();
-          interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
-        //interactionSurface.setup( banana.vertices, transform, draw );
-        //interactionSurface.setup( tests.edgeIntersectShape.vertices, transform, draw );
-          interactionSurface.setup( tests.pointInPolyShape.vertices, transform, draw );
+        interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
+        sceneSetup();
         js.Browser.document.onkeydown = keyDownHandler;
     }
+    var scene = 0;
+    var sceneMax = 3;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
             trace( "LEFT" );
+            if( scene-- == -1 ) scene = sceneMax - 1;
         } else if( e.keyCode == KeyboardEvent.DOM_VK_RIGHT ){
             trace( "RIGHT" );
+            if( scene++ == sceneMax ) scene = 0;
         }
+        sceneSetup();
         trace( e.keyCode );  
+    }
+    
+    function sceneSetup(){
+        draw();
+        switch( scene ){
+            case 0:
+                trace( 'banana test' );
+                interactionSurface.setup( banana.vertices, transform, draw );
+            case 1:
+                trace( 'edge intersect' );
+                interactionSurface.setup( tests.edgeIntersectShape.vertices, transform, draw );
+            case 2:
+                trace( 'poly in point' );
+                interactionSurface.setup( tests.pointInPolyShape.vertices, transform, draw );
+            case 3: 
+                trace( 'angle compare');
+                interactionSurface.setup( tests.angleCompareShape.vertices, transform, draw );
+            default:
+                trace( 'no test');
+        }
     }
     
     public function draw(){
         //trace('webgl drawing setup');
         Triangle.triangles = new Array<Triangle>();
-        //bananaTest();
-        //edgeIntersectTest();
-        pointInPolyTest();
+        switch( scene ){
+            case 0:
+                bananaTest();
+            case 1:
+                edgeIntersectTest();
+            case 2:
+                pointInPolyTest();
+            case 3: 
+                angleCompareTest();
+            default:
+        }
         webgl.clearVerticesAndColors();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
     }
@@ -130,7 +160,30 @@ class MainTestSetup {
         drawVerticesPoints( shape, ctx, 0, col, 5 );
         ctx.render( thick, false );
     }
-    
+    // Don't really understand this one but looks like it's working!!
+    function angleCompareTest(){
+        var shape = tests.angleCompareShape;
+        var vert = shape.vertices;
+        var v0 = vert[0];
+        var v1 = vert[1];
+        var v2 = vert[2];
+        var v3 = vert[3];
+        var cmp = Geom2.angleCompare( v0, v1 );
+        var r = cmp( v2, v3 );
+        var thick = 4;
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setColor( 0, 3 );
+        ctx.fill = true; // with polyK
+        drawEdges( shape.edges, shape, ctx, true );
+        drawVerticesPoints( shape, ctx, 0, 0, 5 );
+        var c2 = r < 0 ? 1 : 0;
+        var c3 = r > 0 ? 1 : 0;
+        ctx.setColor( c2, c2  );
+        drawSquare( 0, ctx, v2 );
+        ctx.setColor( c3, c3  );
+        drawSquare( 0, ctx, v3 );
+        ctx.render( thick, false );
+    }
     function edgeIntersectTest(){
         var shape = tests.edgeIntersectShape;
         var vert = shape.vertices;
@@ -144,7 +197,7 @@ class MainTestSetup {
         if( Geom2.edgesIntersect( v0, v1, v2, v3 ) == true ){
             ctx.setColor( 1);
         } else {
-            ctx.setColor( 3 );
+            ctx.setColor( 4 );
         }
         drawEdges( shape.edges, shape, ctx, true );
         ctx.render( thick, false );
