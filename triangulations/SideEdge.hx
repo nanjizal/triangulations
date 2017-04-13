@@ -13,9 +13,8 @@ class SideEdge {
         c = c_;
         d = d_;
     }
-    public static inline
-    function Null(): SideEdge
-    {
+    public static inline 
+    function getEmpty(){
         return new SideEdge( null, null, null, null );
     }
     public inline
@@ -79,4 +78,3 @@ class SideEdge {
         }
     }
 }
-
