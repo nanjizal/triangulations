@@ -173,6 +173,7 @@ class MainTestSetup {
         var shape = tests.pointInPolyShape;
         var verts = shape.vertices;
         ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setThickness( 4 );
         ctx.setColor( 0, 3 );
         ctx.fill = true; // with polyK
         ctx.lineType = TriangleJoinCurve;
@@ -201,6 +202,7 @@ class MainTestSetup {
         var r = cmp( v2, v3 );
         var thick = 4;
         ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setThickness( 4 );
         ctx.setColor( 0, 3 );
         ctx.fill = true; // with polyK
         drawEdges( shape.edges, shape, ctx, true );
@@ -227,6 +229,7 @@ class MainTestSetup {
         var thick = 4;
         ctx = new PathContext( 1, 1024, 0, 0 );
         // draw outer circle
+        ctx.setThickness( 4 );
         ctx.setColor( 0, 3 );// red 
         ctx.fill = false;// just border?
         ctx.regularPoly( PolySides.hexacontagon, v4.x, v4.y, Math.sqrt( v4.distSq(v1) ), 0 ); // 20 sides
@@ -249,6 +252,7 @@ class MainTestSetup {
         var vert = shape.vertices;
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
+        ctx.setThickness( 4 );
         ctx.fill = false;
         var v0 = vert[0];
         var v1 = vert[1];
@@ -266,6 +270,7 @@ class MainTestSetup {
     public function bananaTest(){
         var thick = 4;
         ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setThickness( 4 );
         ctx.setColor( 0, 3 );
         ctx.fill = true; // with polyK
         ctx.lineType = TriangleJoinCurve;
