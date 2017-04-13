@@ -68,6 +68,8 @@ class MainTestSetup {
     var verts: Vertices;
     var ctx: PathContext;
     var interactionSurface: InteractionSurface<Vector2>;
+    
+    
     public function fillShapesCreate(){
         banana  = new Banana();
         guitar  = new Guitar();
@@ -87,18 +89,39 @@ class MainTestSetup {
         sceneSetup();
         js.Browser.document.onkeydown = keyDownHandler;
     }
+    var theta: Float = 0;
+    inline function spinForwards(): Matrix4 {
+        if( theta > Math.PI/2 ) {
+            webgl.transformationFunc = null;
+            theta = 0;
+            if( scene++ == sceneMax ) scene = 0;
+            js.Browser.document.onkeydown = keyDownHandler;
+            sceneSetup();
+        }
+        return Matrix4.rotationX( theta += Math.PI/75 ).multmat( Matrix4.rotationY( theta ) );
+    }
+    inline function spinBackwards(): Matrix4 {
+        if( theta > Math.PI/2 ) {
+            webgl.transformationFunc = null;
+            theta = 0;
+            if( scene-- == -1 ) scene = sceneMax - 1;
+            js.Browser.document.onkeydown = keyDownHandler;
+            sceneSetup();
+        }
+        return Matrix4.rotationY( theta += Math.PI/75 ).multmat( Matrix4.rotationX( theta ) );
+    }
+    
     var scene = 0;
     var sceneMax = 3;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
             trace( "LEFT" );
-            if( scene-- == -1 ) scene = sceneMax - 1;
+            webgl.transformationFunc = spinBackwards;
         } else if( e.keyCode == KeyboardEvent.DOM_VK_RIGHT ){
             trace( "RIGHT" );
-            if( scene++ == sceneMax ) scene = 0;
+            webgl.transformationFunc = spinForwards;
         }
-        sceneSetup();
         trace( e.keyCode );  
     }
     
