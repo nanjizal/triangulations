@@ -109,36 +109,31 @@ class MainTestSetup {
         webgl.clearVerticesAndColors();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
     }
-    
     function pointInPolyTest(){
         var thick = 4;
-        var ctxFill = new PathContext( 2, 1024, 0, 0 );
-        ctxFill.setColor( 0, 3 );
-        ctxFill.fill = true; // with polyK
-        ctxFill.lineType = TriangleJoinCurve;
-        trace( tests.pointInPolyShape.vertices );
-        drawFaces( tests.pointInPolyShape, ctxFill, false );
-        ctxFill.render( thick, false );
-        
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.setColor( 6 );
-        ctx.fill = false; // with polyK 
-        ctx.lineType = TriangleJoinCurve; // - default
         var shape = tests.pointInPolyShape;
-        var col = if( shape.vertices.pointInPolygon( shape.faces[0][0], shape.vertices[0] )){
+        var verts = shape.vertices;
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setColor( 0, 3 );
+        ctx.fill = true; // with polyK
+        ctx.lineType = TriangleJoinCurve;
+        drawFaces( shape, ctx, false );
+        ctx.fill = true; // with polyK 
+        ctx.lineType = TriangleJoinCurve; // - default
+        var col = if( verts.pointInPolygon( shape.faces[0][0], verts[0] ) ){
             4;
         } else {
             1;
         }
-        ctx.setColor( col );
-        drawSquare( 0, ctx, shape.vertices[0] );
-        trace( 'col ' + col );
-        drawVerticesPoints( tests.pointInPolyShape, ctx, 0, col, 5 );
+        ctx.setColor( col, col  );
+        drawSquare( 0, ctx, verts[0] );
+        drawVerticesPoints( shape, ctx, 0, col, 5 );
         ctx.render( thick, false );
     }
     
     function edgeIntersectTest(){
-        var vert = tests.edgeIntersectShape.vertices;
+        var shape = tests.edgeIntersectShape;
+        var vert = shape.vertices;
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx.fill = false;
@@ -147,43 +142,37 @@ class MainTestSetup {
         var v2 = vert[2];
         var v3 = vert[3];
         if( Geom2.edgesIntersect( v0, v1, v2, v3 ) == true ){
-            ctx.setColor( 1 );
+            ctx.setColor( 1);
         } else {
             ctx.setColor( 3 );
         }
-        drawEdges( tests.edgeIntersectShape.edges, tests.edgeIntersectShape, ctx, true );
+        drawEdges( shape.edges, shape, ctx, true );
         ctx.render( thick, false );
     }
     
     public function bananaTest(){
-        
         var thick = 4;
-        var ctxFill = new PathContext( 2, 1024, 0, 0 );
-        ctxFill.setColor( 0, 3 );
-        ctxFill.fill = true; // with polyK
-        ctxFill.lineType = TriangleJoinCurve;
-        drawVertices( banana, ctxFill, false );
-        ctxFill.render( thick, false );
-        
         ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.setColor( 0, 3 );
+        ctx.fill = true; // with polyK
+        ctx.lineType = TriangleJoinCurve;
+        drawVertices( banana, ctx, false );
         ctx.setColor( 0 );
-        ctx.fill = false; // with polyK 
+        ctx.fill = true; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
         //drawVertices( banana, ctx );
         //drawFaces( guitar, ctx );
-        drawVerticesPoints( banana, ctx, 0, 1, 4 );
+        drawVerticesPoints( banana, ctx, -1, 1, 5 );
         ctx.render( thick, false );
     }
     
     public static inline function drawSquare( i: Int, ctx: PathContext, v: Vector2 ){
-        ctx.moveTo( v.x, v.y );
-        ctx.regularPoly( PolySides.square, v.x, v.y, 10, 0 );
+        ctx.regularPoly( PolySides.square, v.x, v.y, 10, Math.PI/4 );
         ctx.moveTo( v.x, v.y );
     }
     
     public static inline function drawPoint( i: Int, ctx: PathContext, v: Vector2 ){
-        //ctx.moveTo( v.x, v.y );
-        ctx.regularPoly( PolySides.hexacontagon, v.x, v.y, 5, 0 );
+        ctx.regularPoly( PolySides.icosagon, v.x, v.y, 5, 0 ); // 20 sides
         ctx.moveTo( v.x, v.y );
     }
     @:access( justTriangles.PathContext )
@@ -199,7 +188,6 @@ class MainTestSetup {
             somefaces = faces[j];
             for( k in 0...somefaces.length ){
                 face = somefaces[k];
-                trace( 'face.length ' + face.length );
                 for( i in 0...face.length ) drawFace( face, fillShape, ctx_, showPoints );
             }
         }
@@ -223,7 +211,6 @@ class MainTestSetup {
     }
     public function drawEdges( edges: Edges, fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
         var verts = fillShape.vertices;
-        trace(' verts ' + verts );
         var l: Int = edges.length;
         var e: Edge;
         var v: Vector2;
@@ -244,24 +231,23 @@ class MainTestSetup {
     public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int, normalColor: Int ){
         verts = fillShape.vertices;
         var v: Vector2;
-        /*var v0 = verts[0];
-        trace( 'specialPoint ' + specialPoint );
+        var v0 = verts[0];
         if( specialPoint == 0 ){
-            ctx.setColor( specialColor );
+            ctx.setColor( specialColor, specialColor );
             drawPoint( 0, ctx, v0 );
         } else {
-            ctx.setColor( normalColor );
+            ctx.setColor( normalColor, normalColor );
             drawPoint( 0, ctx, v0 );
-            }*/
+        }
         var l = verts.length;
         for( i in 1...l ){
             v = verts[i];
             if( specialPoint == i ){
-                //ctx.setColor( specialColor );
+                ctx.setColor( specialColor, specialColor );
                 drawPoint( i, ctx, v );
                 
             } else {
-                ctx.setColor( normalColor );
+                ctx.setColor( normalColor, normalColor );
                 drawPoint( i, ctx, v );
             }
         }
