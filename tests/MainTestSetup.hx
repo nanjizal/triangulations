@@ -51,6 +51,7 @@ abstract RainbowColors( Int ){
     var Orange = 0xFF7F00;
     var Red    = 0xFF0000;
     var Black  = 0x000000;
+    var White  = 0xFFFFFF;
 }
     
 class MainTestSetup {
@@ -77,7 +78,7 @@ class MainTestSetup {
         sheet   = new Sheet();
         ty      = new Ty();
     }
-    var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet ];   
+    var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet, White ];   
     public function new(){
         trace( 'Testing Triangulations ');
         fillShapesCreate();
@@ -112,7 +113,7 @@ class MainTestSetup {
     }
     
     var scene = 0;
-    var sceneMax = 3;
+    var sceneMax = 4;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
@@ -140,6 +141,9 @@ class MainTestSetup {
             case 3: 
                 trace( 'angle compare');
                 interactionSurface.setup( tests.angleCompareShape.vertices, transform, draw );
+            case 4: 
+                trace( 'angle compare');
+                interactionSurface.setup( tests.pointInTriangleShape.vertices, transform, draw );
             default:
                 trace( 'no test');
         }
@@ -157,6 +161,8 @@ class MainTestSetup {
                 pointInPolyTest();
             case 3: 
                 angleCompareTest();
+            case 4:
+                pointInTriangleTest();
             default:
         }
         webgl.clearVerticesAndColors();
@@ -205,6 +211,37 @@ class MainTestSetup {
         drawSquare( 0, ctx, v2 );
         ctx.setColor( c3, c3  );
         drawSquare( 0, ctx, v3 );
+        ctx.render( thick, false );
+    }
+    function pointInTriangleTest(){
+        var shape = tests.pointInTriangleShape;
+        var vert = shape.vertices;
+        var v0 = vert[0];
+        var v1 = vert[1];
+        var v2 = vert[2];
+        var v3 = vert[3];
+        var v4 = vert[4];
+        var inTriangle = Geom2.pointInTriangle( v1, v2, v3 );
+        vert[4] = Geom2.circumcenter( v1, v2, v3 );
+        v4 = vert[4];
+        var thick = 4;
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        // draw outer circle
+        ctx.setColor( 0, 3 );// red 
+        ctx.fill = false;// just border?
+        ctx.regularPoly( PolySides.hexacontagon, v4.x, v4.y, Math.sqrt( v4.distSq(v1) ), 0 ); // 20 sides
+        ctx.moveTo( v4.x, v4.y );
+        
+        ctx.setColor( 8, 2 );
+        ctx.fill = true; // with polyK
+        drawFaces( shape, ctx, false );
+        ctx.setColor( 0, 3 );
+        ctx.fill = true; // with polyK
+        drawVerticesPoints( shape, ctx, 0, 0, 5 );
+        var c0 = inTriangle(v0) ? 1 : 4;
+        ctx.setColor( c0, c0  );
+        drawSquare( 0, ctx, v0 );
+        trace( 'd ' + Geom2.pointToEdgeDistSq( v1, v2 )( v0 ) );
         ctx.render( thick, false );
     }
     function edgeIntersectTest(){
