@@ -20,4 +20,8 @@ class FillShape {
     function fit( w: Float, h: Float, ?margin: Float = 10 ){
         vertices.fit( w, h, margin );
     }
+    public inline
+    function set_fixedExternal( val: Bool ){
+        edges.set_fixedExternal( val );
+    }
 }
