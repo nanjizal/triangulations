@@ -10,12 +10,7 @@ import triangulations.Settings;
 import triangulations.Graph;
 import triangulations.Face;
 //import triangulations.Rupert;
-import triangulations.Triangulate;
-import tests.fillShapes.Banana;
-import tests.fillShapes.Guitar;
-import tests.fillShapes.Key;
-import tests.fillShapes.Sheet;
-import tests.fillShapes.Ty; 
+import tests.fillShapes.*;
 import triangulations.FillShape;
 import khaMath.Vector2;
 // drawing specific
@@ -32,7 +27,6 @@ import justTriangles.Point;
 import htmlHelper.tools.CSSEnterFrame;
 import justTriangles.SvgPath;
 import justTriangles.PathContextTrace;
-import tests.Tests;
 import justTrianglesWebGL.InteractionSurface;
 // js Specifc
 import js.Browser;
@@ -63,29 +57,62 @@ class MainTestSetup {
     var key:     FillShape;
     var sheet:   FillShape;
     var ty:      FillShape;
-    var tests:   Tests;
-
+    var angleCompareShape:    FillShape;
+    var delaunayShape:        FillShape;
+    var edgeIntersectShape:   FillShape;
+    var enclosingTriangle:    FillShape;
+    var graphShape:           FillShape;
+    var pointInPolyShape:     FillShape;
+    var pointInTriangleShape: FillShape;
+    var quadEdgeShape:        FillShape;
+    var splitShape:           FillShape;
+    var triangulateShape:     FillShape;
     var webgl: Drawing;
     var verts: Vertices;
     var ctx: PathContext;
     var interactionSurface: InteractionSurface<Vector2>;
     
-    
-    public function fillShapesCreate(){
+    public function createFillData(){
         banana  = new Banana();
         guitar  = new Guitar();
         key     = new Key();
         sheet   = new Sheet();
         ty      = new Ty();
+        angleCompareShape       = new TestAngleCompareShape();
+        delaunayShape           = new TestDelaunayShape();
+        edgeIntersectShape      = new TestEdgeIntersectShape();
+        enclosingTriangle       = new TestEnclosingTriangleShape();
+        graphShape              = new TestGraphShape();
+        pointInPolyShape        = new TestPointInPolyShape();
+        pointInTriangleShape    = new TestPointInTriangleShape();
+        quadEdgeShape           = new TestQuadEdgeShape();
+        splitShape              = new TestSplitShape();
+        triangulateShape        = new TestTriangulateShape();
+        var dataShapes = [  banana
+                        ,   guitar
+                        ,   key
+                        ,   sheet
+                        ,   ty
+                        ,   angleCompareShape
+                        ,   delaunayShape 
+                        ,   edgeIntersectShape  
+                        ,   enclosingTriangle  
+                        ,   graphShape  
+                        ,   pointInPolyShape 
+                        ,   pointInTriangleShape 
+                        ,   quadEdgeShape 
+                        ,   splitShape 
+                        ,   triangulateShape ];
+        var l = dataShapes.length;
+        for( i in 0...l ) dataShapes[i].fit( 1024, 1024, 120 );
     }
     var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet, White ];   
     public function new(){
         trace( 'Testing Triangulations ');
-        fillShapesCreate();
+        createFillData();
         webgl = Drawing.create( 512*2 );
         var dom = cast webgl.canvas;
         dom.style.setProperty("pointer-events","none");
-        tests = new Tests();
         interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
         sceneSetup();
         js.Browser.document.onkeydown = keyDownHandler;
@@ -127,26 +154,29 @@ class MainTestSetup {
     }
     
     function sceneSetup(){
-        draw();
+        var vert: Vertices =
         switch( scene ){
             case 0:
                 trace( 'banana test' );
-                interactionSurface.setup( banana.vertices, transform, draw );
+                banana.vertices;
             case 1:
                 trace( 'edge intersect' );
-                interactionSurface.setup( tests.edgeIntersectShape.vertices, transform, draw );
+                edgeIntersectShape.vertices;
             case 2:
                 trace( 'poly in point' );
-                interactionSurface.setup( tests.pointInPolyShape.vertices, transform, draw );
+                pointInPolyShape.vertices;
             case 3: 
                 trace( 'angle compare');
-                interactionSurface.setup( tests.angleCompareShape.vertices, transform, draw );
+                angleCompareShape.vertices;
             case 4: 
                 trace( 'angle compare');
-                interactionSurface.setup( tests.pointInTriangleShape.vertices, transform, draw );
+                pointInTriangleShape.vertices;
             default:
                 trace( 'no test');
+                null;
         }
+        draw();
+        interactionSurface.setup( vert, transform, draw );
     }
     
     public function draw(){
@@ -170,7 +200,7 @@ class MainTestSetup {
     }
     function pointInPolyTest(){
         var thick = 4;
-        var shape = tests.pointInPolyShape;
+        var shape = pointInPolyShape;
         var verts = shape.vertices;
         ctx = new PathContext( 1, 1024, 0, 0 );
         ctx.setThickness( 4 );
@@ -192,7 +222,7 @@ class MainTestSetup {
     }
     // Don't really understand this one but looks like it's working!!
     function angleCompareTest(){
-        var shape = tests.angleCompareShape;
+        var shape = angleCompareShape;
         var vert = shape.vertices;
         var v0 = vert[0];
         var v1 = vert[1];
@@ -216,7 +246,7 @@ class MainTestSetup {
         ctx.render( thick, false );
     }
     function pointInTriangleTest(){
-        var shape = tests.pointInTriangleShape;
+        var shape = pointInTriangleShape;
         var vert = shape.vertices;
         var v0 = vert[0];
         var v1 = vert[1];
@@ -235,7 +265,7 @@ class MainTestSetup {
         ctx.regularPoly( PolySides.hexacontagon, v4.x, v4.y, Math.sqrt( v4.distSq(v1) ), 0 ); // 20 sides
         ctx.moveTo( v4.x, v4.y );
         
-        ctx.setColor( 8, 2 );
+        ctx.setColor( 1, 2 );
         ctx.fill = true; // with polyK
         drawFaces( shape, ctx, false );
         ctx.setColor( 0, 3 );
@@ -248,7 +278,7 @@ class MainTestSetup {
         ctx.render( thick, false );
     }
     function edgeIntersectTest(){
-        var shape = tests.edgeIntersectShape;
+        var shape = edgeIntersectShape;
         var vert = shape.vertices;
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
