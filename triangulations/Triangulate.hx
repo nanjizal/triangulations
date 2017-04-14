@@ -16,8 +16,12 @@ class Triangulate {
     function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> /*, trace */ ) {
         for ( k in 0...face.length ) {
             var diags = triangulateFace( vertices, face[ k ] /*, trace */ );
+            trace( 'diags ' + diags );
             var l = edges.length;
-            for( i in 0...l ) edges[ l + i ] = diags[ i ];// concat Array.prototype.push.apply(edges, diags);
+            var d = diags.length;
+            trace( 'edges.length ' + edges.length );
+            for( i in 0...d ) edges[ l + i ] = diags[ i ];// concat Array.prototype.push.apply(edges, diags);
+            trace( 'edges.length new ' + edges.length );
         }
     }
     
