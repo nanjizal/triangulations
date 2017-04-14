@@ -12,6 +12,22 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
     function getEmpty(){
         return new Vertices( new Array<Vector2>() );
     }
+    
+    public inline
+    function scale( f: Float ){
+        var l = this.length;
+        for( i in 0...l ){
+            this[i] = this[i].mult( f ); 
+        }
+    }
+    public inline
+    function translate( x: Float, y: Float ){
+        var t = new Vector2( x, y );
+        var l = this.length;
+        for( i in 0...l ){
+            this[i] = this[i].add( t ); 
+        }
+    }
     // Given a simple polygon, returns its orientation, namely 1, if it's clockwise,
     // -1, if it's counter-clockwise, and 0 if the orientation is undefined, i.e.,
     // the area is 0.
@@ -118,4 +134,3 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         return v;
     }
 }
-
