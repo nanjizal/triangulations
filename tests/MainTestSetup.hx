@@ -9,6 +9,7 @@ import triangulations.SideEdge;
 import triangulations.Settings;
 import triangulations.Graph;
 import triangulations.Face;
+import triangulations.Triangulate;
 //import triangulations.Rupert;
 import tests.fillShapes.*;
 import triangulations.FillShape;
@@ -104,7 +105,12 @@ class MainTestSetup {
                         ,   splitShape 
                         ,   triangulateShape ];
         var l = dataShapes.length;
-        for( i in 0...l ) dataShapes[i].fit( 1024, 1024, 120 );
+        var shape: FillShape;
+        for( i in 0...l ) {
+            shape = dataShapes[i];
+            shape.fit( 1024, 1024, 120 );
+            shape.set_fixedExternal( true );
+        }
     }
     var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet, White ];   
     public function new(){
@@ -140,7 +146,7 @@ class MainTestSetup {
     }
     
     var scene = 0;
-    var sceneMax = 4;
+    var sceneMax = 5;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
@@ -171,6 +177,9 @@ class MainTestSetup {
             case 4: 
                 trace( 'angle compare');
                 pointInTriangleShape.vertices;
+            case 5: 
+                trace( 'triangulate test' );
+                triangulateShape.vertices;
             default:
                 trace( 'no test');
                 null;
@@ -193,6 +202,8 @@ class MainTestSetup {
                 angleCompareTest();
             case 4:
                 pointInTriangleTest();
+            case 5:
+                triangulateTest();
             default:
         }
         webgl.clearVerticesAndColors();
@@ -296,7 +307,27 @@ class MainTestSetup {
         drawEdges( shape.edges, shape, ctx, true );
         ctx.render( thick, false );
     }
-    
+    function triangulateTest(){
+        var shape = triangulateShape;
+        var vert = shape.vertices;
+        var face = shape.faces;
+        Triangulate.triangulateSimple( vert, shape.edges, face );
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        var thick = 4;
+        ctx.setThickness( 4 );
+        ctx.fill = true;
+        ctx.setColor( 0, 3 );
+        drawFaces( shape, ctx, false );
+        ctx.fill = false;
+        ctx.setColor( 4, 3 );
+        ctx.moveTo( 0, 0 );
+        trace( shape.edges.length );
+        for( i in 0...shape.edges.length ){
+            trace( shape.edges[i] );
+        }
+        drawEdges( shape.edges, shape, ctx, true );
+        ctx.render( thick, false );
+    }
     public function bananaTest(){
         var thick = 4;
         ctx = new PathContext( 1, 1024, 0, 0 );
