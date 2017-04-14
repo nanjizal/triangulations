@@ -16,4 +16,8 @@ class FillShape {
     function translate( x: Float, y: Float ){
         vertices.translate( x, y );
     }
+    public inline
+    function fit( w: Float, h: Float, ?margin: Float = 10 ){
+        vertices.fit( w, h, margin );
+    }
 }
