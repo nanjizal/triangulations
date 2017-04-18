@@ -311,7 +311,7 @@ class MainTestSetup {
         var shape = triangulateShape;
         var vert = shape.vertices;
         var face = shape.faces;
-        Triangulate.triangulateSimple( vert, shape.edges, face );
+        var diags = Triangulate.triangulateFace( vert, face[0] );
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx.setThickness( 4 );
@@ -325,7 +325,8 @@ class MainTestSetup {
         for( i in 0...shape.edges.length ){
             trace( shape.edges[i] );
         }
-        drawEdges( shape.edges, shape, ctx, true );
+        var edges = shape.edges.clone().add( diags );
+        drawEdges( edges, shape, ctx, true );
         ctx.render( thick, false );
     }
     public function bananaTest(){
