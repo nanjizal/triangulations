@@ -321,10 +321,6 @@ class MainTestSetup {
         ctx.fill = false;
         ctx.setColor( 4, 3 );
         ctx.moveTo( 0, 0 );
-        trace( shape.edges.length );
-        for( i in 0...shape.edges.length ){
-            trace( shape.edges[i] );
-        }
         var edges = shape.edges.clone().add( diags );
         drawEdges( edges, shape, ctx, true );
         ctx.render( thick, false );
