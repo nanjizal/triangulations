@@ -94,7 +94,7 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
       se = sideEdges[j3];
       se.substitute( j , j2);
       se.substitute( j0, j );
-
+        
       // Flip
       this[j] = coEdges[j];
       coEdges[j] = edge.clone(); // in order to not effect the input
