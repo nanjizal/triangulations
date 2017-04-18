@@ -45,7 +45,6 @@ class Triangulate {
         var diagonals = new Edges();
         while( polies.length > 0 ){
             var poly = polies.pop();
-
             // First we find a locally convex vertex.
             var node = poly;
             var a: Vector2;
@@ -79,18 +78,16 @@ class Triangulate {
             
             // Now we proceed with checking the intersections with ac.
             if( acOK ) acOK = !intersects( a, c, vertices, cNode.next, aNode.prev );
-            
             var holesLen = holes.length;
             for( l in 0...holesLen ){
-                if( !acOK ) break;
                 acOK = !intersects( a, c, vertices, holes[ l ] );
+                if( !acOK ) break; // moved this to get same out as example but unsure if correct.
             }
             
             var split;
             var fromNode;
             var toNode;
-            
-            if (acOK) {
+            if( acOK ){
               // No intersections. We can easily connect a and c.
               fromNode = cNode;
               toNode = aNode;
@@ -113,10 +110,9 @@ class Triangulate {
                   if( newBest != best ) lHole = l;
                   best = newBest;
               }
-            
+              
               fromNode = bNode;
               toNode = best;
-
               if( lHole < 0 ){
                 // The nearest vertex does not come from a hole. It is lies on the outer
                 // polygon itself (or is undefined).
@@ -127,43 +123,40 @@ class Triangulate {
                 holes.splice( lHole, 1 );
                 split = false;
               }
-              
-              if( toNode == null ) {
-                // It was a triangle all along!
-                continue;
-              }
+          }
 
-              diagonals.push( new Edge( fromNode.value, toNode.value ) );
-              //if (trace !== undefined) {
-                //trace.push({
-                  //selectFace: makeArrayPoly( poly ),
-                  //addDiag: [fromNode.value, toNode.value ]
-                //});
-              //}
+          if( toNode == null ) {
+            // It was a triangle all along!
+            continue;
+          }
 
-              // TODO: Elaborate
-              var poly1 = new Node( fromNode.value );
-              poly1.next = fromNode.next; 
-              var tempNode = new Node( toNode.value );
-              tempNode.prev = toNode.prev;
-              tempNode.next = poly1;
-              poly1.prev = tempNode;
-              fromNode.next.prev = poly1;
-              toNode.prev.next = poly1.prev;
+          diagonals.push( new Edge( fromNode.value, toNode.value ) );
+          //if (trace !== undefined) {
+            //trace.push({
+              //selectFace: makeArrayPoly( poly ),
+              //addDiag: [fromNode.value, toNode.value ]
+            //});
+          //}
 
-              fromNode.next = toNode;
-              toNode.prev = fromNode;
-              var poly2 = fromNode;
+          // TODO: Elaborate
+          var poly1 = new Node( fromNode.value );
+          poly1.next = fromNode.next; 
+          var tempNode = new Node( toNode.value );
+          tempNode.prev = toNode.prev;
+          tempNode.next = poly1;
+          poly1.prev = tempNode;
+          fromNode.next.prev = poly1;
+          toNode.prev.next = poly1.prev;
 
-              if( split ){
-                  polies.push( poly1 );
-                  polies.push( poly2 );
-              } else {
-                  polies.push( poly2 );
-              }
-            }
-            
-                 
+          fromNode.next = toNode;
+          toNode.prev = fromNode;
+          var poly2 = fromNode;
+          if( split ){
+              polies.push( poly1 );
+              polies.push( poly2 );
+          } else {
+              polies.push( poly2 );
+          }
         }
         return diagonals;
     }
