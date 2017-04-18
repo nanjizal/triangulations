@@ -9,11 +9,11 @@ class Node<T> {
     }
     @:keep
     public function toString() {
-        return value;
+        /*return value;
     }
-    public function toStringOrder() {
+    public function toStringOrder() {*/
         var p = prev.value;
         var n = next.value;
-        return '$p->$value->$n';
+        return '$p -> $value -> $n';
     }
 }
