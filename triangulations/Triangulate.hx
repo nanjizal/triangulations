@@ -275,7 +275,6 @@ class Triangulate {
            };
     }
     
-}
     
     /*
     // "ok"
@@ -714,8 +713,8 @@ class Triangulate {
             return diagonals;
                  
         }
-
-            
+*/
+           
             
         // "NOT OK ??"
             
@@ -735,6 +734,7 @@ class Triangulate {
     //
     // WARNING: The procedure will change the orientation of edges.
     // 
+    public static 
     function makeQuadEdge( vertices: Vertices
                         ,  edges: Edges
                         , coEdges: Edges
@@ -745,35 +745,36 @@ class Triangulate {
       //var sideEdges = [];
       for( j in 0...edges.length ){
         coEdges[ j ] = new Edge( null, null );
-        sideEdges[ j ] = SideEdge.Null();
+        sideEdges[ j ] = SideEdge.getEmpty();
       }
 
       // Find the outgoing edges for each vertex
-      var outEdges = [];
+      var outEdges = new Array<Array<Int>>();
       for( i in 0...vertices.length )
-        outEdges[ i ] = new Edge( null, null );// null null?
+        outEdges[ i ] = new Array<Int>();
       for( j in 0...edges.length ){
         var e = edges[ j ];
-        outEdges[ e.p ].p = j;
-        outEdges[ e.q ].q = j;
+        outEdges[ e.p ].push( j );
+        outEdges[ e.q ].push( j );
       }
-      
+      var l = vertices.length;
       // Process edges around each vertex.
-      for( i in 0...vertices.length ){
+      for( i in 0...l ){
         var v = vertices[i];
         var js = outEdges[i];
 
         // Reverse edges, so that they point outward and sort them angularily.
-        for( k in 0...js.length ){
-          var e = edges[ js[k] ];
-          if (e.p != i) {
+        for( k in 0...js.length ) {
+          var e = edges[js[k]];
+          if( e.p != i ) {
             e.q = e.p;
             e.p = i;
           }
         }
-        var angleCmp = Geom.angleCompare( v, vertices[ edges[ js[0] ].q ] );
+        
+        var angleCmp = Geom2.angleCompare( v, vertices[ edges[ js[ 0 ] ].q ] );
         js.sort(function (j1: Int, j2: Int) {
-          return angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]);
+          return Std.int( angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]) );
         });
 
         // Associate each edge with neighbouring edges appropriately.
@@ -786,11 +787,14 @@ class Triangulate {
           // i.e., edges[jNext][1] will be, or already was, put while processing the
           // edges of the opporite vertex, i.e., edges[j][1].
           coEdges[j].push( edges[ jPrev ].q );
-          sideEdges[j].push( jPrev, jNext );  
+          sideEdges[j].push( jPrev );
+          sideEdges[j].push( jNext );  
         }
+        
       }
 
       // Amend external edges
+      
       function disjoint( i: Int, j: Int ) { 
           return edges[j].p != i && edges[j].q != i;
       }
@@ -799,18 +803,25 @@ class Triangulate {
         var ce = coEdges[ j ]; 
         var ses = sideEdges[ j ];
 
+        // NOT Working?? Comment out ...
+
         // If the whole mesh is a triangle, just remove one of the duplicate entries
         if( ce.p == ce.q ) {
           ce.q = ses.b = ses.c = null;
           continue;
         }
+        
+        // NOT Working!! Comment out ...
+        /*
         // If the arms of a supported triangle are also external, remove.
         if( edges[ ses.a ].external && edges[ ses.d ].external)
           ce.p = ses.a = ses.d = null;
         if( edges[ ses.b ].external && edges[ ses.c ].external)
-          ce.q = ses.b = ses.c = null;
+          ce.q = ses.b = ses.c = null;  
+        */
       }
-
+      
       //return { coEdges: coEdges, sideEdges: sideEdges };
     }
-    }}*/
+
+}
