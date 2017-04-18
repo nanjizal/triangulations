@@ -109,6 +109,7 @@ class MainTestSetup {
         for( i in 0...l ) {
             shape = dataShapes[i];
             shape.fit( 1024, 1024, 120 );
+            // set the outline!
             shape.set_fixedExternal( true );
         }
     }
@@ -138,7 +139,7 @@ class MainTestSetup {
         if( theta > Math.PI/2 ) {
             webgl.transformationFunc = null;
             theta = 0;
-            if( scene-- == -1 ) scene = sceneMax - 1;
+            if( scene-- == 0 ) scene = sceneMax;
             js.Browser.document.onkeydown = keyDownHandler;
             sceneSetup();
         }
@@ -146,7 +147,7 @@ class MainTestSetup {
     }
     
     var scene = 0;
-    var sceneMax = 5;
+    var sceneMax = 6;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
@@ -180,6 +181,9 @@ class MainTestSetup {
             case 5: 
                 trace( 'triangulate test' );
                 triangulateShape.vertices;
+            case 6:
+                trace( 'quad edge test');
+                quadEdgeShape.vertices; 
             default:
                 trace( 'no test');
                 null;
@@ -204,7 +208,10 @@ class MainTestSetup {
                 pointInTriangleTest();
             case 5:
                 triangulateTest();
+            case 6:
+                quadEdgeTest();
             default:
+                
         }
         webgl.clearVerticesAndColors();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
@@ -325,6 +332,30 @@ class MainTestSetup {
         drawEdges( edges, shape, ctx, true );
         ctx.render( thick, false );
     }
+    function quadEdgeTest(){
+        var shape = quadEdgeShape;
+        var vert = shape.vertices;
+        var face = shape.faces;
+        var edges = shape.edges;
+        var coEdges = new Edges();
+        var sideEdges = new Array<SideEdge>();
+        Triangulate.makeQuadEdge( vert, edges, coEdges, sideEdges );
+        edges.flipEdge( coEdges, sideEdges, 12 );
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        var thick = 4;
+        ctx.setThickness( 4 );
+        ctx.fill = true;
+        ctx.setColor( 0, 3 );
+        ctx.moveTo( 0, 0 );
+        drawEdges( edges, shape, ctx, true );
+        ctx.fill = true;
+        ctx.setColor( 1, 2 );
+        ctx.moveTo( 0, 0 );
+        edges.flipEdge( coEdges, sideEdges, 12 );
+        drawEdges( edges, shape, ctx, true );
+        ctx.render( thick, false );
+    }
+    
     public function bananaTest(){
         var thick = 4;
         ctx = new PathContext( 1, 1024, 0, 0 );
@@ -394,12 +425,16 @@ class MainTestSetup {
         var q: Int;
         for( i in 0...l ){
             e = edges[i];
+            if( e.isNull() ) continue;
+            trace( 'is null ? ' + e.isNull()  + ' ' + e );
             p = e.p;
             q = e.q;
             v = verts[p];
+            if( v == null ) continue;
             ctx.moveTo( v.x, v.y );
             if( showPoints ) drawPoint( p, ctx, v );
             v = verts[q];
+            if( v == null ) continue;
             ctx.lineTo( v.x, v.y );
             if( showPoints ) drawPoint( q, ctx, v );
         }
