@@ -45,10 +45,11 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     }
     
     public inline
-    function add( e: Edges ){
+    function add( e: Edges ): Edges {
         var l = this.length;
         var el = e.length;
         for( i in 0...el ) this[ l + i ] = e[ i ];
+        return e;
     }
     @:from
     static public function fromArrayArray( arr: Array<Array<Null<Int>>> ) {
