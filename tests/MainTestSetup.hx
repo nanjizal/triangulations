@@ -3,7 +3,6 @@ import triangulations.Edge;
 import triangulations.Edges;
 import triangulations.Vertices;
 import triangulations.Geom2;
-import triangulations.Node;
 import triangulations.Queue;
 import triangulations.SideEdge;
 import triangulations.Settings;
