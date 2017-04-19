@@ -145,7 +145,7 @@ class MainTestSetup {
         return Matrix4.rotationY( theta += Math.PI/75 ).multmat( Matrix4.rotationX( theta ) );
     }
     
-    var scene = 7;
+    var scene = 0;
     var sceneMax = 7;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
