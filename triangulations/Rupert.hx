@@ -190,4 +190,21 @@ class Rupert {
                                         ,   unsureEdges )
       };
     }
+    
+    public static inline 
+    function edgeIsEncroached(  vertices: Vertices
+                            ,   edges:    Edges
+                            ,   coEdges:  Edges
+                            ,   j: Int    ): Bool
+    {
+      var edge = edges[j];
+      var coEdge = coEdges[j];
+      var a = vertices[ edge.p ];
+      var c = vertices[ edge.q ];
+      var p = a.mid(c);
+      var rSq = p.distSq(a);
+      return ( coEdge.p != null && p.distSq( vertices[ coEdge.p ] ) <= rSq ) ||
+             ( coEdge.q != null && p.distSq( vertices[ coEdge.q ] ) <= rSq );
+    }
+    
 }
