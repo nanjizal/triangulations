@@ -68,7 +68,7 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     // j, maintaining the quad-edge structure integrity.
     public inline
     function flipEdge( coEdges: Edges, sideEdges: Array<SideEdge>, j: Int ) {
-      var edge = this[j];
+      var edge = this[j].clone();
       var coEdge = coEdges[j];
       var se = sideEdges[j];
       var j0 = se.a;
@@ -99,7 +99,7 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         
       // Flip
       this[j] = coEdges[j];
-      coEdges[j] = edge.clone(); // in order to not effect the input
+      coEdges[j] = edge; // in order to not effect the input
 
       // Amend primary edge
       var tmp = sideEdges[j].a;
