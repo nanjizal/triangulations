@@ -19,7 +19,11 @@ class Edge {
     }
     public inline
     function clone(): Edge {
-        return new Edge( this.p, this.q );
+        var e = new Edge( this.p, this.q );
+        e.fixed = this.fixed;
+        e.external = this.external;
+        return e;
+        
     }
     public static inline function fromArray( arr: Array<Int> ): Edge {
         return new Edge( arr[0], arr[1] );
@@ -47,6 +51,15 @@ class Edge {
     public function toString() {
         var p0 = p;
         var q0 = q;
-        return 'Edge( $p0,$q0 )';
+        var out: String = '';
+        if( fixed == true && external == true ){
+            out = 'Edge( $p0,$q0 ';
+            if( fixed ) out = out + 'fixed ';
+            if( external ) out = out + 'external ';
+            out =  out + ' )';
+        } else {
+            out =  'Edge( $p0,$q0 )';
+        }
+        return out;
     }
 }
