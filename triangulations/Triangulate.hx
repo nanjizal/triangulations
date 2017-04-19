@@ -405,9 +405,6 @@ class Triangulate {
         return face;
     }
     
-    
-    /*
-    // "ok"  - unsure of fixed
     // Refines the given triangulation graph to be a Conforming Delaunay
     // Triangulation (abr. CDT). Edges with property fixed = true are not altered.
     //
@@ -418,12 +415,69 @@ class Triangulate {
     function refineToDelaunay(  vertices:   Vertices
                             ,   edges:      Edges
                             ,   coEdges:    Edges
-                            ,   sideEdges:  Array<SideEdge> ) {
+                            ,   sideEdges:  Array<SideEdge> )
+                            :   Vertices->Edges->Edges->Array<SideEdge>->Array<Int>->Array<Int>
+    {
       // We mark all edges as unsure, i.e., we don't know whether the enclosing
       // quads of those edges are properly triangulated.
-      unsureEdges = edges.getUnsure();
+      var unsureEdges = edges.getUnsure();
       return maintainDelaunay( vertices, edges, coEdges, sideEdges, unsureEdges );
     }
+    
+    public static inline
+    function maintainDelaunay(  vertices:   Vertices
+                            ,   edges:      Edges
+                            ,   coEdges:    Edges
+                            ,   sideEdges:  Array<SideEdge>
+                            ,   unsureEdges: Array<Int> )
+                            :   Vertices->Edges->Edges->Array<SideEdge>->Array<Int>->Array<Int> 
+    {
+        var unsure = new Array<Bool>();
+        var tried = new Array<Int>();
+        var cookie: Int = 0;
+        return function(    vertices:   Vertices
+                    ,   edges:      Edges
+                    ,   coEdges:    Edges
+                    ,   sideEdges:  Array<SideEdge>
+                    ,   unsureEdges: Array<Int>
+                    ): Array<Int> {
+          ++cookie;
+          var triedEdges = unsureEdges.slice(0);// not sure if ideal replace with loop?
+          for( l in 0...unsureEdges.length ) {
+              unsure[ unsureEdges[l] ] = true;
+              tried[ unsureEdges[l] ] = cookie;
+          }
+          // The procedure used is the incremental Flip Algorithm. As long as there are
+          // any, we fix the triangulation around an unsure edge and mark the
+          // surrounding ones as unsure.
+          while( unsureEdges.length > 0 ){
+              var j = unsureEdges.pop();
+              unsure[j] = false;
+              if ( !edges[j].fixed && ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j ) ) {
+                  var newUnsureCnt = 0;
+                  for( jk in sideEdges[j] ){ 
+                      if( !unsure[jk] ){
+                          if (tried[jk] != cookie) {
+                              triedEdges.push(jk);
+                              tried[ jk ] = cookie;
+                          }
+                          if (!edges[jk].fixed) {
+                              unsureEdges.push(jk);
+                              unsure[ jk ] = true;
+                              ++newUnsureCnt;
+                          }
+                      }
+                  }
+                  //if( newUnsureCnt > 0 ) trace( unsureEdges.slice(-newUnsureCnt) );
+                }
+            }
+          return triedEdges;
+        }
+    }
+    
+    /*
+    // "ok"  - unsure of fixed
+    
     
     // "NOT OK - requires more work and thought"
     
@@ -577,24 +631,7 @@ class Triangulate {
       if (jd != null ) affectedEdges.push( jd );
       return affectedEdges;
     }
-    
-    
-    // "ok?"
-    public static inline 
-    function edgeIsEncroached(  vertices: Vertices
-                            ,   edges:    Edges
-                            ,   coEdges:  Edges
-                            ,   j: Int    ): Bool
-    {
-      var edge = edges[j];
-      var coEdge = coEdges[j];
-      var a = vertices[ edge.p ];
-      var c = vertices[ edge.q ];
-      var p = a.mid(c);
-      var rSq = p.distSq(a);
-      return ( coEdge.p != null && p.distSq( vertices[ coEdge.p ] ) <= rSq ) ||
-             ( coEdge.q != null && p.distSq( vertices[ coEdge.q ] ) <= rSq );
-    }
+
     
     // "NOT OK - needs a lot more thought and work."
     public static 
