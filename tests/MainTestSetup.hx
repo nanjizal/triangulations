@@ -145,7 +145,7 @@ class MainTestSetup {
         return Matrix4.rotationY( theta += Math.PI/75 ).multmat( Matrix4.rotationX( theta ) );
     }
     
-    var scene = 0;
+    var scene = 7;
     var sceneMax = 7;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
@@ -334,6 +334,8 @@ class MainTestSetup {
         ctx.moveTo( 0, 0 );
         var edges = shape.edges.clone().add( diags );
         drawEdges( edges, shape, ctx, true );
+        ctx.setColor( 0, 3 );
+        drawFaces( shape, ctx, false );
         ctx.render( thick, false );
     }
     function quadEdgeTest(){
@@ -344,7 +346,9 @@ class MainTestSetup {
         var coEdges = new Edges();
         var sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, edges, coEdges, sideEdges );
-        edges.flipEdge( coEdges, sideEdges, 12 );
+        trace( ' coEdges ' + coEdges );
+        trace( ' edges ' + edges );
+        //edges.flipEdge( coEdges, sideEdges, 12 );
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx.setThickness( 4 );
@@ -353,7 +357,7 @@ class MainTestSetup {
         ctx.moveTo( 0, 0 );
         drawEdges( edges, shape, ctx, true );
         ctx.fill = true;
-        ctx.setColor( 1, 2 );
+        ctx.setColor( 5, 2 );
         ctx.moveTo( 0, 0 );
         edges.flipEdge( coEdges, sideEdges, 12 );
         drawEdges( edges, shape, ctx, true );
@@ -366,20 +370,38 @@ class MainTestSetup {
         var edges = shape.edges;
         
         var diags = Triangulate.triangulateFace( vert, face[0] );
-        var all = edges.clone().add(diags);        
+        trace( 'diags ' + diags );
+        var all = edges.clone().add( diags );        
         var coEdges = new Edges();
         var sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
+        
         Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
+        trace( 'all ' + all );
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx.setThickness( 4 );
-        ctx.fill = true;
+        ctx.setColor( 4, 0 );
+        ctx.fill = false;
+        for( j in edges.length...all.length ){
+          var edge = all[j];
+          var coEdge = coEdges[j];
+          var w = vert[edge.p];
+          var y = vert[edge.q];
+          var x = vert[coEdge.p];
+          var z = vert[coEdge.q];
+          var p = Geom2.circumcenter( w, y, x );
+          var r = Math.sqrt( w.distSq( p ) );
+          ctx.regularPoly( PolySides.hexacontagon, p.x, p.y, r, 0 );
+        }
+        ctx.fill = false;
         ctx.setColor( 0, 3 );
         ctx.moveTo( 0, 0 );
-        // ??
-        drawEdges( edges, shape, ctx, true );
+        //drawFaces( shape, ctx );
         drawEdges( all, shape, ctx, true );
+        ctx.setColor( 1, 3 );
+        ctx.moveTo( 0, 0 );
+        drawEdges( edges, shape, ctx, true );
         ctx.render( thick, false );
     }
     public function bananaTest(){
@@ -452,7 +474,6 @@ class MainTestSetup {
         for( i in 0...l ){
             e = edges[i];
             if( e.isNull() ) continue;
-            trace( 'is null ? ' + e.isNull()  + ' ' + e );
             p = e.p;
             q = e.q;
             v = verts[p];
