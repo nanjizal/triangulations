@@ -181,8 +181,12 @@ class Triangulate {
       var c = vertices[ edge.q ];
       var b = vertices[ coEdge.p ];
       var d = vertices[ coEdge.q ];
-      return !Geom2.pointInCircumcircle( a, c, b, d ) &&
-             !Geom2.pointInCircumcircle( a, c, d, b );
+      var in0 = !Geom2.pointInCircumcircle( a, c, b, d );
+      var in1 = !Geom2.pointInCircumcircle( a, c, d, b );
+      trace( 'in0 ' + in0 );
+      trace( 'in1 ' + in1 );
+      trace( 'in_' + ( in0 && in1 ) );
+      return in0 && in1;
     }
     
     // Checks wether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
@@ -386,9 +390,11 @@ class Triangulate {
                                 , j:            Int ): Bool {
       var out: Bool;
       if( isDelaunayEdge( vertices, edges[ j ], coEdges[ j ] ) ) {
+          trace( 'ensureDelaunayEdge ' + j + ' false ');
           out = false;
       } else { 
           edges.flipEdge( coEdges, sideEdges, j );
+          trace( 'ensureDelaunayEdge ' + j + ' true ');
           out = true;
       }
       trace(' ensureDelaunayEdge ' + out );
@@ -461,7 +467,8 @@ class Triangulate {
           while( unsureEdges.length > 0 ){
               var j = unsureEdges.pop();
               unsure[j] = false;
-              if ( !edges[j].fixed && ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j ) ) {
+              ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j );
+              if ( !edges[j].fixed && !ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j ) ) {
                   var newUnsureCnt = 0;
                   for( jk in sideEdges[j] ){ 
                       if( !unsure[jk] ){
@@ -477,8 +484,9 @@ class Triangulate {
                       }
                   }
                   //if( newUnsureCnt > 0 ) trace( unsureEdges.slice(-newUnsureCnt) );
-                }
-            }
+               }
+               
+          }
           return triedEdges;
         }
     }
