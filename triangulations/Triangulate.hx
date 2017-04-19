@@ -1,7 +1,7 @@
 package triangulations;
 
 import khaMath.Vector2;
-import triangulations.Node;
+import triangulations.DllNode;
 import triangulations.SideEdge;
 import triangulations.Edge;
 import triangulations.Edges;
@@ -77,12 +77,12 @@ class Triangulate {
             }
             
             var split;
-            var fromNode;
-            var toNode;
+            var prevDL;
+            var prevDL;
             if( acOK ){
               // No intersections. We can easily connect a and c.
-              fromNode = cNode;
-              toNode = aNode;
+              prevDL = cNode;
+              prevDL = aNode;
               split = true;
             } else {
               // If there are intersections, we have to find the closes vertex to b in
@@ -103,8 +103,8 @@ class Triangulate {
                   best = newBest;
               }
               
-              fromNode = bNode;
-              toNode = best;
+              prevDL = bNode;
+              prevDL = best;
               if( lHole < 0 ){
                 // The nearest vertex does not come from a hole. It is lies on the outer
                 // polygon itself (or is undefined).
@@ -117,32 +117,32 @@ class Triangulate {
               }
           }
 
-          if( toNode == null ) {
+          if( prevDL == null ) {
             // It was a triangle all along!
             continue;
           }
 
-          diagonals.push( new Edge( fromNode.value, toNode.value ) );
+          diagonals.push( new Edge( prevDL.value, prevDL.value ) );
           //if (trace !== undefined) {
             //trace.push({
               //selectFace: makeArrayPoly( poly ),
-              //addDiag: [fromNode.value, toNode.value ]
+              //addDiag: [prevDL.value, prevDL.value ]
             //});
           //}
 
           // TODO: Elaborate
-          var poly1 = new Node( fromNode.value );
-          poly1.next = fromNode.next; 
-          var tempNode = new Node( toNode.value );
-          tempNode.prev = toNode.prev;
+          var poly1 = new DllNodeInt( prevDL.value );
+          poly1.next = prevDL.next; 
+          var tempNode = new DllNodeInt( prevDL.value );
+          tempNode.prev = prevDL.prev;
           tempNode.next = poly1;
           poly1.prev = tempNode;
-          fromNode.next.prev = poly1;
-          toNode.prev.next = poly1.prev;
+          prevDL.next.prev = poly1;
+          prevDL.prev.next = poly1.prev;
 
-          fromNode.next = toNode;
-          toNode.prev = fromNode;
-          var poly2 = fromNode;
+          prevDL.next = prevDL;
+          prevDL.prev = prevDL;
+          var poly2 = prevDL;
           if( split ){
               polies.push( poly1 );
               polies.push( poly2 );
@@ -156,13 +156,13 @@ class Triangulate {
     // Given a polygon as a list of vertex indices, returns it in a form of
     // a doubly linked list.
     public static inline
-    function makeLinkedPoly( face: Array<Int> ): NodeInt {
-        var linkedPoly = new NodeInt( face[ 0 ] );
+    function makeLinkedPoly( face: Array<Int> ): DllNodeInt {
+        var linkedPoly = new DllNodeInt( face[ 0 ] );
         var node = linkedPoly;
         var l = face.length;
         for( i in 1...l ) {
             var prevNode = node;
-            node = new NodeInt( face[ i ] );
+            node = new DllNodeInt( face[ i ] );
             prevNode.next = node;
             node.prev = prevNode;
         }
@@ -191,8 +191,8 @@ class Triangulate {
     function intersects(    a:          Vector2
                         ,   b:          Vector2
                         ,   vertices:   Vertices
-                        ,   nodeBeg:    NodeInt
-                        ,   ?nodeEnd:    NodeInt = null ): Bool {
+                        ,   nodeBeg:    DllNodeInt
+                        ,   ?nodeEnd:   DllNodeInt = null ): Bool {
        var out = false;
        if( nodeEnd == null ) {
          if( aux( vertices, a, b, nodeBeg ) ){
@@ -217,7 +217,7 @@ class Triangulate {
     }
     
     public static inline
-    function aux( vertices: Vertices, a: Vector2, b: Vector2, node: NodeInt ): Bool {
+    function aux( vertices: Vertices, a: Vector2, b: Vector2, node: DllNodeInt ): Bool {
         var c = vertices[ node.value ];
         var d = vertices[ node.next.value ];
         return c != a && c != b && d != a && d != b && Geom2.edgesIntersect( a, b, c, d );
@@ -225,16 +225,16 @@ class Triangulate {
     
     public static inline
     function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
-                            : Vertices -> NodeInt -> NodeInt -> ?NodeInt -> NodeInt {
+                            : Vertices -> DllNodeInt -> DllNodeInt -> ?DllNodeInt -> DllNodeInt {
       
       var inabc     = Geom2.pointInTriangle( a, b, c );
       var acDistSq  = Geom2.pointToEdgeDistSq( a, c );
       
       return 
           function( vertices: Vertices
-                  , nodeBeg: NodeInt
-                  , nodeEnd: NodeInt
-                  , ?bestNode: NodeInt = null ): NodeInt {
+                  , nodeBeg: DllNodeInt
+                  , nodeEnd: DllNodeInt
+                  , ?bestNode: DllNodeInt = null ): DllNodeInt {
                       
               var v: Int; 
               var maxDepthSq = 
@@ -393,7 +393,7 @@ class Triangulate {
     
     // makeArrayPoly
     public static inline
-    function faceFromNode( linkedPoly: NodeInt ): Face {
+    function faceFromNode( linkedPoly: DllNodeInt ): Face {
         var face = new Face();
         var node = linkedPoly;
         var l = 0;
@@ -442,7 +442,7 @@ class Triangulate {
                                   , edges:      Edges
                                   , coEdges:    Edges
                                   , sideEdges:  Array<SideEdge>
-                                  , p:          NodeInt
+                                  , p:          DllNodeInt
                                   , j0:         Int ) {
 
         var enqueued = [];
