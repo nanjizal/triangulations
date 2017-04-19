@@ -8,7 +8,9 @@ import triangulations.Edges;
 import triangulations.Vertices;
 import triangulations.Queue;
 import triangulations.Face;
+import triangulations.Triangulate;
 
+typedef DelanuayFunc = Vertices->Edges->Edges->Array<SideEdge>->Array<Int>->Array<Int>;
 class Triangulate {
     
     public static inline
@@ -306,7 +308,6 @@ class Triangulate {
       for( i in 0...l ){
         var v = vertices[i];
         var js = outEdges[i];
-
         // Reverse edges, so that they point outward and sort them angularily.
         for( k in 0...js.length ) {
           var e = edges[js[k]];
@@ -331,6 +332,7 @@ class Triangulate {
           // i.e., edges[jNext][1] will be, or already was, put while processing the
           // edges of the opporite vertex, i.e., edges[j][1].
           coEdges[j].push( edges[ jPrev ].q );
+          trace( 'coEdges['+j+']' + coEdges[j] );
           sideEdges[j].push( jPrev );
           sideEdges[j].push( jNext );  
         }
@@ -349,7 +351,7 @@ class Triangulate {
         var ses = sideEdges[ j ];
 
         // NOT Working?? Comment out ...
-
+        
         // If the whole mesh is a triangle, just remove one of the duplicate entries
         if( ce.p == ce.q ) {
           ce.q = ses.b = ses.c = null;
@@ -361,6 +363,7 @@ class Triangulate {
         // surely they need to be removed for safety once that is done otherwise easily break rendering?
         // 
         // NOT Working!! Comment out ...
+        // problematic if the connector is between the two sides rather than along edge.
         /*
         // If the arms of a supported triangle are also external, remove.
         if( edges[ ses.a ].external && edges[ ses.d ].external)
@@ -369,7 +372,7 @@ class Triangulate {
           ce.q = ses.b = ses.c = null;  
         */
       }
-      
+      trace( 'coEdges__ ' + coEdges );
     }
     
     // Given edges along with their quad-edge datastructure, flips the chosen edge
@@ -388,6 +391,7 @@ class Triangulate {
           edges.flipEdge( coEdges, sideEdges, j );
           out = true;
       }
+      trace(' ensureDelaunayEdge ' + out );
       return out;
     }
     
@@ -408,7 +412,7 @@ class Triangulate {
     // Refines the given triangulation graph to be a Conforming Delaunay
     // Triangulation (abr. CDT). Edges with property fixed = true are not altered.
     //
-    // The edges are modified in place and returned is an array of indeces tried to
+    // The edges are modified in place and returned is an array of indices tried to
     // flip. The flip was performed unless the edge was fixed. If a trace array is
     // provided, the algorithm will log key actions into it.
     public static inline
@@ -416,22 +420,26 @@ class Triangulate {
                             ,   edges:      Edges
                             ,   coEdges:    Edges
                             ,   sideEdges:  Array<SideEdge> )
-                            :   Vertices->Edges->Edges->Array<SideEdge>->Array<Int>->Array<Int>
+                            :   Array<Int>
     {
       // We mark all edges as unsure, i.e., we don't know whether the enclosing
       // quads of those edges are properly triangulated.
       var unsureEdges = edges.getUnsure();
-      return maintainDelaunay( vertices, edges, coEdges, sideEdges, unsureEdges );
+      trace( 'unsureEdges ' + unsureEdges );
+      return delaunay( vertices, edges, coEdges, sideEdges, unsureEdges );
     }
-    
-    public static inline
-    function maintainDelaunay(  vertices:   Vertices
-                            ,   edges:      Edges
-                            ,   coEdges:    Edges
-                            ,   sideEdges:  Array<SideEdge>
-                            ,   unsureEdges: Array<Int> )
-                            :   Vertices->Edges->Edges->Array<SideEdge>->Array<Int>->Array<Int> 
-    {
+    static var _delaunay: DelanuayFunc;
+    public static var delaunay( get, null ): DelanuayFunc;
+    public static function get_delaunay(): DelanuayFunc {
+        if( _delaunay == null  ) _delaunay = maintainDelaunay();
+        return _delaunay;
+    }
+    public static function delaunayReset(){
+        _delaunay = null;
+        return delaunay;
+    }
+    static inline
+    function maintainDelaunay(): DelanuayFunc {
         var unsure = new Array<Bool>();
         var tried = new Array<Int>();
         var cookie: Int = 0;
