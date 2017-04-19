@@ -1,17 +1,15 @@
 package triangulations;
-typedef NodeInt = Node<Int>;
-class Node<T> {
-    public var prev: Node<T>;
-    public var next: Node<T>;
+// Double Linked List Node
+typedef DllNodeInt = DllNode<Int>;
+class DllNode<T> {
+    public var prev: DllNode<T>;
+    public var next: DllNode<T>;
     public var value: Null<T>;
     public function new( value_: T ){
         value = value_;
     }
     @:keep
     public function toString() {
-        /*return value;
-    }
-    public function toStringOrder() {*/
         var p = prev.value;
         var n = next.value;
         return '$p -> $value -> $n';
