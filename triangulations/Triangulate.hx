@@ -52,9 +52,9 @@ class Triangulate {
             } while( !convex && node != poly);
 
             if(!convex) continue;
-            var aNode = node.prev.prev;
-            var bNode = node.prev;
-            var cNode = node;
+            var aDllNode = node.prev.prev;
+            var bDllNode = node.prev;
+            var cDllNode = node;
 
             // We try to make a diagonal out of ac. This is possible only if it lies
             // completely inside the polygon.
@@ -66,10 +66,10 @@ class Triangulate {
             // case when the immediate neighbors of vertices a and c are inside abc.
             // Note that if ac is already an edge, it will also be rejected.
             var inabc = Geom2.pointInTriangle( a, b, c );
-            acOK = !inabc( vertices[ aNode.prev.value ] ) && !inabc( vertices[ cNode.next.value ] );
+            acOK = !inabc( vertices[ aDllNode.prev.value ] ) && !inabc( vertices[ cDllNode.next.value ] );
             
             // Now we proceed with checking the intersections with ac.
-            if( acOK ) acOK = !intersects( a, c, vertices, cNode.next, aNode.prev );
+            if( acOK ) acOK = !intersects( a, c, vertices, cDllNode.next, aDllNode.prev );
             var holesLen = holes.length;
             for( l in 0...holesLen ){
                 acOK = !intersects( a, c, vertices, holes[ l ] );
@@ -77,12 +77,12 @@ class Triangulate {
             }
             
             var split;
-            var prevDL;
-            var prevDL;
+            var fromDllNode;
+            var toDllNode;
             if( acOK ){
               // No intersections. We can easily connect a and c.
-              prevDL = cNode;
-              prevDL = aNode;
+              fromDllNode = cDllNode;
+              toDllNode = aDllNode;
               split = true;
             } else {
               // If there are intersections, we have to find the closes vertex to b in
@@ -90,8 +90,8 @@ class Triangulate {
               // guaranteed that such a vertex forms a legal diagonal with b.
               var findBest = findDeepestInside(a, b, c);
               var best = 
-                  if( cNode.next != aNode ){
-                      findBest( vertices, cNode.next, aNode );
+                  if( cDllNode.next != aDllNode ){
+                      findBest( vertices, cDllNode.next, aDllNode );
                   } else {
                       null; 
                   }
@@ -103,8 +103,8 @@ class Triangulate {
                   best = newBest;
               }
               
-              prevDL = bNode;
-              prevDL = best;
+              fromDllNode = bDllNode;
+              toDllNode = best;
               if( lHole < 0 ){
                 // The nearest vertex does not come from a hole. It is lies on the outer
                 // polygon itself (or is undefined).
@@ -117,32 +117,32 @@ class Triangulate {
               }
           }
 
-          if( prevDL == null ) {
+          if( toDllNode == null ) {
             // It was a triangle all along!
             continue;
           }
 
-          diagonals.push( new Edge( prevDL.value, prevDL.value ) );
+          diagonals.push( new Edge( fromDllNode.value, toDllNode.value ) );
           //if (trace !== undefined) {
             //trace.push({
               //selectFace: makeArrayPoly( poly ),
-              //addDiag: [prevDL.value, prevDL.value ]
+              //addDiag: [fromDllNode.value, toDllNode.value ]
             //});
           //}
 
           // TODO: Elaborate
-          var poly1 = new DllNodeInt( prevDL.value );
-          poly1.next = prevDL.next; 
-          var tempNode = new DllNodeInt( prevDL.value );
-          tempNode.prev = prevDL.prev;
-          tempNode.next = poly1;
-          poly1.prev = tempNode;
-          prevDL.next.prev = poly1;
-          prevDL.prev.next = poly1.prev;
+          var poly1 = new DllNode( fromDllNode.value );
+          poly1.next = fromDllNode.next; 
+          var tempDllNode = new DllNode( toDllNode.value );
+          tempDllNode.prev = toDllNode.prev;
+          tempDllNode.next = poly1;
+          poly1.prev = tempDllNode;
+          fromDllNode.next.prev = poly1;
+          toDllNode.prev.next = poly1.prev;
 
-          prevDL.next = prevDL;
-          prevDL.prev = prevDL;
-          var poly2 = prevDL;
+          fromDllNode.next = toDllNode;
+          toDllNode.prev = fromDllNode;
+          var poly2 = fromDllNode;
           if( split ){
               polies.push( poly1 );
               polies.push( poly2 );
@@ -161,10 +161,10 @@ class Triangulate {
         var node = linkedPoly;
         var l = face.length;
         for( i in 1...l ) {
-            var prevNode = node;
+            var prevDllNode = node;
             node = new DllNodeInt( face[ i ] );
-            prevNode.next = node;
-            node.prev = prevNode;
+            prevDllNode.next = node;
+            node.prev = prevDllNode;
         }
         node.next = linkedPoly;
         linkedPoly.prev = node;
@@ -192,7 +192,7 @@ class Triangulate {
                         ,   b:          Vector2
                         ,   vertices:   Vertices
                         ,   nodeBeg:    DllNodeInt
-                        ,   ?nodeEnd:   DllNodeInt = null ): Bool {
+                        ,   ?nodeEnd:    DllNodeInt = null ): Bool {
        var out = false;
        if( nodeEnd == null ) {
          if( aux( vertices, a, b, nodeBeg ) ){
@@ -234,12 +234,12 @@ class Triangulate {
           function( vertices: Vertices
                   , nodeBeg: DllNodeInt
                   , nodeEnd: DllNodeInt
-                  , ?bestNode: DllNodeInt = null ): DllNodeInt {
+                  , ?bestDllNode: DllNodeInt = null ): DllNodeInt {
                       
               var v: Int; 
               var maxDepthSq = 
-                  if( bestNode != null ){
-                      v = bestNode.value;
+                  if( bestDllNode != null ){
+                      v = bestDllNode.value;
                       acDistSq( vertices[ v ] );
                   } else {
                     -1;
@@ -252,13 +252,13 @@ class Triangulate {
                       var depthSq = acDistSq( v );
                       if( depthSq > maxDepthSq ) {
                           maxDepthSq = depthSq;
-                          bestNode = node;
+                          bestDllNode = node;
                       }
                   }
                   node = node.next;
                } while (node != nodeEnd);
                
-               return bestNode;
+               return bestDllNode;
            };
     }
     
@@ -326,7 +326,7 @@ class Triangulate {
           var jPrev = js[(js.length + k - 1) % js.length];
           var j     = js[k];
           var jNext = js[(k + 1) % js.length];
-          // Node that although we could determine the whole co-edge just now, we
+          // DllNode that although we could determine the whole co-edge just now, we
           // we choose to push only the endpoint edges[jPrev][1]. The other end,
           // i.e., edges[jNext][1] will be, or already was, put while processing the
           // edges of the opporite vertex, i.e., edges[j][1].
@@ -393,7 +393,7 @@ class Triangulate {
     
     // makeArrayPoly
     public static inline
-    function faceFromNode( linkedPoly: DllNodeInt ): Face {
+    function faceFromDllNode( linkedPoly: DllNodeInt ): Face {
         var face = new Face();
         var node = linkedPoly;
         var l = 0;
@@ -444,7 +444,6 @@ class Triangulate {
                                   , sideEdges:  Array<SideEdge>
                                   , p:          DllNodeInt
                                   , j0:         Int ) {
-
         var enqueued = [];
         var cookie = 0;
         return function() {
@@ -464,7 +463,6 @@ class Triangulate {
                     = enqueued[2 * j1 + ( coEdges[j1].p == edges[j].q ? 0 : 1)]
                     = cookie;
         }
-
       // We start at two triangles adjecent to edge j.
       tryEnqueue( j0, 0); 
       tryEnqueue( j0, 1);
@@ -477,9 +475,7 @@ class Triangulate {
         var b = vertices[bi];
         var ci = edges[j].q;  
         var c = vertices[ci];
-
         if( Geom2.pointInTriangle(a, b, c)(p) ) return t;
-
         // Continue search to triangles adjecent to edges opposite to vertices a and
         // c. The other triangle, adjecent to edge j, i.e., oppisite to b, is not
         // further examined as this is the direction we are coming from.
@@ -516,7 +512,6 @@ class Triangulate {
       var ja = j; // Reuse the index
       edges.push( new Edge( ip, ic ) );
       var jc = edges.length - 1;
-
       // One of the supported triangles is is not present if the edge is external,
       // which is typical for fixed edges.
       var jb;
@@ -527,18 +522,14 @@ class Triangulate {
         jb =  edges.length - 1;
         j0 = sideEdges[j].a; 
         j3 = sideEdges[j].d;
-
         coEdges[j0].substitute( ia, ip );
         sideEdges[j0].substitute( j, jc );
         sideEdges[j0].substitute( j3, jb );
-
         coEdges[j3].substitute( ic, ip );
       //arraySubst4(sideEdges[j3],  j, ja); // Not needed, ja == j
         sideEdges[j3].substitute( j0, jb );
-
         coEdges[jb] = new Edge( ia, ic );
         sideEdges[jb] = new SideEdge( ja, jc, j0, j3 );
-
         if( !edges[j0].fixed ) unsureEdges.push( j0 );
         if (!edges[j3].fixed)  unsureEdges.push( j3 );
       }
@@ -551,27 +542,21 @@ class Triangulate {
         jd = edges.length - 1;
         j1 = sideEdges[j].b; 
         j2 = sideEdges[j].c;
-
         coEdges[j1].substitute( ia, ip );
         sideEdges[j1].substitute( j, jc );
         sideEdges[j1].substitute( j2, jd );
-
         coEdges[j2].substitute( ic, ip );
       //arraySubst4(sideEdges[j2],  j, ja); // Not needed, ja == j
         sideEdges[j2].substitute( j1, jd );
-
         coEdges[ jd ] = new Edge( ia, ic );
         sideEdges[ jd ] = new SideEdge( j2, j1, jc, ja );
-
         if( !edges[j1].fixed ) unsureEdges.push( j1 );
         if( !edges[j2].fixed ) unsureEdges.push( j2 );
       }
-
     //coEdges[ja] = [ib, id]; // Not needed, already there.
       sideEdges[ ja ] = new SideEdge( jb, jd, j2, j3 );
       coEdges[ jc ]   = new Edge( ib, id );
       sideEdges[ jc ] = new SideEdges( j0, j1, jd, jb );
-
       // Splitting a fixed edge yields fixed edges. Same with external.
       if( edge.fixed ) {
           edges[ ja ].fixed = true;
@@ -581,7 +566,6 @@ class Triangulate {
         edges[ ja ].external = true;
         edges[ jc ].external = true;
      }
-
       var affectedEdges = maintainDelaunay( vertices
                                           , edges
                                           , coEdges
@@ -630,14 +614,12 @@ class Triangulate {
         unsure[ unsureEdges[l] ] = true;
         tried[ unsureEdges[l] ] = cookie;
       }
-
       // The procedure used is the incremental Flip Algorithm. As long as there are
       // any, we fix the triangulation around an unsure edge and mark the
       // surrounding ones as unsure.
       while (unsureEdges.length > 0) {
         var j = unsureEdges.pop();
         unsure[j] = false;
-
         //var traceEntry = { ensured: j };
         if ( !edges[j].fixed && ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j ) ) {
           traceEntry.flippedTo = edges[j].slice();
@@ -659,7 +641,6 @@ class Triangulate {
           //if (newUnsureCnt > 0) traceEntry.markedUnsure = unsureEdges.slice(-newUnsureCnt);
         }
       }
-
       return triedEdges;
     }}
     
