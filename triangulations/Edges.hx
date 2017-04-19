@@ -24,8 +24,10 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
     function clone(): Edges {
         var e = new Edges();
         var l = this.length;
+        var tempIn: Edge;
+        var tempOut: Edge;
         for( i in 0...l ){
-            e[ i ] = new Edge( this[ i ].p, this[ i ].q );
+            e[i] = this[i].clone();       
         }
         return e;
     }
