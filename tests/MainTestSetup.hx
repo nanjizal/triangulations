@@ -70,7 +70,7 @@ class MainTestSetup {
     var webgl: Drawing;
     var verts: Vertices;
     var ctx: PathContext;
-    var interactionSurface: InteractionSurface<Vector2>;
+    var interactionSurface:   InteractionSurface<Vector2>;
     
     public function createFillData(){
         banana  = new Banana();
@@ -146,7 +146,7 @@ class MainTestSetup {
     }
     
     var scene = 0;
-    var sceneMax = 6;
+    var sceneMax = 7;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
@@ -182,7 +182,10 @@ class MainTestSetup {
                 triangulateShape.vertices;
             case 6:
                 trace( 'quad edge test');
-                quadEdgeShape.vertices; 
+                quadEdgeShape.vertices;
+            case 7: 
+                trace( 'delaunay test');
+                delaunayShape.vertices;
             default:
                 trace( 'no test');
                 null;
@@ -209,6 +212,8 @@ class MainTestSetup {
                 triangulateTest();
             case 6:
                 quadEdgeTest();
+            case 7:
+                delaunayTest();
             default:
                 
         }
@@ -354,7 +359,29 @@ class MainTestSetup {
         drawEdges( edges, shape, ctx, true );
         ctx.render( thick, false );
     }
-    
+    function delaunayTest(){
+        var shape = delaunayShape;
+        var vert = shape.vertices;
+        var face = shape.faces;
+        var edges = shape.edges;
+        
+        var diags = Triangulate.triangulateFace( vert, face[0] );
+        var all = edges.clone().add(diags);        
+        var coEdges = new Edges();
+        var sideEdges = new Array<SideEdge>();
+        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
+        Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        var thick = 4;
+        ctx.setThickness( 4 );
+        ctx.fill = true;
+        ctx.setColor( 0, 3 );
+        ctx.moveTo( 0, 0 );
+        // ??
+        drawEdges( edges, shape, ctx, true );
+        drawEdges( all, shape, ctx, true );
+        ctx.render( thick, false );
+    }
     public function bananaTest(){
         var thick = 4;
         ctx = new PathContext( 1, 1024, 0, 0 );
