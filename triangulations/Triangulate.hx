@@ -11,23 +11,15 @@ import triangulations.Face;
 
 class Triangulate {
     
-    // "ok"
     public static inline
-    function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> /*, trace */ ) {
+    function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> ) {
         for ( k in 0...face.length ) {
-            var diags = triangulateFace( vertices, face[ k ] /*, trace */ );
-            trace( 'diags ' + diags );
-            var l = edges.length;
-            var d = diags.length;
-            trace( 'edges.length ' + edges.length );
-            for( i in 0...d ) edges[ l + i ] = diags[ i ];// concat Array.prototype.push.apply(edges, diags);
-            trace( 'edges.length new ' + edges.length );
+            var diags = triangulateFace( vertices, face[ k ] );
+            edges.add( diags );
         }
     }
     
-    
-    // "Maybe OK?"
-    public static //inline
+    public static inline
     function triangulateFace(  vertices:   Vertices
                             ,  face:      Array<Face> ){
         // Convert the polygon components into linked lists. We assume the first
@@ -161,7 +153,6 @@ class Triangulate {
         return diagonals;
     }
     
-    // "ok"
     // Given a polygon as a list of vertex indices, returns it in a form of
     // a doubly linked list.
     public static inline
@@ -180,7 +171,6 @@ class Triangulate {
         return linkedPoly;
     }
     
-    // "ok"
     public static inline
     function isDelaunayEdge(    vertices:   Vertices
                             ,   edge:       Edge
@@ -193,7 +183,6 @@ class Triangulate {
              !Geom2.pointInCircumcircle( a, c, d, b );
     }
     
-    // "ok"
     // Checks wether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
     // If nodeEnd is not provided, nodeBeg is interpreted as lying on a cycle and
     // the whole cycle is tested. Edges spanned on equal (===) vertices are not
@@ -227,7 +216,6 @@ class Triangulate {
       return out;
     }
     
-    // "ok"
     public static inline
     function aux( vertices: Vertices, a: Vector2, b: Vector2, node: NodeInt ): Bool {
         var c = vertices[ node.value ];
@@ -235,7 +223,6 @@ class Triangulate {
         return c != a && c != b && d != a && d != b && Geom2.edgesIntersect( a, b, c, d );
     }
     
-    // "ok"
     public static inline
     function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
                             : Vertices -> NodeInt -> NodeInt -> ?NodeInt -> NodeInt {
@@ -275,9 +262,116 @@ class Triangulate {
            };
     }
     
+    // Given a triangulation graph, produces the quad-edge datastructure for fast
+    // local traversal. The result consists of two arrays: coEdges and sideEdges
+    // with one entry per edge each. The coEdges array is returned as list of vertex
+    // index pairs, whereas sideEdges are represented by edge index quadruples.
+    //
+    // Consider edge ac enclosed by the quad abcd. Then its co-edge is bd and the
+    // side edges are: bc, cd, da, ab, in that order. Although the graph is not
+    // directed, the edges have direction implied by the implementation. The order
+    // of side edges is determined by the de facto orientation of the primary edge
+    // ac and its co-edge bd, but the directions of the side edges are arbitrary.
+    //
+    // External edges are handled by setting indices describing one supported
+    // triangle to undefined. Which triangle it will be is not determined.
+    //
+    // WARNING: The procedure will change the orientation of edges.
+    // 
+    public static 
+    function makeQuadEdge( vertices: Vertices
+                        ,  edges: Edges
+                        , coEdges: Edges
+                        , sideEdges: Array<SideEdge> ) {
+      // Prepare datas tructures for fast graph traversal.  
+      // !!!! pass coEdges and SideEdges in rather than return object of them.  !!!
+      //var coEdges = [];
+      //var sideEdges = [];
+      for( j in 0...edges.length ){
+        coEdges[ j ] = new Edge( null, null );
+        sideEdges[ j ] = SideEdge.getEmpty();
+      }
+
+      // Find the outgoing edges for each vertex
+      var outEdges = new Array<Array<Int>>();
+      for( i in 0...vertices.length )
+        outEdges[ i ] = new Array<Int>();
+      for( j in 0...edges.length ){
+        var e = edges[ j ];
+        outEdges[ e.p ].push( j );
+        outEdges[ e.q ].push( j );
+      }
+      var l = vertices.length;
+      // Process edges around each vertex.
+      for( i in 0...l ){
+        var v = vertices[i];
+        var js = outEdges[i];
+
+        // Reverse edges, so that they point outward and sort them angularily.
+        for( k in 0...js.length ) {
+          var e = edges[js[k]];
+          if( e.p != i ) {
+            e.q = e.p;
+            e.p = i;
+          }
+        }
+        
+        var angleCmp = Geom2.angleCompare( v, vertices[ edges[ js[ 0 ] ].q ] );
+        js.sort(function (j1: Int, j2: Int) {
+          return Std.int( angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]) );
+        });
+
+        // Associate each edge with neighbouring edges appropriately.
+        for( k in 0...js.length ) {
+          var jPrev = js[(js.length + k - 1) % js.length];
+          var j     = js[k];
+          var jNext = js[(k + 1) % js.length];
+          // Node that although we could determine the whole co-edge just now, we
+          // we choose to push only the endpoint edges[jPrev][1]. The other end,
+          // i.e., edges[jNext][1] will be, or already was, put while processing the
+          // edges of the opporite vertex, i.e., edges[j][1].
+          coEdges[j].push( edges[ jPrev ].q );
+          sideEdges[j].push( jPrev );
+          sideEdges[j].push( jNext );  
+        }
+        
+      }
+
+      // Amend external edges
+      // THIS DOES NOT SEEM TO BE USED???
+      function disjoint( i: Int, j: Int ) { 
+          return edges[j].p != i && edges[j].q != i;
+      }
+      
+      for( j in 0...edges.length ){
+        if( !edges[j].external ) continue;
+        var ce = coEdges[ j ]; 
+        var ses = sideEdges[ j ];
+
+        // NOT Working?? Comment out ...
+
+        // If the whole mesh is a triangle, just remove one of the duplicate entries
+        if( ce.p == ce.q ) {
+          ce.q = ses.b = ses.c = null;
+          continue;
+        }
+        
+        // TODO: Fix / Rework
+        // This seems to partially destroy half an Edge and sideEdge from coEdges/sideEdges,
+        // surely they need to be removed for safety once that is done otherwise easily break rendering?
+        // 
+        // NOT Working!! Comment out ...
+        /*
+        // If the arms of a supported triangle are also external, remove.
+        if( edges[ ses.a ].external && edges[ ses.d ].external)
+          ce.p = ses.a = ses.d = null;
+        if( edges[ ses.b ].external && edges[ ses.c ].external)
+          ce.q = ses.b = ses.c = null;  
+        */
+      }
+      
+    }
     
-    /*
-    // "ok"
     // Given edges along with their quad-edge datastructure, flips the chosen edge
     // j if it doesn't form a Delaunay triangulation with its enclosing quad.
     // Returns true if a flip was performed.
@@ -291,13 +385,28 @@ class Triangulate {
       if( isDelaunayEdge( vertices, edges[ j ], coEdges[ j ] ) ) {
           out = false;
       } else { 
-          flipEdge( edges, coEdges, sideEdges, j );
+          edges.flipEdge( coEdges, sideEdges, j );
           out = true;
       }
       return out;
     }
     
+    // makeArrayPoly
+    public static inline
+    function faceFromNode( linkedPoly: NodeInt ): Face {
+        var face = new Face();
+        var node = linkedPoly;
+        var l = 0;
+        do {
+            face[ l ] = node.value;
+            ++l;
+            node = node.next;
+        } while (node != linkedPoly);
+        return face;
+    }
     
+    
+    /*
     // "ok"  - unsure of fixed
     // Refines the given triangulation graph to be a Conforming Delaunay
     // Triangulation (abr. CDT). Edges with property fixed = true are not altered.
@@ -315,26 +424,6 @@ class Triangulate {
       unsureEdges = edges.getUnsure();
       return maintainDelaunay( vertices, edges, coEdges, sideEdges, unsureEdges );
     }
-    
-    
-
-    
-    // "ok"
-    public static inline
-    function makeArrayPoly( linkedPoly: NodeInt ): NodeInt {
-        var poly = [];
-        var node = linkedPoly;
-        var l = 0;
-        do {
-            poly[ l ] = node.value;
-            ++l;
-            node = node.next;
-        } while (node != linkedPoly);
-        return poly;
-    }
-    
-    
-
     
     // "NOT OK - requires more work and thought"
     
@@ -574,254 +663,6 @@ class Triangulate {
       return triedEdges;
     }}
     
-    
-    // "Maybe OK?"
-    public static inline
-    function triangulateFaces(  vertices:   Vertices
-                            ,   faces:      Array<Vector2> ){
-        // Convert the polygon components into linked lists. We assume the first
-        // polygon is the outermost, and the rest, if present, are holes.
-        var polies = [ makeLinkedPoly( faces[ 0 ] ) ];
-        var holes = [];
-        for ( k in 1...face.length ){
-          holes.push( makeLinkedPoly( face[ k ] ) );
-        }
-        
-        // We handle only the outer polygons. We start with only one, but more are
-        // to come because of splitting. The holes are eventually merged in.
-        // In each iteration a diagonal is added.
-        var diagonals = [];
-        while( polies.length > 0 ){
-            var poly = polies.pop();
-
-            // First we find a locally convex vertex.
-            var node = poly;
-            var a: Vector2;
-            var b: Vector2;
-            var c: Vector2;
-            var convex = false;
-            do {
-                a = vertices[ node.prev.value ];
-                b = vertices[ node.value ];
-                c = vertices[ node.next.value ];
-                convex = (a.span(b)).cross(b.span(c)) < 0;
-                node = node.next;
-            } while( !convex && node != poly);
-
-            if(!convex) continue;
-            var aNode = node.prev.prev;
-            var bNode = node.prev;
-            var cNode = node;
-
-            // We try to make a diagonal out of ac. This is possible only if it lies
-            // completely inside the polygon.
-            var acOK = true;
-
-            // Ensuring there are no intersections of ac with other edges doesn't
-            // guarantee that ac lies within the poly. It is also possible that the
-            // whole polygon is inside the triangle abc. Therefore we early reject the
-            // case when the immediate neighbors of vertices a and c are inside abc.
-            // Note that if ac is already an edge, it will also be rejected.
-            var inabc = Geom2.pointInTriangle( a, b, c );
-            acOK = !inabc( vertices[ aNode.prev.value ] ) && !inabc( vertices[ cNode.next.value ] );
-            
-            // Now we proceed with checking the intersections with ac.
-            if( acOK ) acOK = !intersects( a, c, vertices, cNode.next, aNode.prev );
-            
-            var holesLen = holes.length;
-            for( l in 0...holesLen ){
-                if( !acOK ) break;
-                acOK = !intersects( a, c, vertices, holes[ l ] );
-            }
-            
-            var split;
-            var fromNode;
-            var toNode;
-            
-            if (acOK) {
-              // No intersections. We can easily connect a and c.
-              fromNode = cNode;
-              toNode = aNode;
-              split = true;
-            } else {
-              // If there are intersections, we have to find the closes vertex to b in
-              // the direction perpendicular to ac, i.e., furthest from ac. It is
-              // guaranteed that such a vertex forms a legal diagonal with b.
-              var findBest = findDeepestInside(a, b, c);
-              var best = 
-                  if( cNode.next != aNode ){
-                      findBest( vertices, cNode.next, aNode );
-                  } else {
-                      null; 
-                  }
-              var lHole = -1;
-              var holesLen = holes.length;// TODO: check if need to redefine does findBest effect?
-              for( l in 0...holesLen ) {
-                  var newBest = findBest( vertices, holes[l], holes[l], best );
-                  if( newBest != best ) lHole = l;
-                  best = newBest;
-              }
-            
-              fromNode = bNode;
-              toNode = best;
-
-              if( lHole < 0 ){
-                // The nearest vertex does not come from a hole. It is lies on the outer
-                // polygon itself (or is undefined).
-                split = true;
-              } else {
-                // The nearest vertex is found on a hole. The hole will be merged into
-                // the currently processed poly, so we remove it from the hole list.
-                holes.splice( lHole, 1 );
-                split = false;
-              }
-              
-              if( toNode == null ) {
-                // It was a triangle all along!
-                continue;
-              }
-
-              diagonals.push( [ fromNode.value, toNode.value ] );
-              //if (trace !== undefined) {
-                //trace.push({
-                  //selectFace: makeArrayPoly( poly ),
-                  //addDiag: [fromNode.value, toNode.value ]
-                //});
-              //}
-
-              // TODO: Elaborate
-              var poly1 = new Node( fromNode.value );
-              poly1.next = fromNode.next; 
-              var tempNode = new Node( toNode.value );
-              tempNode.prev = toNode.prev;
-              tempNode.next = poly1;
-              poly1.prev = tempNode;
-              fromNode.next.prev = poly1;
-              toNode.prev.next = poly1.prev;
-
-              fromNode.next = toNode;
-              toNode.prev = fromNode;
-              var poly2 = fromNode;
-
-              if( split ){
-                  polies.push( poly1 );
-                  polies.push( poly2 );
-              } else {
-                  polies.push( poly2 );
-              }
-            }
-            return diagonals;
-                 
-        }
 */
-           
-            
-        // "NOT OK ??"
-            
-    // Given a triangulation graph, produces the quad-edge datastructure for fast
-    // local traversal. The result consists of two arrays: coEdges and sideEdges
-    // with one entry per edge each. The coEdges array is returned as list of vertex
-    // index pairs, whereas sideEdges are represented by edge index quadruples.
-    //
-    // Consider edge ac enclosed by the quad abcd. Then its co-edge is bd and the
-    // side edges are: bc, cd, da, ab, in that order. Although the graph is not
-    // directed, the edges have direction implied by the implementation. The order
-    // of side edges is determined by the de facto orientation of the primary edge
-    // ac and its co-edge bd, but the directions of the side edges are arbitrary.
-    //
-    // External edges are handled by setting indices describing one supported
-    // triangle to undefined. Which triangle it will be is not determined.
-    //
-    // WARNING: The procedure will change the orientation of edges.
-    // 
-    public static 
-    function makeQuadEdge( vertices: Vertices
-                        ,  edges: Edges
-                        , coEdges: Edges
-                        , sideEdges: Array<SideEdge> ) {
-      // Prepare datas tructures for fast graph traversal.  
-      // !!!! pass coEdges and SideEdges in rather than return object of them.  !!!
-      //var coEdges = [];
-      //var sideEdges = [];
-      for( j in 0...edges.length ){
-        coEdges[ j ] = new Edge( null, null );
-        sideEdges[ j ] = SideEdge.getEmpty();
-      }
-
-      // Find the outgoing edges for each vertex
-      var outEdges = new Array<Array<Int>>();
-      for( i in 0...vertices.length )
-        outEdges[ i ] = new Array<Int>();
-      for( j in 0...edges.length ){
-        var e = edges[ j ];
-        outEdges[ e.p ].push( j );
-        outEdges[ e.q ].push( j );
-      }
-      var l = vertices.length;
-      // Process edges around each vertex.
-      for( i in 0...l ){
-        var v = vertices[i];
-        var js = outEdges[i];
-
-        // Reverse edges, so that they point outward and sort them angularily.
-        for( k in 0...js.length ) {
-          var e = edges[js[k]];
-          if( e.p != i ) {
-            e.q = e.p;
-            e.p = i;
-          }
-        }
-        
-        var angleCmp = Geom2.angleCompare( v, vertices[ edges[ js[ 0 ] ].q ] );
-        js.sort(function (j1: Int, j2: Int) {
-          return Std.int( angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]) );
-        });
-
-        // Associate each edge with neighbouring edges appropriately.
-        for( k in 0...js.length ) {
-          var jPrev = js[(js.length + k - 1) % js.length];
-          var j     = js[k];
-          var jNext = js[(k + 1) % js.length];
-          // Node that although we could determine the whole co-edge just now, we
-          // we choose to push only the endpoint edges[jPrev][1]. The other end,
-          // i.e., edges[jNext][1] will be, or already was, put while processing the
-          // edges of the opporite vertex, i.e., edges[j][1].
-          coEdges[j].push( edges[ jPrev ].q );
-          sideEdges[j].push( jPrev );
-          sideEdges[j].push( jNext );  
-        }
-        
-      }
-
-      // Amend external edges
-      
-      function disjoint( i: Int, j: Int ) { 
-          return edges[j].p != i && edges[j].q != i;
-      }
-      for( j in 0...edges.length ){
-        if( !edges[j].external ) continue;
-        var ce = coEdges[ j ]; 
-        var ses = sideEdges[ j ];
-
-        // NOT Working?? Comment out ...
-
-        // If the whole mesh is a triangle, just remove one of the duplicate entries
-        if( ce.p == ce.q ) {
-          ce.q = ses.b = ses.c = null;
-          continue;
-        }
-        
-        // NOT Working!! Comment out ...
-        /*
-        // If the arms of a supported triangle are also external, remove.
-        if( edges[ ses.a ].external && edges[ ses.d ].external)
-          ce.p = ses.a = ses.d = null;
-        if( edges[ ses.b ].external && edges[ ses.c ].external)
-          ce.q = ses.b = ses.c = null;  
-        */
-      }
-      
-      //return { coEdges: coEdges, sideEdges: sideEdges };
-    }
 
 }
