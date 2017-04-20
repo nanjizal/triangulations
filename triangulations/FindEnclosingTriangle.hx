@@ -101,8 +101,8 @@ class FindEnclosingTriangle {
                 var ja = sideEdges[j].getByIndex( k ); // :(
                 var jc = sideEdges[j].getByIndex( 3 - k );
                 // Falling through a fixed edge is not allowed.
-                if( !edges[ja].fixed ) tryEnqueue( ja, coEdges[ja].p == ai ? 1 : 0 );
-                if( !edges[jc].fixed ) tryEnqueue( jc, coEdges[jc].p == ci ? 1 : 0 );
+                if( edges[ja] != null ) if( !edges[ja].fixed ) tryEnqueue( ja, coEdges[ja].p == ai ? 1 : 0 );
+                if( edges[jc] != null ) if( !edges[jc].fixed ) tryEnqueue( jc, coEdges[jc].p == ci ? 1 : 0 );
             }
             var face: Face = null;
             if ( t_ != null ) {
