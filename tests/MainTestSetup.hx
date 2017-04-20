@@ -195,6 +195,7 @@ class MainTestSetup {
                 null;
         }
         draw();
+        
         interactionSurface.setup( vert, transform, draw );
     }
     
@@ -376,8 +377,7 @@ class MainTestSetup {
         var edges = shape.edges;
         
         var diags = Triangulate.triangulateFace( vert, face[0] );
-        trace( 'diags ' + diags );
-        var all = edges.clone().add( diags );        
+        var all = edges.clone().add( diags );
         var coEdges = new Edges();
         var sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
@@ -412,7 +412,7 @@ class MainTestSetup {
     }
     public function enclosingTriangleTest(){
         var shape = enclosingTriangleShape;
-        var vert = shape.vertices;
+        var vert = shape.vertices;//.clone();
         var face = shape.faces;
         var edges = shape.edges;
         ctx = new PathContext( 1, 1024, 0, 0 );
@@ -421,14 +421,31 @@ class MainTestSetup {
         ctx.setThickness( 4 );
         ctx.setColor( 4, 3 );
         ctx.fill = true; // with polyK
+        var diags = Triangulate.triangulateFace( vert, face[0] );
+        var all = edges.clone().add( diags );
+        var coEdges = new Edges();
+        var sideEdges = new Array<SideEdge>();
+        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
         ctx.moveTo( 0, 0 );
         //drawVertices( shape, ctx, false );
         drawFaces( shape, ctx, false );
-        //drawEdges( edges, shape, ctx, true );
+        //drawEdges( edges, shape, ctx, false );
         ctx.setColor( 0 );
         ctx.fill = true; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
         drawVerticesPoints( shape, ctx, -1, 1, 5 );
+        
+        
+        var p = new Vector2( 300, 300 );
+        var p2 = new Vector2( 350, 350 );
+        drawSquare( 0, ctx, p );
+        var findTri = new FindEnclosingTriangle();
+        var triangle = findTri.getFace( vert, all, coEdges, sideEdges, p2, 0 )();
+        ctx.setColor( 7, 1 );
+        ctx.fill = true; // with polyK 
+        //triangle = [0,1,2];
+        if( triangle != null ) drawFace( triangle, shape, ctx, false );
+        trace( 'found triangle ' + triangle );
         ctx.render( thick, false );
     }
     public function bananaTest(){
