@@ -9,6 +9,7 @@ import triangulations.Settings;
 import triangulations.Graph;
 import triangulations.Face;
 import triangulations.Triangulate;
+import triangulations.FindEnclosingTriangle;
 //import triangulations.Rupert;
 import tests.fillShapes.*;
 import triangulations.FillShape;
@@ -60,7 +61,7 @@ class MainTestSetup {
     var angleCompareShape:    FillShape;
     var delaunayShape:        FillShape;
     var edgeIntersectShape:   FillShape;
-    var enclosingTriangle:    FillShape;
+    var enclosingTriangleShape:    FillShape;
     var graphShape:           FillShape;
     var pointInPolyShape:     FillShape;
     var pointInTriangleShape: FillShape;
@@ -81,7 +82,7 @@ class MainTestSetup {
         angleCompareShape       = new TestAngleCompareShape();
         delaunayShape           = new TestDelaunayShape();
         edgeIntersectShape      = new TestEdgeIntersectShape();
-        enclosingTriangle       = new TestEnclosingTriangleShape();
+        enclosingTriangleShape  = new TestEnclosingTriangleShape();
         graphShape              = new TestGraphShape();
         pointInPolyShape        = new TestPointInPolyShape();
         pointInTriangleShape    = new TestPointInTriangleShape();
@@ -96,7 +97,7 @@ class MainTestSetup {
                         ,   angleCompareShape
                         ,   delaunayShape 
                         ,   edgeIntersectShape  
-                        ,   enclosingTriangle  
+                        ,   enclosingTriangleShape  
                         ,   graphShape  
                         ,   pointInPolyShape 
                         ,   pointInTriangleShape 
@@ -146,7 +147,7 @@ class MainTestSetup {
     }
     
     var scene = 0;
-    var sceneMax = 7;
+    var sceneMax = 8;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
@@ -186,6 +187,9 @@ class MainTestSetup {
             case 7: 
                 trace( 'delaunay test');
                 delaunayShape.vertices;
+            case 8:
+                trace('enclosing triangle test');
+                enclosingTriangleShape.vertices;
             default:
                 trace( 'no test');
                 null;
@@ -214,6 +218,8 @@ class MainTestSetup {
                 quadEdgeTest();
             case 7:
                 delaunayTest();
+            case 8: 
+                enclosingTriangleTest();
             default:
                 
         }
@@ -402,6 +408,27 @@ class MainTestSetup {
         ctx.setColor( 1, 3 );
         ctx.moveTo( 0, 0 );
         drawEdges( edges, shape, ctx, true );
+        ctx.render( thick, false );
+    }
+    public function enclosingTriangleTest(){
+        var shape = enclosingTriangleShape;
+        var vert = shape.vertices;
+        var face = shape.faces;
+        var edges = shape.edges;
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.lineType = TriangleJoinCurve;
+        var thick = 4;
+        ctx.setThickness( 4 );
+        ctx.setColor( 4, 3 );
+        ctx.fill = true; // with polyK
+        ctx.moveTo( 0, 0 );
+        //drawVertices( shape, ctx, false );
+        drawFaces( shape, ctx, false );
+        //drawEdges( edges, shape, ctx, true );
+        ctx.setColor( 0 );
+        ctx.fill = true; // with polyK 
+        ctx.lineType = TriangleJoinCurve; // - default
+        drawVerticesPoints( shape, ctx, -1, 1, 5 );
         ctx.render( thick, false );
     }
     public function bananaTest(){
