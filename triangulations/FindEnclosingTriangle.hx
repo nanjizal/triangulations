@@ -20,7 +20,7 @@ import khaMath.Vector2;
     // co-edge vertex is chosen. Then the triangle index is t = 2 * j + k.
     
     // UNTESTED but can compile as import
-class FindEnclosingTriangles {
+class FindEnclosingTriangle {
     var enqueued    = new Array<Int>();
     var cookie:     Int = 0;
     var queue:      Queue<Int>;
