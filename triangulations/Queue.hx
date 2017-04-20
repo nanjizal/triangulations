@@ -33,7 +33,7 @@ class Queue<T> {
 
     // Enqueues the specified item. The parameter is:
     // item - the item to enqueue
-    public inline function equeue( item: Null<T> ){
+    public inline function enqueue( item: Null<T> ){
         queue.push( item );
     }
 
