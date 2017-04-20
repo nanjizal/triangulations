@@ -59,20 +59,20 @@ class FindEnclosingTriangles {
         return out;
     }
     public
-    function findEnclosingTriangle(     vertices:   Vertices
-                                  ,     edges_:      Edges
-                                  ,     coEdges_:    Edges
-                                  ,     sideEdges_:  Array<SideEdge>
-                                  ,     p:          Vector2
-                                  ,     j0:         Int 
-                                  ):    Void->Face {
+    function getFace(     vertices:   Vertices
+                    ,     edges_:      Edges
+                    ,     coEdges_:    Edges
+                    ,     sideEdges_:  Array<SideEdge>
+                    ,     p:          Vector2
+                    ,     j0:         Int 
+                    ):    Void->Face {
         return function() {
             edges = edges_;
             coEdges = coEdges_;
             sideEdges = sideEdges_;
             queue = new Queue<Int>();
             ++cookie;
-            // We start at two triangles adjecent to edge j.
+            // We start at two triangles adjacent to edge j.
             tryEnqueue( j0, 0 ); 
             tryEnqueue( j0, 1 ); 
             var t_ = null;
