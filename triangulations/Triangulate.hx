@@ -491,13 +491,13 @@ class Triangulate {
         }
     }
     
-    /*
+    
     // "Maybe OK"
     public static inline
     function splitEdge(     vertices:   Vertices
-                        ,   edges:      Edge
-                        ,   coEdges:    Edge
-                        ,   sideEdges:  SideEdge
+                        ,   edges:      Edges
+                        ,   coEdges:    Edges
+                        ,   sideEdges:  Array<SideEdge>
                         ,   j ) {
       var edge   = edges[j];
       var coEdge = coEdges[j];
@@ -507,17 +507,17 @@ class Triangulate {
       var id = coEdge.q;
       var p = (vertices[ia]).mid( vertices[ic] ) ;
       var unsureEdges = [];
-      verticies.push( p );
-      var ip = verticies.length - 1;
+      vertices.push( p );
+      var ip = vertices.length - 1;
       edges[ j ] = new Edge( ia, ip ); 
       var ja = j; // Reuse the index
       edges.push( new Edge( ip, ic ) );
       var jc = edges.length - 1;
       // One of the supported triangles is is not present if the edge is external,
       // which is typical for fixed edges.
-      var jb;
-      var j0;
-      var j3;
+      var jb = null;
+      var j0 = null;
+      var j3 = null;
       if( ib != null ){
         edges.push( new Edge( ib, ip ) );
         jb =  edges.length - 1;
@@ -557,7 +557,7 @@ class Triangulate {
     //coEdges[ja] = [ib, id]; // Not needed, already there.
       sideEdges[ ja ] = new SideEdge( jb, jd, j2, j3 );
       coEdges[ jc ]   = new Edge( ib, id );
-      sideEdges[ jc ] = new SideEdges( j0, j1, jd, jb );
+      sideEdges[ jc ] = new SideEdge( j0, j1, jd, jb );
       // Splitting a fixed edge yields fixed edges. Same with external.
       if( edge.fixed ) {
           edges[ ja ].fixed = true;
@@ -567,7 +567,8 @@ class Triangulate {
         edges[ ja ].external = true;
         edges[ jc ].external = true;
      }
-      var affectedEdges = maintainDelaunay( vertices
+     var delaunay_ = delaunay;
+      var affectedEdges = delaunay_( vertices
                                           , edges
                                           , coEdges
                                           , sideEdges
@@ -578,56 +579,4 @@ class Triangulate {
       if (jd != null ) affectedEdges.push( jd );
       return affectedEdges;
     }
-
-    
-    // "NOT OK - needs a lot more thought and work."
-    public static 
-    function maintainDelaunay() {
-    var unsure = new Array<Bool>();
-    var tried = new Array<Bool>();
-    var cookie: Int = 0;
-    return function(    vertices:   Vertices
-                    ,   edges:      Edges
-                    ,   coEdges:    Edges
-                    ,   sideEdges:  Array<SideEdge>
-                    ,   unsureEdges: Array<Int>
-                    ) {
-      ++cookie;
-      var triedEdges = unsureEdges.slice();
-      for( l in 0...unsureEdges.length ) {
-        unsure[ unsureEdges[l] ] = true;
-        tried[ unsureEdges[l] ] = cookie;
-      }
-      // The procedure used is the incremental Flip Algorithm. As long as there are
-      // any, we fix the triangulation around an unsure edge and mark the
-      // surrounding ones as unsure.
-      while (unsureEdges.length > 0) {
-        var j = unsureEdges.pop();
-        unsure[j] = false;
-        //var traceEntry = { ensured: j };
-        if ( !edges[j].fixed && ensureDelaunayEdge( vertices, edges, coEdges, sideEdges, j ) ) {
-          traceEntry.flippedTo = edges[j].slice();
-          var newUnsureCnt = 0;
-          for( k in 0...4 ) {// TODO: refactor
-            var jk = sideEdges[j].getIndexBy( k );
-            if (!unsure[jk]) {
-              if (tried[jk] != cookie) {
-                triedEdges.push(jk);
-                tried[ jk ] = cookie;
-              }
-              if (!edges[jk].fixed) {
-                unsureEdges.push(jk);
-                unsure[ jk ] = true;
-                ++newUnsureCnt;
-              }
-            }
-          }
-          //if (newUnsureCnt > 0) traceEntry.markedUnsure = unsureEdges.slice(-newUnsureCnt);
-        }
-      }
-      return triedEdges;
-    }}
-    
-*/
-
 }
