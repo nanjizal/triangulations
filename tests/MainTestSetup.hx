@@ -36,6 +36,7 @@ import js.html.DivElement;
 import js.html.Event;
 import js.html.KeyboardEvent;
 import js.html.MouseEvent;
+
 @:enum
 abstract RainbowColors( Int ){
     var Violet = 0x9400D3;
@@ -147,7 +148,7 @@ class MainTestSetup {
     }
     
     var scene = 0;
-    var sceneMax = 8;
+    var sceneMax = 9;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
@@ -190,18 +191,21 @@ class MainTestSetup {
             case 8:
                 trace('enclosing triangle test');
                 enclosingTriangleShape.vertices;
+                case 9:
+                trace('split test');
+                splitShape.vertices;
             default:
                 trace( 'no test');
                 null;
         }
         draw();
-        
         interactionSurface.setup( vert, transform, draw );
     }
     
     public function draw(){
         //trace('webgl drawing setup');
         Triangle.triangles = new Array<Triangle>();
+        
         switch( scene ){
             case 0:
                 bananaTest();
@@ -221,6 +225,8 @@ class MainTestSetup {
                 delaunayTest();
             case 8: 
                 enclosingTriangleTest();
+            case 9: 
+                splitTest();
             default:
                 
         }
@@ -447,6 +453,36 @@ class MainTestSetup {
         if( triangle != null ) drawFace( triangle, shape, ctx, false );
         trace( 'found triangle ' + triangle );
         ctx.render( thick, false );
+    }
+    public function splitTest(){
+        var shape = splitShape;
+        var vert = shape.vertices;
+        var face = shape.faces;
+        var edges = shape.edges;
+        
+        var diags = Triangulate.triangulateFace( vert, face[0] );
+        var all = edges.clone().add( diags );
+        var coEdges = new Edges();
+        var sideEdges = new Array<SideEdge>();
+        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
+        Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        var thick = 4;
+        ctx.setThickness( 4 );
+        ctx.setColor( 4, 0 );
+        ctx.moveTo( 0, 0 );
+        ctx.fill = false;
+        //Triangulate.splitEdge( vertices, edges, coEdges, sideEdges, j );
+        ctx.fill = false;
+        ctx.setColor( 0, 3 );
+        ctx.moveTo( 0, 0 );
+        //drawFaces( shape, ctx );
+        drawEdges( all, shape, ctx, true );
+        ctx.setColor( 1, 3 );
+        ctx.moveTo( 0, 0 );
+        drawEdges( edges, shape, ctx, true );
+        ctx.render( thick, false );
+    
     }
     public function bananaTest(){
         var thick = 4;
