@@ -5,9 +5,7 @@ import triangulations.SideEdge;
 import triangulations.Queue;
 import triangulations.Face;
 import khaMath.Vector2;
-  
-// This is not really nice to understand :(
-    
+
     // Finds the triangle enclosing the given point p. The quad-edge datastructure
     // has to be provided. The search is started from the triangles adjecent to
     // edge j0 and proceeds to to neighboring triangles. Falling through fixed
@@ -18,8 +16,6 @@ import khaMath.Vector2;
     // hacking. A triangle is represented by an edge and a vertex of its co-edge.
     // Suppose the edge in question has number j, and k is 0 or 1 depending on which
     // co-edge vertex is chosen. Then the triangle index is t = 2 * j + k.
-    
-    // UNTESTED but can compile as import
 class FindEnclosingTriangle {
     var enqueued    = new Array<Int>();
     var cookie:     Int = 0;
@@ -33,7 +29,6 @@ class FindEnclosingTriangle {
     // ambiguous -- each triangle has three indices. To prevent multiple visits,
     // all three are marked as already enqueued. Trianglea already enqueued and
     // Invalid triangles supported by external edges are rejected.
-    inline
     function tryEnqueue( j: Int, k: Int ): Bool {
         var t = 2 * j + k;
         var out: Bool;
@@ -43,7 +38,7 @@ class FindEnclosingTriangle {
         } else {
             pq = coEdges[ j ].q;
         }
-        
+
         if( enqueued[ t ] == cookie || pq == null ) {
             out = false;
         } else {
@@ -70,12 +65,13 @@ class FindEnclosingTriangle {
             edges = edges_;
             coEdges = coEdges_;
             sideEdges = sideEdges_;
+            
             queue = new Queue<Int>();
             ++cookie;
             // We start at two triangles adjacent to edge j.
             tryEnqueue( j0, 0 ); 
             tryEnqueue( j0, 1 ); 
-            var t_ = null;
+            var t_: Null<Int> = null;
             while( !queue.isEmpty() ){
                 var t = queue.dequeue();
                 var k = t % 2;
@@ -101,8 +97,12 @@ class FindEnclosingTriangle {
                 var ja = sideEdges[j].getByIndex( k ); // :(
                 var jc = sideEdges[j].getByIndex( 3 - k );
                 // Falling through a fixed edge is not allowed.
-                if( edges[ja] != null ) if( !edges[ja].fixed ) tryEnqueue( ja, coEdges[ja].p == ai ? 1 : 0 );
-                if( edges[jc] != null ) if( !edges[jc].fixed ) tryEnqueue( jc, coEdges[jc].p == ci ? 1 : 0 );
+                if( edges[ja] != null ) if( !edges[ja].fixed ) {
+                    tryEnqueue( ja, coEdges[ja].p == ai ? 1 : 0 );
+                }
+                if( edges[jc] != null ) if( !edges[jc].fixed ) {
+                    tryEnqueue( jc, coEdges[jc].p == ci ? 1 : 0 );
+                }
             }
             var face: Face = null;
             if ( t_ != null ) {
