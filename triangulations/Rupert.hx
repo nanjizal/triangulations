@@ -1,6 +1,7 @@
 package triangulations;
 import triangulations.Geom2;
 import triangulations.Triangulate;
+import triangulations.FindEnclosingTriangle;
 class Rupert {
     
     // "ok"
@@ -41,7 +42,7 @@ class Rupert {
         while (
             steinerLeft > 0 && (encroachedEdges.length > 0 || badTriangles.length > 0)
         ){
-            var affectedEdges = 0;
+            var affectedEdges = [];
             var forceSplit = [];
             var traceEntry = {};
             if (encroachedEdges.length > 0) {
@@ -50,9 +51,9 @@ class Rupert {
                 var j = encroachedEdges.pop();
                 encroached[j] = false;
                 if( edgeIsEncroached( vertices, edges, coEdges, j ) ) {
-                    affectedEdges = splitEdge( vertices, edges, coEdges, sideEdges, j );
+                    affectedEdges = Triangulate.splitEdge( vertices, edges, coEdges, sideEdges, j );
                     --steinerLeft;
-                    traceEntry.split = [j];
+                    //traceEntry.split = [j];
                 }
             } else if (badTriangles.length > 0) {
                 var s = Math.floor(Math.random() * badTriangles.length);
@@ -63,13 +64,19 @@ class Rupert {
                 var a = vertices[ edge.p ];
                 var c = vertices[ edge.q ];
                 var okCnt = 0;
-                
+                var coEdgeK: Int;
                 for( k in 0...2 ){ // NOT Ideal!!
-                    if (coEdge[k] == null ) {
+                    coEdgeK = if( k == 0 ){
+                        coEdge.p;
+                    } else {
+                        coEdge.q;
+                    }
+                    
+                    if( coEdgeK == null ) {
                         ++okCnt;
                         continue;
                     }
-                    var b = vertices[coEdge[k]];
+                    var b = vertices[ coEdgeK ];
                     if (!isBad(a, b, c)) {
                         ++okCnt;
                         continue;
@@ -94,7 +101,7 @@ class Rupert {
                 if (forceSplit.length > 0) traceEntry.split = [];
                 while (forceSplit.length > 0 && steinerLeft > 0) {
                       var j = forceSplit.pop();
-                      var affectedEdgesPart = splitEdge( vertices, edges, coEdges, sideEdges, j );
+                      var affectedEdgesPart = Triangulate.splitEdge( vertices, edges, coEdges, sideEdges, j );
                       Array.prototype.push.apply(affectedEdges, affectedEdgesPart);
                       var l = affectedEdgesPart.length;
                       for( i in 0...l ) affectedEdges[ l + i ] = affectedEdgesPart[ i ];
@@ -123,8 +130,9 @@ class Rupert {
                             , sideEdges:Array<SideEdge>
                             , p
                             , j0 ) {
-      var t = findEnclosingTriangle(vertices, edges, coEdges, sideEdges, p, j0);
-      if (t == undefined)
+      var findTri = new FindEnclosingTriangle();
+      var t = findTri.getFace( vertices, edges, coEdges, sideEdges, p, j0 )();
+      if (t == null)
         throw "impossibru";//return { success: true, affectedEdges: [] };
 
       var k = t % 2, j = (t - k) / 2;
@@ -206,5 +214,6 @@ class Rupert {
       return ( coEdge.p != null && p.distSq( vertices[ coEdge.p ] ) <= rSq ) ||
              ( coEdge.q != null && p.distSq( vertices[ coEdge.q ] ) <= rSq );
     }
+    
     
 }
