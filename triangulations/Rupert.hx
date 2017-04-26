@@ -149,9 +149,9 @@ class Rupert {
       var abj = sideEdges[ j ].getByIndex( 3 - k );
 
       var encroachedEdges = [];
-      if( edges[bcj].fixed && pointEncroachesEdge( b, c, p ) ) encroachedEdges.push( bcj );
-      if( edges[caj].fixed && pointEncroachesEdge( c, a, p ) ) encroachedEdges.push( caj );
-      if( edges[abj].fixed && pointEncroachesEdge( a, b, p ) ) encroachedEdges.push( abj );
+      if( edges[bcj].fixed && Geom2.pointEncroachesEdge( b, c, p ) ) encroachedEdges.push( bcj );
+      if( edges[caj].fixed && Geom2.pointEncroachesEdge( c, a, p ) ) encroachedEdges.push( caj );
+      if( edges[abj].fixed && Geom2.pointEncroachesEdge( a, b, p ) ) encroachedEdges.push( abj );
       if (encroachedEdges.length > 0)
         return { success: false, encroachedEdges: encroachedEdges };
 
