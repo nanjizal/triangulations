@@ -130,6 +130,9 @@ class MainTestSetup {
         sceneSetup();
         js.Browser.document.onkeydown = keyDownHandler;
     }
+    var updateFunction: Void->Void;
+    var mX: Float;
+    var mY: Float;
     var theta: Float = 0;
     inline function spinForwards(): Matrix4 {
         if( theta > Math.PI/2 ) {
@@ -205,6 +208,21 @@ class MainTestSetup {
         }
         draw();
         interactionSurface.setup( vert, transform, draw );
+        if( scene == 8 ) {
+            js.Browser.document.onmousemove = function ( e: MouseEvent ){
+                mX = e.clientX * 2;
+                mY = e.clientY * 2;
+                if( updateFunction != null ) {
+                    updateFunction();
+                }
+            }
+            // excessive don't really need to redraw all the triangles could use a secondary PathContext 
+            // save the triangles before drawing in then add extra on.
+            updateFunction = draw;
+        } else {
+            updateFunction = null;
+            js.Browser.document.onmousemove = null;
+        }
     }
     
     public function draw(){
@@ -367,8 +385,6 @@ class MainTestSetup {
         var coEdges = new Edges();
         var sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, edges, coEdges, sideEdges );
-        trace( ' coEdges ' + coEdges );
-        trace( ' edges ' + edges );
         //edges.flipEdge( coEdges, sideEdges, 12 );
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
@@ -389,15 +405,12 @@ class MainTestSetup {
         var vert = shape.vertices;
         var face = shape.faces;
         var edges = shape.edges;
-        
         var diags = Triangulate.triangulateFace( vert, face[0] );
         var all = edges.clone().add( diags );
         var coEdges = new Edges();
         var sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        
         Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
-        trace( 'all ' + all );
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx.setThickness( 4 );
@@ -424,9 +437,14 @@ class MainTestSetup {
         drawEdges( edges, shape, ctx, true );
         ctx.render( thick, false );
     }
+    var all: Edges;
+    var vert: Vertices;
+    var shape: FillShape;
+    var coEdges: Edges;
+    var sideEdges: Array<SideEdge>;
     public function enclosingTriangleTest(){
-        var shape = enclosingTriangleShape;
-        var vert = shape.vertices;//.clone();
+        shape = enclosingTriangleShape;
+        vert = shape.vertices;//.clone();
         var face = shape.faces;
         var edges = shape.edges;
         ctx = new PathContext( 1, 1024, 0, 0 );
@@ -436,9 +454,9 @@ class MainTestSetup {
         ctx.setColor( 4, 3 );
         ctx.fill = true; // with polyK
         var diags = Triangulate.triangulateFace( vert, face[0] );
-        var all = edges.clone().add( diags );
-        var coEdges = new Edges();
-        var sideEdges = new Array<SideEdge>();
+        all = edges.clone().add( diags );
+        coEdges = new Edges();
+        sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
         ctx.moveTo( 0, 0 );
         //drawVertices( shape, ctx, false );
@@ -448,20 +466,25 @@ class MainTestSetup {
         ctx.fill = true; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
         drawVerticesPoints( shape, ctx, -1, 1, 5 );
-        
-        
-        var p = new Vector2( 300, 300 );
-        var p2 = new Vector2( 350, 350 );
-        drawSquare( 0, ctx, p );
-        var findTri = new FindEnclosingTriangle();
-        var triangle = findTri.getFace( vert, all, coEdges, sideEdges, p2, 0 )();
-        ctx.setColor( 7, 1 );
-        ctx.fill = true; // with polyK 
-        //triangle = [0,1,2];
-        if( triangle != null ) drawFace( triangle, shape, ctx, false );
-        trace( 'found triangle ' + triangle );
         ctx.render( thick, false );
+        encloseTriangleDraw();
     }
+    
+    // TODO: Refactor to be only called rather than method above when triangle moves.
+    public function encloseTriangleDraw(){
+        var p = new Vector2( mX, mY );
+        //drawSquare( 0, ctx, p );
+        var ctx2 = new PathContext( 1, 1024, 0, 0 );
+        var thick = 4;
+        ctx2.setThickness( 4 );
+        var findTri = new FindEnclosingTriangle();
+        var triangle = findTri.getFace( vert, all, coEdges, sideEdges, p, 0 )();
+        ctx2.setColor( 7, 7 );
+        ctx2.fill = true; // with polyK 
+        if( triangle != null ) drawFace( triangle, shape, ctx2, false );
+        ctx2.render( thick, false );
+    }
+    
     public function splitTest(){
         sevenSegOnEdges = true;
         sevenSegOnPoints = false;
@@ -469,7 +492,6 @@ class MainTestSetup {
         var vert = shape.vertices;
         var face = shape.faces;
         var edges = shape.edges;
-        
         var diags = Triangulate.triangulateFace( vert, face[0] );
         var all = edges.clone().add( diags );
         var coEdges = new Edges();
