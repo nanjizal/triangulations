@@ -64,7 +64,7 @@ class SideEdge {
     public inline 
     function getByIndex( i: Int ): Null<Int> {
         var out: Int;
-        switch( count ){
+        switch( i ){
             case 0:
                 out = a;
             case 1:
