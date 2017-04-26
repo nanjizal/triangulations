@@ -53,6 +53,7 @@ class Queue<T> {
                offset = 0;
             }
         }
+        // trace('dequeue item ' + item + ' offset ' + offset + ' queue ' + queue );
         // return the dequeued item
         return item;
     }
