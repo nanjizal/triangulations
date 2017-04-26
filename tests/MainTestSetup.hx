@@ -24,6 +24,7 @@ import justTriangles.Point;
 import justTriangles.PathContext;
 import justTriangles.ShapePoints;
 import justTriangles.QuickPaths;
+import justTriangles.SevenSeg;
 import justTriangles.Point;
 import htmlHelper.tools.CSSEnterFrame;
 import justTriangles.SvgPath;
@@ -73,6 +74,8 @@ class MainTestSetup {
     var verts: Vertices;
     var ctx: PathContext;
     var interactionSurface:   InteractionSurface<Vector2>;
+    static var sevenSegOnPoints:      Bool = true;
+    static var sevenSegOnEdges:       Bool = false;
     
     public function createFillData(){
         banana  = new Banana();
@@ -122,7 +125,8 @@ class MainTestSetup {
         var dom = cast webgl.canvas;
         dom.style.setProperty("pointer-events","none");
         interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
-        sevenSeg = new justTriangles.SevenSeg( 6, 6, 0.015, 0.025 );
+        sevenSegPoints = new justTriangles.SevenSeg( 6, 6, 0.015, 0.025 );
+        sevenSegEdges = new justTriangles.SevenSeg( 7, 5, 0.015, 0.025 );
         sceneSetup();
         js.Browser.document.onkeydown = keyDownHandler;
     }
@@ -206,7 +210,8 @@ class MainTestSetup {
     public function draw(){
         //trace('webgl drawing setup');
         Triangle.triangles = new Array<Triangle>();
-        sevenSeg.clear();
+        sevenSegPoints.clear();
+        sevenSegEdges.clear();
         switch( scene ){
             case 0:
                 bananaTest();
@@ -232,7 +237,8 @@ class MainTestSetup {
                 
         }
         webgl.clearVerticesAndColors();
-        sevenSeg.render();
+        sevenSegPoints.render();
+        sevenSegEdges.render();
         webgl.setTriangles( Triangle.triangles, cast rainbow );
     }
     function pointInPolyTest(){
@@ -457,6 +463,8 @@ class MainTestSetup {
         ctx.render( thick, false );
     }
     public function splitTest(){
+        sevenSegOnEdges = true;
+        sevenSegOnPoints = false;
         var shape = splitShape;
         var vert = shape.vertices;
         var face = shape.faces;
@@ -474,7 +482,7 @@ class MainTestSetup {
         ctx.setColor( 4, 0 );
         ctx.moveTo( 0, 0 );
         ctx.fill = false;
-        //Triangulate.splitEdge( vertices, edges, coEdges, sideEdges, j );
+        Triangulate.splitEdge( vert, all, coEdges, sideEdges, 23 );
         ctx.fill = false;
         ctx.setColor( 0, 3 );
         ctx.moveTo( 0, 0 );
@@ -484,9 +492,11 @@ class MainTestSetup {
         ctx.moveTo( 0, 0 );
         drawEdges( edges, shape, ctx, true );
         ctx.render( thick, false );
-    
+        sevenSegOnEdges = false;
+        sevenSegOnPoints = true;
     }
-    static var sevenSeg: justTriangles.SevenSeg;
+    static var sevenSegPoints: SevenSeg;
+    static var sevenSegEdges: SevenSeg;
     public function bananaTest(){
         var thick = 4;
         
@@ -511,10 +521,12 @@ class MainTestSetup {
     }
     
     public static inline function drawPoint( i: Int, ctx: PathContext, v: Vector2 ){
-        var p: justTriangles.Point = { x: v.x, y: v.y };
-        p = ctx.pt( p.x, p.y );
-        var w = sevenSeg.numberWidth( i );
-        sevenSeg.addNumber( i, p.x - 2*w, p.y - sevenSeg.height );
+        if( sevenSegOnPoints ){
+            var p: justTriangles.Point = { x: v.x, y: v.y };
+            p = ctx.pt( p.x, p.y );
+            var w = sevenSegPoints.numberWidth( i );
+            sevenSegPoints.addNumber( i, p.x - 2*w, p.y - sevenSegPoints.height );
+        }
         ctx.regularPoly( PolySides.icosagon, v.x, v.y, 5, 0 ); // 20 sides
         ctx.moveTo( v.x, v.y );
     }
@@ -556,29 +568,34 @@ class MainTestSetup {
         var verts = fillShape.vertices;
         var l: Int = edges.length;
         var e: Edge;
-        var v: Vector2;
+        var v0: Vector2;
+        var v1: Vector2;
         var p: Int;
         var q: Int;
+        var mid: Vector2;
+        var w: Float;
+        var point: Point;
         for( i in 0...l ){
             e = edges[i];
             if( e.isNull() ) continue;
             p = e.p;
             q = e.q;
-            v = verts[p];
-            if( v == null ) continue;
-            ctx.moveTo( v.x, v.y );
-            if( showPoints ) drawPoint( p, ctx, v );
-            v = verts[q];
-            if( v == null ) continue;
-            ctx.lineTo( v.x, v.y );
-            if( showPoints ) drawPoint( q, ctx, v );
+            v0 = verts[p];
+            if( v0 == null ) continue;
+            ctx.moveTo( v0.x, v0.y );
+            if( showPoints ) drawPoint( p, ctx, v0 );
+            v1 = verts[q];
+            if( v1 == null ) continue;
+            ctx.lineTo( v1.x, v1.y );
+            if( showPoints ) drawPoint( q, ctx, v1 );
+            if( sevenSegOnEdges ){
+                mid = v0.mid( v1 );
+                point = { x: mid.x, y: mid.y };
+                point = ctx.pt( point.x, point.y );
+                w = sevenSegEdges.numberWidth( i );
+                sevenSegEdges.addNumber( i, point.x, point.y, true );
+            }
         }
-    }
-    public function sevenSegment(){
-        var sevenSeg = new justTriangles.SevenSeg( 1, 1, 0.015, 0.025 );
-        //sevenSeg.addDigit( 0, 0, 0 );
-        sevenSeg.addString( '0123456789', -0.5, -0.5 );
-        sevenSeg.addNumber( 123456789, 0, 0 );
     }
     public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int, normalColor: Int ){
         verts = fillShape.vertices;
