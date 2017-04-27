@@ -67,11 +67,7 @@ class Rupert {
                 var okCnt = 0;
                 var coEdgeK: Int;
                 for( k in 0...2 ){ // NOT Ideal!!
-                    coEdgeK = if( k == 0 ){
-                        coEdge.p;
-                    } else {
-                        coEdge.q;
-                    }
+                    coEdgeK = coEdge.getByIndex( k );
                     
                     if( coEdgeK == null ) {
                         ++okCnt;
@@ -83,13 +79,14 @@ class Rupert {
                         continue;
                     }
                     var p = Geom2.circumcenter(a, b, c);
-                    var insert = tryInsertPoint( vertices, edges, coEdges, sideEdges, p, j );
-                    if( insert.success ){
-                        affectedEdges = insert.affectedEdges;
+                    var encroachedEdges = new Array<Int>();
+                    var insert = tryInsertPoint( vertices, edges, coEdges, sideEdges, encroachedEdges, p, j );
+                    if( insert != null ){
+                        affectedEdges = insert;
                         --steinerLeft;
-                        traceEntry.insert = 2 * j + k;
+                        //traceEntry.insert = 2 * j + k;
                     } else {
-                        forceSplit = insert.encroachedEdges;
+                        forceSplit = encroachedEdges;
                     }
                     break;
                   }
@@ -99,13 +96,13 @@ class Rupert {
                   }
                 }
                 
-                if (forceSplit.length > 0) traceEntry.split = [];
+                //if (forceSplit.length > 0) traceEntry.split = [];
                 while (forceSplit.length > 0 && steinerLeft > 0) {
                       var j = forceSplit.pop();
                       var affectedEdgesPart = Triangulate.splitEdge( vertices, edges, coEdges, sideEdges, j );
                       addArrayInt( affectedEdges, affectedEdgesPart );
                       --steinerLeft;
-                      traceEntry.split.push(j);
+                      //traceEntry.split.push(j);
                 }
 
         while (affectedEdges.length > 0) {
@@ -127,7 +124,7 @@ class Rupert {
         var l = e0.length;
         var el = e1.length;
         for( i in 0...el ) e0[ l + i ] = e1[ i ];
-        return this;
+        return e0;
     }
     
     private static
@@ -135,8 +132,9 @@ class Rupert {
                             , edges: Edges
                             , coEdges: Edges
                             , sideEdges:Array<SideEdge>
+                            , encroachedEdges: Array<Int>
                             , p: Vector2
-                            , j0: Int ) {
+                            , j0: Int ):Array<Int> {
       var findTri = new FindEnclosingTriangle();
       var t = findTri.triangleIndex( vertices, edges, coEdges, sideEdges, p, j0 );
       if (t == null)
@@ -159,12 +157,12 @@ class Rupert {
       var c = vertices[ ci ]; 
       var abj = sideEdges[ edgeId ].getByIndex( 3 - vertexId );
 
-      var encroachedEdges = [];
+      // var encroachedEdges = [];
       if( edges[bcj].fixed && Geom2.pointEncroachesEdge( b, c, p ) ) encroachedEdges.push( bcj );
       if( edges[caj].fixed && Geom2.pointEncroachesEdge( c, a, p ) ) encroachedEdges.push( caj );
       if( edges[abj].fixed && Geom2.pointEncroachesEdge( a, b, p ) ) encroachedEdges.push( abj );
       // TODO pass in encroacedEdges so that can keep return simpler?
-      if (encroachedEdges.length > 0) return { success: false, encroachedEdges: encroachedEdges };
+      if (encroachedEdges.length > 0) return null;
       vertices.push( p );
       var pi = vertices.length - 1;
       edges.push( new Edge( pi, ai ) );
@@ -199,15 +197,12 @@ class Rupert {
       if( !edges[bcj].fixed ) unsureEdges.push(bcj);
       if( !edges[caj].fixed ) unsureEdges.push(caj);
       if( !edges[abj].fixed ) unsureEdges.push(abj);
-      var delaunay = Triangulate.delaunay;
-      return {
-        success: true,
-        affectedEdges: delaunay(    vertices
+      var delaunay = new Delaunay();
+      return delaunay.calculate(    vertices
                                 ,   edges
                                 ,   coEdges
                                 ,   sideEdges
-                                ,   unsureEdges )
-      };
+                                ,   unsureEdges );
     }
     
     public static inline 
