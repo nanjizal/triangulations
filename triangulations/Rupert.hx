@@ -1,5 +1,6 @@
 package triangulations;
 import triangulations.Geom2;
+import khaMath.Vector2;
 import triangulations.Triangulate;
 import triangulations.FindEnclosingTriangle;
 class Rupert {
@@ -128,34 +129,38 @@ class Rupert {
                             , edges: Edges
                             , coEdges: Edges
                             , sideEdges:Array<SideEdge>
-                            , p
-                            , j0 ) {
+                            , p: Vector2
+                            , j0: Int ) {
       var findTri = new FindEnclosingTriangle();
-      var t = findTri.getFace( vertices, edges, coEdges, sideEdges, p, j0 )();
+      var t = findTri.triangleIndex( vertices, edges, coEdges, sideEdges, p, j0 );
       if (t == null)
         throw "impossibru";//return { success: true, affectedEdges: [] };
 
-      var k = t % 2, j = (t - k) / 2;
-      var edge = edges[ j ];
-      var coEdge = coEdges[ j ];
+      //var k = t % 2, j = (t - k) / 2;
+      var ev = t.edgeVertexTriangle();
+      var edgeId = ev.edgeId;
+      var vertexId = ev.vertexId;
+      
+      var edge = edges[ edgeId ];
+      var coEdge = coEdges[ edgeId ];
       var ai = edge.p;
       var a = vertices[ ai ];
-      var bcj = sideEdges[ j ].getByIndex( k );
-      var bi = coEdge[ k ];
+      var bcj = sideEdges[ edgeId ].getByIndex( vertexId );
+      var bi = coEdge.getByIndex( vertexId );
       var b = vertices[ bi ];
-      var caj = j;
+      var caj = edgeId;
       var ci = edge.q;
       var c = vertices[ ci ]; 
-      var abj = sideEdges[ j ].getByIndex( 3 - k );
+      var abj = sideEdges[ edgeId ].getByIndex( 3 - vertexId );
 
       var encroachedEdges = [];
       if( edges[bcj].fixed && Geom2.pointEncroachesEdge( b, c, p ) ) encroachedEdges.push( bcj );
       if( edges[caj].fixed && Geom2.pointEncroachesEdge( c, a, p ) ) encroachedEdges.push( caj );
       if( edges[abj].fixed && Geom2.pointEncroachesEdge( a, b, p ) ) encroachedEdges.push( abj );
-      if (encroachedEdges.length > 0)
-        return { success: false, encroachedEdges: encroachedEdges };
-
-      var pi = vertices.push(p) - 1;
+      // TODO pass in encroacedEdges so that can keep return simpler?
+      if (encroachedEdges.length > 0) return { success: false, encroachedEdges: encroachedEdges };
+      vertices.push( p );
+      var pi = vertices.length - 1;
       edges.push( new Edge( pi, ai ) );
       var paj = edges.length - 1;
       edges.push( new Edge( pi, bi ) );
@@ -203,10 +208,10 @@ class Rupert {
     function edgeIsEncroached(  vertices: Vertices
                             ,   edges:    Edges
                             ,   coEdges:  Edges
-                            ,   j: Int    ): Bool
+                            ,   edgeId: Int    ): Bool
     {
-      var edge = edges[j];
-      var coEdge = coEdges[j];
+      var edge = edges[ edgeId ];
+      var coEdge = coEdges[ edgeId ];
       var a = vertices[ edge.p ];
       var c = vertices[ edge.q ];
       var p = a.mid(c);
