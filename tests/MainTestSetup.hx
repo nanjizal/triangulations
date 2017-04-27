@@ -10,9 +10,10 @@ import triangulations.Graph;
 import triangulations.Face;
 import triangulations.Triangulate;
 import triangulations.FindEnclosingTriangle;
-//import triangulations.Rupert;
+import triangulations.Rupert;
 import tests.fillShapes.*;
 import triangulations.FillShape;
+import triangulations.Delaunay;
 import khaMath.Vector2;
 // drawing specific
 import js.Browser;
@@ -57,7 +58,7 @@ class MainTestSetup {
     }
     var banana:  FillShape;
     var guitar:  FillShape;
-    var key:     FillShape;
+    var keyShape:     FillShape;
     var sheet:   FillShape;
     var ty:      FillShape;
     var angleCompareShape:    FillShape;
@@ -80,7 +81,7 @@ class MainTestSetup {
     public function createFillData(){
         banana  = new Banana();
         guitar  = new Guitar();
-        key     = new Key();
+        keyShape = new Key();
         sheet   = new Sheet();
         ty      = new Ty();
         angleCompareShape       = new TestAngleCompareShape();
@@ -95,7 +96,7 @@ class MainTestSetup {
         triangulateShape        = new TestTriangulateShape();
         var dataShapes = [  banana
                         ,   guitar
-                        ,   key
+                        ,   keyShape
                         ,   sheet
                         ,   ty
                         ,   angleCompareShape
@@ -155,8 +156,8 @@ class MainTestSetup {
         return Matrix4.rotationY( theta += Math.PI/75 ).multmat( Matrix4.rotationX( theta ) );
     }
     
-    var scene = 0;
-    var sceneMax = 9;
+    var scene = 10;
+    var sceneMax = 10;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
@@ -202,6 +203,9 @@ class MainTestSetup {
             case 9:
                 trace('split test');
                 splitShape.vertices;
+            case 10:
+                trace('rupert test');
+                triangulateShape.vertices;
             default:
                 trace( 'no test');
                 null;
@@ -251,6 +255,8 @@ class MainTestSetup {
                 enclosingTriangleTest();
             case 9: 
                 splitTest();
+            case 10:
+                rupertTest();
             default:
                 
         }
@@ -410,7 +416,8 @@ class MainTestSetup {
         var coEdges = new Edges();
         var sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
+        var delaunay = new Delaunay();
+        delaunay.refineToDelaunay( vert, all, coEdges, sideEdges );
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx.setThickness( 4 );
@@ -485,6 +492,47 @@ class MainTestSetup {
         ctx2.render( thick, false );
     }
     
+    public function rupertTest(){
+
+        shape = triangulateShape;//keyShape;
+        var vert = shape.vertices;
+        var face = shape.faces;
+        var edges = shape.edges;
+        Triangulate.triangulateSimple( vert, edges, [face[0]] );
+        var coEdges = new Edges();
+        var sideEdges = new Array<SideEdge>();
+        Triangulate.makeQuadEdge( vert, edges, coEdges, sideEdges );
+        var delaunay = new Delaunay();
+        delaunay.refineToDelaunay( vert, edges, coEdges, sideEdges );
+        
+        /*
+        var verticesBackup = vertices.clone();
+        var edgesBackup = edges.clone();
+        var coEdgesBackup = coEdges.clone();
+        var sideEdgesBackup = [];
+        var l = edges.length;
+        for ( j in 0... l ) sideEdgesBackup[j] = sideEdges[j].clone();
+        */
+           
+        var setting = new Settings();
+        //setting.maxSteinerPoints = 50;
+        //setting.minAngle = 20;
+        Rupert.refineTo( vert, edges, coEdges, sideEdges, setting );
+        
+        ctx = new PathContext( 1, 1024, 0, 0 );
+        ctx.lineType = TriangleJoinCurve;
+        var thick = 4;
+        ctx.setThickness( 4 );
+        ctx.setColor( 4, 3 );
+        ctx.fill = true; // with polyK
+        ctx.moveTo( 0, 0 );
+        drawEdges( edges, shape, ctx, true );
+        ctx.setColor( 0, 3 );
+        drawFaces( shape, ctx, false );
+        ctx.render( thick, false );
+        
+    }
+    
     public function splitTest(){
         sevenSegOnEdges = true;
         sevenSegOnPoints = false;
@@ -497,7 +545,8 @@ class MainTestSetup {
         var coEdges = new Edges();
         var sideEdges = new Array<SideEdge>();
         Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
+        var delaunay = new Delaunay();
+        delaunay.refineToDelaunay( vert, all, coEdges, sideEdges );
         ctx = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx.setThickness( 4 );
