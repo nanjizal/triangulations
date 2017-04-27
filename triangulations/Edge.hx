@@ -25,6 +25,17 @@ class Edge {
         return e;
         
     }
+    public inline function getByIndex( k: Int ){
+        return switch( k ){
+            case 0:
+                return p;
+            case 1:
+                return q;
+            default:
+                throw "Error can't get one of the Edges out of range " + k;
+                return null;
+        }
+    }
     public static inline function fromArray( arr: Array<Int> ): Edge {
         return new Edge( arr[0], arr[1] );
     }
