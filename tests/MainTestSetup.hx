@@ -478,7 +478,7 @@ class MainTestSetup {
         var thick = 4;
         ctx2.setThickness( 4 );
         var findTri = new FindEnclosingTriangle();
-        var triangle = findTri.getFace( vert, all, coEdges, sideEdges, p, 0 )();
+        var triangle = findTri.getFace( vert, all, coEdges, sideEdges, p, 0 );
         ctx2.setColor( 7, 7 );
         ctx2.fill = true; // with polyK 
         if( triangle != null ) drawFace( triangle, shape, ctx2, false );
