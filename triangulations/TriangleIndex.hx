@@ -23,4 +23,14 @@ abstract TriangleIndex( Int ) to Int from Int {
     static public function fromEdgeVertex( ev: EdgeVertexTriangle ) {
         return new TriangleIndex( 2 * ev.edgeId + ev.vertexId );
     }
+    inline public function getFace( edges: Edges, coEdges: Edges ){
+        var face: Face = null;
+        if( this != null ) {
+            var ev = edgeVertexTriangle();
+            face = [  edges[ ev.edgeId ].p
+                    , edges[ ev.edgeId ].q
+                    , ( ev.vertexId == 0 )?coEdges[ ev.edgeId ].p: coEdges[ ev.edgeId ].q  ];
+        }
+        return face;    
+    }
 }
