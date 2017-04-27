@@ -156,7 +156,7 @@ class MainTestSetup {
         return Matrix4.rotationY( theta += Math.PI/75 ).multmat( Matrix4.rotationX( theta ) );
     }
     
-    var scene = 10;
+    var scene = 0;
     var sceneMax = 10;
     function keyDownHandler( e: KeyboardEvent ) {
         e.preventDefault();
@@ -186,7 +186,7 @@ class MainTestSetup {
                 trace( 'angle compare');
                 angleCompareShape.vertices;
             case 4: 
-                trace( 'angle compare');
+                trace( 'point in Triangle' );
                 pointInTriangleShape.vertices;
             case 5: 
                 trace( 'triangulate test' );
@@ -553,12 +553,19 @@ class MainTestSetup {
         ctx.setColor( 4, 0 );
         ctx.moveTo( 0, 0 );
         ctx.fill = false;
-        Triangulate.splitEdge( vert, all, coEdges, sideEdges, 23 );
+        var extra = all.clone();
+        //for( i in 0...10 ){
+            Triangulate.splitEdge( vert, extra, coEdges, sideEdges, 19 );
+            Triangulate.splitEdge( vert, extra, coEdges, sideEdges, 16 );
+            Triangulate.splitEdge( vert, extra, coEdges, sideEdges, 21 );
+            //}
+        //all.clone().add( extra );
         ctx.fill = false;
         ctx.setColor( 0, 3 );
         ctx.moveTo( 0, 0 );
         //drawFaces( shape, ctx );
         drawEdges( all, shape, ctx, true );
+        drawEdges( extra, shape, ctx, true );
         ctx.setColor( 1, 3 );
         ctx.moveTo( 0, 0 );
         drawEdges( edges, shape, ctx, true );
