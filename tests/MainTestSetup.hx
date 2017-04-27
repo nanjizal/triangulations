@@ -15,6 +15,7 @@ import tests.fillShapes.*;
 import triangulations.FillShape;
 import triangulations.Delaunay;
 import khaMath.Vector2;
+import tests.DrawHelper;
 // drawing specific
 import js.Browser;
 import khaMath.Matrix4;
@@ -38,19 +39,6 @@ import js.html.DivElement;
 import js.html.Event;
 import js.html.KeyboardEvent;
 import js.html.MouseEvent;
-
-@:enum
-abstract RainbowColors( Int ){
-    var Violet = 0x9400D3;
-    var Indigo = 0x4b0082;
-    var Blue   = 0x0000FF;
-    var Green  = 0x00ff00;
-    var Yellow = 0xFFFF00;
-    var Orange = 0xFF7F00;
-    var Red    = 0xFF0000;
-    var Black  = 0x000000;
-    var White  = 0xFFFFFF;
-}
     
 class MainTestSetup {
     static function main(){
@@ -71,12 +59,9 @@ class MainTestSetup {
     var quadEdgeShape:        FillShape;
     var splitShape:           FillShape;
     var triangulateShape:     FillShape;
-    var webgl: Drawing;
     var verts: Vertices;
     var ctx: PathContext;
     var interactionSurface:   InteractionSurface<Vector2>;
-    static var sevenSegOnPoints:      Bool = true;
-    static var sevenSegOnEdges:       Bool = false;
     
     public function createFillData(){
         banana  = new Banana();
@@ -118,16 +103,12 @@ class MainTestSetup {
             shape.set_fixedExternal( true );
         }
     }
-    var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet, White ];   
+    var drawHelper: DrawHelper;
     public function new(){
         trace( 'Testing Triangulations ');
         createFillData();
-        webgl = Drawing.create( 512*2 );
-        var dom = cast webgl.canvas;
-        dom.style.setProperty("pointer-events","none");
+        drawHelper = new DrawHelper();
         interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
-        sevenSegPoints = new justTriangles.SevenSeg( 6, 6, 0.015, 0.025 );
-        sevenSegEdges = new justTriangles.SevenSeg( 7, 5, 0.015, 0.025 );
         sceneSetup();
         js.Browser.document.onkeydown = keyDownHandler;
     }
@@ -137,7 +118,7 @@ class MainTestSetup {
     var theta: Float = 0;
     inline function spinForwards(): Matrix4 {
         if( theta > Math.PI/2 ) {
-            webgl.transformationFunc = null;
+            drawHelper.webgl.transformationFunc = null;
             theta = 0;
             if( scene++ == sceneMax ) scene = 0;
             js.Browser.document.onkeydown = keyDownHandler;
@@ -147,7 +128,7 @@ class MainTestSetup {
     }
     inline function spinBackwards(): Matrix4 {
         if( theta > Math.PI/2 ) {
-            webgl.transformationFunc = null;
+            drawHelper.webgl.transformationFunc = null;
             theta = 0;
             if( scene-- == 0 ) scene = sceneMax;
             js.Browser.document.onkeydown = keyDownHandler;
@@ -162,10 +143,10 @@ class MainTestSetup {
         e.preventDefault();
         if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
             trace( "LEFT" );
-            webgl.transformationFunc = spinBackwards;
+            drawHelper.webgl.transformationFunc = spinBackwards;
         } else if( e.keyCode == KeyboardEvent.DOM_VK_RIGHT ){
             trace( "RIGHT" );
-            webgl.transformationFunc = spinForwards;
+            drawHelper.webgl.transformationFunc = spinForwards;
         }
         trace( e.keyCode );  
     }
@@ -210,8 +191,34 @@ class MainTestSetup {
                 trace( 'no test');
                 null;
         }
-        draw();
-        interactionSurface.setup( vert, transform, draw );
+       drawHelper.testScene = switch( scene ){
+            case 0:
+                bananaTest;
+            case 1:
+                edgeIntersectTest;
+            case 2:
+                pointInPolyTest;
+            case 3: 
+                angleCompareTest;
+            case 4:
+                pointInTriangleTest;
+            case 5:
+                triangulateTest;
+            case 6:
+                quadEdgeTest;
+            case 7:
+                delaunayTest;
+            case 8: 
+                enclosingTriangleTest;
+            case 9: 
+                splitTest;
+            case 10:
+                rupertTest;
+            default:
+                bananaTest;
+        }
+        drawHelper.render();
+        interactionSurface.setup( vert, transform, drawHelper.render );
         if( scene == 8 ) {
             js.Browser.document.onmousemove = function ( e: MouseEvent ){
                 mX = e.clientX * 2;
@@ -222,49 +229,14 @@ class MainTestSetup {
             }
             // excessive don't really need to redraw all the triangles could use a secondary PathContext 
             // save the triangles before drawing in then add extra on.
-            updateFunction = draw;
+            updateFunction = drawHelper.render;
         } else {
             updateFunction = null;
             js.Browser.document.onmousemove = null;
         }
     }
+    public var testScene: Void -> Void;
     
-    public function draw(){
-        //trace('webgl drawing setup');
-        Triangle.triangles = new Array<Triangle>();
-        sevenSegPoints.clear();
-        sevenSegEdges.clear();
-        switch( scene ){
-            case 0:
-                bananaTest();
-            case 1:
-                edgeIntersectTest();
-            case 2:
-                pointInPolyTest();
-            case 3: 
-                angleCompareTest();
-            case 4:
-                pointInTriangleTest();
-            case 5:
-                triangulateTest();
-            case 6:
-                quadEdgeTest();
-            case 7:
-                delaunayTest();
-            case 8: 
-                enclosingTriangleTest();
-            case 9: 
-                splitTest();
-            case 10:
-                rupertTest();
-            default:
-                
-        }
-        webgl.clearVerticesAndColors();
-        sevenSegPoints.render();
-        sevenSegEdges.render();
-        webgl.setTriangles( Triangle.triangles, cast rainbow );
-    }
     function pointInPolyTest(){
         var thick = 4;
         var shape = pointInPolyShape;
@@ -274,7 +246,7 @@ class MainTestSetup {
         ctx.setColor( 0, 3 );
         ctx.fill = true; // with polyK
         ctx.lineType = TriangleJoinCurve;
-        drawFaces( shape, ctx, false );
+        drawHelper.faces( shape, ctx, false );
         ctx.fill = true; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
         var col = if( verts.pointInPolygon( shape.faces[0][0], verts[0] ) ){
@@ -283,8 +255,8 @@ class MainTestSetup {
             1;
         }
         ctx.setColor( col, col  );
-        drawSquare( 0, ctx, verts[0] );
-        drawVerticesPoints( shape, ctx, 0, col, 5 );
+        drawHelper.square( 0, ctx, verts[0] );
+        drawHelper.verticesPoints( shape, ctx, 0, col, 5 );
         ctx.render( thick, false );
     }
     // Don't really understand this one but looks like it's working!!
@@ -302,14 +274,14 @@ class MainTestSetup {
         ctx.setThickness( 4 );
         ctx.setColor( 0, 3 );
         ctx.fill = true; // with polyK
-        drawEdges( shape.edges, shape, ctx, true );
-        drawVerticesPoints( shape, ctx, 0, 0, 5 );
+        drawHelper.edges( shape.edges, shape, ctx, true );
+        drawHelper.verticesPoints( shape, ctx, 0, 0, 5 );
         var c2 = r < 0 ? 1 : 0;
         var c3 = r > 0 ? 1 : 0;
         ctx.setColor( c2, c2  );
-        drawSquare( 0, ctx, v2 );
+        drawHelper.square( 0, ctx, v2 );
         ctx.setColor( c3, c3  );
-        drawSquare( 0, ctx, v3 );
+        drawHelper.square( 0, ctx, v3 );
         ctx.render( thick, false );
     }
     function pointInTriangleTest(){
@@ -334,13 +306,13 @@ class MainTestSetup {
         
         ctx.setColor( 1, 2 );
         ctx.fill = true; // with polyK
-        drawFaces( shape, ctx, false );
+        drawHelper.faces( shape, ctx, false );
         ctx.setColor( 0, 3 );
         ctx.fill = true; // with polyK
-        drawVerticesPoints( shape, ctx, 0, 0, 5 );
+        drawHelper.verticesPoints( shape, ctx, 0, 0, 5 );
         var c0 = inTriangle(v0) ? 1 : 4;
         ctx.setColor( c0, c0  );
-        drawSquare( 0, ctx, v0 );
+        drawHelper.square( 0, ctx, v0 );
         trace( 'd ' + Geom2.pointToEdgeDistSq( v1, v2 )( v0 ) );
         ctx.render( thick, false );
     }
@@ -360,7 +332,7 @@ class MainTestSetup {
         } else {
             ctx.setColor( 4 );
         }
-        drawEdges( shape.edges, shape, ctx, true );
+        drawHelper.edges( shape.edges, shape, ctx, true );
         ctx.render( thick, false );
     }
     function triangulateTest(){
@@ -373,14 +345,14 @@ class MainTestSetup {
         ctx.setThickness( 4 );
         ctx.fill = true;
         ctx.setColor( 0, 3 );
-        drawFaces( shape, ctx, false );
+        drawHelper.faces( shape, ctx, false );
         ctx.fill = false;
         ctx.setColor( 4, 3 );
         ctx.moveTo( 0, 0 );
         var edges = shape.edges.clone().add( diags );
-        drawEdges( edges, shape, ctx, true );
+        drawHelper.edges( edges, shape, ctx, true );
         ctx.setColor( 0, 3 );
-        drawFaces( shape, ctx, false );
+        drawHelper.faces( shape, ctx, false );
         ctx.render( thick, false );
     }
     function quadEdgeTest(){
@@ -398,12 +370,12 @@ class MainTestSetup {
         ctx.fill = true;
         ctx.setColor( 0, 3 );
         ctx.moveTo( 0, 0 );
-        drawEdges( edges, shape, ctx, true );
+        drawHelper.edges( edges, shape, ctx, true );
         ctx.fill = true;
         ctx.setColor( 5, 2 );
         ctx.moveTo( 0, 0 );
         edges.flipEdge( coEdges, sideEdges, 12 );
-        drawEdges( edges, shape, ctx, true );
+        drawHelper.edges( edges, shape, ctx, true );
         ctx.render( thick, false );
     }
     function delaunayTest(){
@@ -437,11 +409,11 @@ class MainTestSetup {
         ctx.fill = false;
         ctx.setColor( 0, 3 );
         ctx.moveTo( 0, 0 );
-        //drawFaces( shape, ctx );
-        drawEdges( all, shape, ctx, true );
+        //faces( shape, ctx );
+        drawHelper.edges( all, shape, ctx, true );
         ctx.setColor( 1, 3 );
         ctx.moveTo( 0, 0 );
-        drawEdges( edges, shape, ctx, true );
+        drawHelper.edges( edges, shape, ctx, true );
         ctx.render( thick, false );
     }
     var all: Edges;
@@ -467,12 +439,12 @@ class MainTestSetup {
         Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
         ctx.moveTo( 0, 0 );
         //drawVertices( shape, ctx, false );
-        drawFaces( shape, ctx, false );
+        drawHelper.faces( shape, ctx, false );
         //drawEdges( edges, shape, ctx, false );
         ctx.setColor( 0 );
         ctx.fill = true; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
-        drawVerticesPoints( shape, ctx, -1, 1, 5 );
+        drawHelper.verticesPoints( shape, ctx, -1, 1, 5 );
         ctx.render( thick, false );
         encloseTriangleDraw();
     }
@@ -480,7 +452,7 @@ class MainTestSetup {
     // TODO: Refactor to be only called rather than method above when triangle moves.
     public function encloseTriangleDraw(){
         var p = new Vector2( mX, mY );
-        //drawSquare( 0, ctx, p );
+        //square( 0, ctx, p );
         var ctx2 = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
         ctx2.setThickness( 4 );
@@ -488,7 +460,7 @@ class MainTestSetup {
         var triangle = findTri.getFace( vert, all, coEdges, sideEdges, p, 0 );
         ctx2.setColor( 7, 7 );
         ctx2.fill = true; // with polyK 
-        if( triangle != null ) drawFace( triangle, shape, ctx2, false );
+        if( triangle != null ) drawHelper.face( triangle, shape, ctx2, false );
         ctx2.render( thick, false );
     }
     
@@ -526,16 +498,16 @@ class MainTestSetup {
         ctx.setColor( 4, 3 );
         ctx.fill = true; // with polyK
         ctx.moveTo( 0, 0 );
-        drawEdges( edges, shape, ctx, true );
+        drawHelper.edges( edges, shape, ctx, true );
         ctx.setColor( 0, 3 );
-        drawFaces( shape, ctx, false );
+        drawHelper.faces( shape, ctx, false );
         ctx.render( thick, false );
         
     }
     
     public function splitTest(){
-        sevenSegOnEdges = true;
-        sevenSegOnPoints = false;
+        drawHelper.sevenSegOnEdges = true;
+        drawHelper.sevenSegOnPoints = false;
         var shape = splitShape;
         var vert = shape.vertices;
         var face = shape.faces;
@@ -563,18 +535,21 @@ class MainTestSetup {
         ctx.fill = false;
         ctx.setColor( 0, 3 );
         ctx.moveTo( 0, 0 );
-        //drawFaces( shape, ctx );
-        drawEdges( all, shape, ctx, true );
-        drawEdges( extra, shape, ctx, true );
+        //faces( shape, ctx );
+        drawHelper.edges( all, shape, ctx, true );
+        drawHelper.edges( extra, shape, ctx, true );
         ctx.setColor( 1, 3 );
         ctx.moveTo( 0, 0 );
-        drawEdges( edges, shape, ctx, true );
+        drawHelper.edges( edges, shape, ctx, true );
         ctx.render( thick, false );
-        sevenSegOnEdges = false;
-        sevenSegOnPoints = true;
+        drawHelper.sevenSegOnEdges = false;
+        drawHelper.sevenSegOnPoints = true;
     }
-    static var sevenSegPoints: SevenSeg;
-    static var sevenSegEdges: SevenSeg;
+    
+    public inline function transform( x: Float, y: Float ): Point {
+       return ctx.pt( x, y );
+    }
+    
     public function bananaTest(){
         var thick = 4;
         
@@ -583,134 +558,13 @@ class MainTestSetup {
         ctx.setColor( 0, 3 );
         ctx.fill = true; // with polyK
         ctx.lineType = TriangleJoinCurve;
-        drawVertices( banana, ctx, false );
+        drawHelper.vertices( banana, ctx, false );
         ctx.setColor( 0 );
         ctx.fill = true; // with polyK 
         ctx.lineType = TriangleJoinCurve; // - default
-        //drawVertices( banana, ctx );
-        //drawFaces( guitar, ctx );
-        drawVerticesPoints( banana, ctx, -1, 1, 5 );
+        //drawHelper.drawVertices( banana, ctx );
+        //drawHelper.faces( guitar, ctx );
+        drawHelper.verticesPoints( banana, ctx, -1, 1, 5 );
         ctx.render( thick, false );
-    }
-    
-    public static inline function drawSquare( i: Int, ctx: PathContext, v: Vector2 ){
-        ctx.regularPoly( PolySides.square, v.x, v.y, 10, Math.PI/4 );
-        ctx.moveTo( v.x, v.y );
-    }
-    
-    public static inline function drawPoint( i: Int, ctx: PathContext, v: Vector2 ){
-        if( sevenSegOnPoints ){
-            var p: justTriangles.Point = { x: v.x, y: v.y };
-            p = ctx.pt( p.x, p.y );
-            var w = sevenSegPoints.numberWidth( i );
-            sevenSegPoints.addNumber( i, p.x - 2*w, p.y - sevenSegPoints.height );
-        }
-        ctx.regularPoly( PolySides.icosagon, v.x, v.y, 5, 0 ); // 20 sides
-        ctx.moveTo( v.x, v.y );
-    }
-    @:access( justTriangles.PathContext )
-    public inline function transform( x: Float, y: Float ): Point {
-       return ctx.pt( x, y );
-    }
-        
-    public function drawFaces( fillShape: FillShape, ctx_: PathContext, showPoints: Bool = true ){
-        var faces = fillShape.faces;
-        var somefaces: Array<Face>;
-        var face: Face;
-        for( j in 0...faces.length ){
-            somefaces = faces[j];
-            for( k in 0...somefaces.length ){
-                face = somefaces[k];
-                for( i in 0...face.length ) drawFace( face, fillShape, ctx_, showPoints );
-            }
-        }
-    }
-    public function drawFace( face: Face, fillShape: FillShape, ctx_: PathContext, showPoints: Bool = true ){
-        var verts = fillShape.vertices;
-        var l: Int = face.length;
-        var f0 = face[0];
-        var v0 = verts[f0];
-        var f: Int;
-        ctx_.moveTo( v0.x, v0.y );
-        if( showPoints ) drawPoint( f0, ctx_, v0 );
-        var v: Vector2;
-        for( i in 1...l ){
-            f = face[i];
-            v = verts[f];
-            ctx_.lineTo( v.x, v.y );
-            if( showPoints ) drawPoint( f, ctx_, v );
-        }
-        ctx_.lineTo( v0.x, v0.y );
-    }
-    public function drawEdges( edges: Edges, fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
-        var verts = fillShape.vertices;
-        var l: Int = edges.length;
-        var e: Edge;
-        var v0: Vector2;
-        var v1: Vector2;
-        var p: Int;
-        var q: Int;
-        var mid: Vector2;
-        var w: Float;
-        var point: Point;
-        for( i in 0...l ){
-            e = edges[i];
-            if( e.isNull() ) continue;
-            p = e.p;
-            q = e.q;
-            v0 = verts[p];
-            if( v0 == null ) continue;
-            ctx.moveTo( v0.x, v0.y );
-            if( showPoints ) drawPoint( p, ctx, v0 );
-            v1 = verts[q];
-            if( v1 == null ) continue;
-            ctx.lineTo( v1.x, v1.y );
-            if( showPoints ) drawPoint( q, ctx, v1 );
-            if( sevenSegOnEdges ){
-                mid = v0.mid( v1 );
-                point = { x: mid.x, y: mid.y };
-                point = ctx.pt( point.x, point.y );
-                w = sevenSegEdges.numberWidth( i );
-                sevenSegEdges.addNumber( i, point.x, point.y, true );
-            }
-        }
-    }
-    public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int, normalColor: Int ){
-        verts = fillShape.vertices;
-        var v: Vector2;
-        var v0 = verts[0];
-        if( specialPoint == 0 ){
-            ctx.setColor( specialColor, specialColor );
-            drawPoint( 0, ctx, v0 );
-        } else {
-            ctx.setColor( normalColor, normalColor );
-            drawPoint( 0, ctx, v0 );
-        }
-        var l = verts.length;
-        for( i in 1...l ){
-            v = verts[i];
-            if( specialPoint == i ){
-                ctx.setColor( specialColor, specialColor );
-                drawPoint( i, ctx, v );
-                
-            } else {
-                ctx.setColor( normalColor, normalColor );
-                drawPoint( i, ctx, v );
-            }
-        }
-    }
-    public function drawVertices( fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
-        verts = fillShape.vertices;
-        var v0 = verts[0];
-        var v: Vector2;
-        ctx.moveTo( v0.x, v0.y );
-        if( showPoints ) drawPoint( 0, ctx, v0 );
-        var l = verts.length;
-        for( i in 1...l ){
-            v = verts[i];
-            ctx.lineTo( v.x, v.y );
-            if( showPoints ) drawPoint( i, ctx, v );
-        }
-        ctx.lineTo( v0.x, v0.y );
     }
 }
