@@ -103,9 +103,7 @@ class Rupert {
                 while (forceSplit.length > 0 && steinerLeft > 0) {
                       var j = forceSplit.pop();
                       var affectedEdgesPart = Triangulate.splitEdge( vertices, edges, coEdges, sideEdges, j );
-                      Array.prototype.push.apply(affectedEdges, affectedEdgesPart);
-                      var l = affectedEdgesPart.length;
-                      for( i in 0...l ) affectedEdges[ l + i ] = affectedEdgesPart[ i ];
+                      addArrayInt( affectedEdges, affectedEdgesPart );
                       --steinerLeft;
                       traceEntry.split.push(j);
                 }
@@ -122,6 +120,14 @@ class Rupert {
             }
         }
       }
+    }
+    
+    public static inline
+    function addArrayInt( e0: Array<Int>, e1: Array<Int> ): Array<Int> {
+        var l = e0.length;
+        var el = e1.length;
+        for( i in 0...el ) e0[ l + i ] = e1[ i ];
+        return this;
     }
     
     private static
@@ -193,14 +199,14 @@ class Rupert {
       if( !edges[bcj].fixed ) unsureEdges.push(bcj);
       if( !edges[caj].fixed ) unsureEdges.push(caj);
       if( !edges[abj].fixed ) unsureEdges.push(abj);
-
+      var delaunay = Triangulate.delaunay;
       return {
         success: true,
-        affectedEdges: Triangulate.maintainDelaunay(    vertices
-                                        ,   edges
-                                        ,   coEdges
-                                        ,   sideEdges
-                                        ,   unsureEdges )
+        affectedEdges: delaunay(    vertices
+                                ,   edges
+                                ,   coEdges
+                                ,   sideEdges
+                                ,   unsureEdges )
       };
     }
     
