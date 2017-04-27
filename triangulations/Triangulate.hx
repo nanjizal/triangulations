@@ -350,13 +350,13 @@ class Triangulate {
         // 
         // NOT Working!! Comment out ...
         // problematic if the connector is between the two sides rather than along edge.
-        /*
+        
         // If the arms of a supported triangle are also external, remove.
         if( edges[ ses.a ].external && edges[ ses.d ].external)
           ce.p = ses.a = ses.d = null;
         if( edges[ ses.b ].external && edges[ ses.c ].external)
           ce.q = ses.b = ses.c = null;  
-        */
+        
       }
     }
         
