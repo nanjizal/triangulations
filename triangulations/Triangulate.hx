@@ -1,660 +1,464 @@
-package tests;
+package triangulations;
+
+import khaMath.Vector2;
+import triangulations.DllNode;
+import triangulations.SideEdge;
 import triangulations.Edge;
 import triangulations.Edges;
 import triangulations.Vertices;
-import triangulations.Geom2;
 import triangulations.Queue;
-import triangulations.SideEdge;
-import triangulations.Settings;
-import triangulations.Graph;
 import triangulations.Face;
 import triangulations.Triangulate;
-import triangulations.FindEnclosingTriangle;
-//import triangulations.Rupert;
-import tests.fillShapes.*;
-import triangulations.FillShape;
-import khaMath.Vector2;
-// drawing specific
-import js.Browser;
-import khaMath.Matrix4;
-import justTrianglesWebGL.Drawing;
-import justTriangles.Triangle;
-import justTriangles.Draw;
-import justTriangles.Point;
-import justTriangles.PathContext;
-import justTriangles.ShapePoints;
-import justTriangles.QuickPaths;
-import justTriangles.SevenSeg;
-import justTriangles.Point;
-import htmlHelper.tools.CSSEnterFrame;
-import justTriangles.SvgPath;
-import justTriangles.PathContextTrace;
-import justTrianglesWebGL.InteractionSurface;
-// js Specifc
-import js.Browser;
-import js.html.HTMLDocument;
-import js.html.DivElement;
-import js.html.Event;
-import js.html.KeyboardEvent;
-import js.html.MouseEvent;
 
-@:enum
-abstract RainbowColors( Int ){
-    var Violet = 0x9400D3;
-    var Indigo = 0x4b0082;
-    var Blue   = 0x0000FF;
-    var Green  = 0x00ff00;
-    var Yellow = 0xFFFF00;
-    var Orange = 0xFF7F00;
-    var Red    = 0xFF0000;
-    var Black  = 0x000000;
-    var White  = 0xFFFFFF;
-}
+class Triangulate {
     
-class MainTestSetup {
-    static function main(){
-        new MainTestSetup();
-    }
-    var banana:  FillShape;
-    var guitar:  FillShape;
-    var key:     FillShape;
-    var sheet:   FillShape;
-    var ty:      FillShape;
-    var angleCompareShape:    FillShape;
-    var delaunayShape:        FillShape;
-    var edgeIntersectShape:   FillShape;
-    var enclosingTriangleShape:    FillShape;
-    var graphShape:           FillShape;
-    var pointInPolyShape:     FillShape;
-    var pointInTriangleShape: FillShape;
-    var quadEdgeShape:        FillShape;
-    var splitShape:           FillShape;
-    var triangulateShape:     FillShape;
-    var webgl: Drawing;
-    var verts: Vertices;
-    var ctx: PathContext;
-    var interactionSurface:   InteractionSurface<Vector2>;
-    static var sevenSegOnPoints:      Bool = true;
-    static var sevenSegOnEdges:       Bool = false;
-    
-    public function createFillData(){
-        banana  = new Banana();
-        guitar  = new Guitar();
-        key     = new Key();
-        sheet   = new Sheet();
-        ty      = new Ty();
-        angleCompareShape       = new TestAngleCompareShape();
-        delaunayShape           = new TestDelaunayShape();
-        edgeIntersectShape      = new TestEdgeIntersectShape();
-        enclosingTriangleShape  = new TestEnclosingTriangleShape();
-        graphShape              = new TestGraphShape();
-        pointInPolyShape        = new TestPointInPolyShape();
-        pointInTriangleShape    = new TestPointInTriangleShape();
-        quadEdgeShape           = new TestQuadEdgeShape();
-        splitShape              = new TestSplitShape();
-        triangulateShape        = new TestTriangulateShape();
-        var dataShapes = [  banana
-                        ,   guitar
-                        ,   key
-                        ,   sheet
-                        ,   ty
-                        ,   angleCompareShape
-                        ,   delaunayShape 
-                        ,   edgeIntersectShape  
-                        ,   enclosingTriangleShape  
-                        ,   graphShape  
-                        ,   pointInPolyShape 
-                        ,   pointInTriangleShape 
-                        ,   quadEdgeShape 
-                        ,   splitShape 
-                        ,   triangulateShape ];
-        var l = dataShapes.length;
-        var shape: FillShape;
-        for( i in 0...l ) {
-            shape = dataShapes[i];
-            shape.fit( 1024, 1024, 120 );
-            // set the outline!
-            shape.set_fixedExternal( true );
-        }
-    }
-    var rainbow = [ Black, Red, Orange, Yellow, Green, Blue, Indigo, Violet, White ];   
-    public function new(){
-        trace( 'Testing Triangulations ');
-        createFillData();
-        webgl = Drawing.create( 512*2 );
-        var dom = cast webgl.canvas;
-        dom.style.setProperty("pointer-events","none");
-        interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
-        sevenSegPoints = new justTriangles.SevenSeg( 6, 6, 0.015, 0.025 );
-        sevenSegEdges = new justTriangles.SevenSeg( 7, 5, 0.015, 0.025 );
-        sceneSetup();
-        js.Browser.document.onkeydown = keyDownHandler;
-    }
-    var updateFunction: Void->Void;
-    var mX: Float;
-    var mY: Float;
-    var theta: Float = 0;
-    inline function spinForwards(): Matrix4 {
-        if( theta > Math.PI/2 ) {
-            webgl.transformationFunc = null;
-            theta = 0;
-            if( scene++ == sceneMax ) scene = 0;
-            js.Browser.document.onkeydown = keyDownHandler;
-            sceneSetup();
-        }
-        return Matrix4.rotationX( theta += Math.PI/75 ).multmat( Matrix4.rotationY( theta ) );
-    }
-    inline function spinBackwards(): Matrix4 {
-        if( theta > Math.PI/2 ) {
-            webgl.transformationFunc = null;
-            theta = 0;
-            if( scene-- == 0 ) scene = sceneMax;
-            js.Browser.document.onkeydown = keyDownHandler;
-            sceneSetup();
-        }
-        return Matrix4.rotationY( theta += Math.PI/75 ).multmat( Matrix4.rotationX( theta ) );
-    }
-    
-    var scene = 0;
-    var sceneMax = 9;
-    function keyDownHandler( e: KeyboardEvent ) {
-        e.preventDefault();
-        if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
-            trace( "LEFT" );
-            webgl.transformationFunc = spinBackwards;
-        } else if( e.keyCode == KeyboardEvent.DOM_VK_RIGHT ){
-            trace( "RIGHT" );
-            webgl.transformationFunc = spinForwards;
-        }
-        trace( e.keyCode );  
-    }
-    
-    function sceneSetup(){
-        var vert: Vertices =
-        switch( scene ){
-            case 0:
-                trace( 'banana test' );
-                banana.vertices;
-            case 1:
-                trace( 'edge intersect' );
-                edgeIntersectShape.vertices;
-            case 2:
-                trace( 'poly in point' );
-                pointInPolyShape.vertices;
-            case 3: 
-                trace( 'angle compare');
-                angleCompareShape.vertices;
-            case 4: 
-                trace( 'angle compare');
-                pointInTriangleShape.vertices;
-            case 5: 
-                trace( 'triangulate test' );
-                triangulateShape.vertices;
-            case 6:
-                trace( 'quad edge test');
-                quadEdgeShape.vertices;
-            case 7: 
-                trace( 'delaunay test');
-                delaunayShape.vertices;
-            case 8:
-                trace('enclosing triangle test');
-                enclosingTriangleShape.vertices;
-            case 9:
-                trace('split test');
-                splitShape.vertices;
-            default:
-                trace( 'no test');
-                null;
-        }
-        draw();
-        interactionSurface.setup( vert, transform, draw );
-        if( scene == 8 ) {
-            js.Browser.document.onmousemove = function ( e: MouseEvent ){
-                mX = e.clientX * 2;
-                mY = e.clientY * 2;
-                if( updateFunction != null ) {
-                    updateFunction();
-                }
-            }
-            // excessive don't really need to redraw all the triangles could use a secondary PathContext 
-            // save the triangles before drawing in then add extra on.
-            updateFunction = draw;
-        } else {
-            updateFunction = null;
-            js.Browser.document.onmousemove = null;
+    public static inline
+    function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> ) {
+        for ( k in 0...face.length ) {
+            var diags = triangulateFace( vertices, face[ k ] );
+            edges.add( diags );
         }
     }
     
-    public function draw(){
-        //trace('webgl drawing setup');
-        Triangle.triangles = new Array<Triangle>();
-        sevenSegPoints.clear();
-        sevenSegEdges.clear();
-        switch( scene ){
-            case 0:
-                bananaTest();
-            case 1:
-                edgeIntersectTest();
-            case 2:
-                pointInPolyTest();
-            case 3: 
-                angleCompareTest();
-            case 4:
-                pointInTriangleTest();
-            case 5:
-                triangulateTest();
-            case 6:
-                quadEdgeTest();
-            case 7:
-                delaunayTest();
-            case 8: 
-                enclosingTriangleTest();
-            case 9: 
-                splitTest();
-            default:
-                
+    public static inline
+    function triangulateFace(  vertices:   Vertices
+                            ,  face:      Array<Face> ){
+        // Convert the polygon components into linked lists. We assume the first
+        // polygon is the outermost, and the rest, if present, are holes.
+        var polies = [ makeLinkedPoly( face[ 0 ] ) ];
+        var holes = [];
+        var l = face.length;
+        for ( k in 1...l ){
+          holes.push( makeLinkedPoly( face[ k ] ) );
         }
-        webgl.clearVerticesAndColors();
-        sevenSegPoints.render();
-        sevenSegEdges.render();
-        webgl.setTriangles( Triangle.triangles, cast rainbow );
-    }
-    function pointInPolyTest(){
-        var thick = 4;
-        var shape = pointInPolyShape;
-        var verts = shape.vertices;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        ctx.lineType = TriangleJoinCurve;
-        drawFaces( shape, ctx, false );
-        ctx.fill = true; // with polyK 
-        ctx.lineType = TriangleJoinCurve; // - default
-        var col = if( verts.pointInPolygon( shape.faces[0][0], verts[0] ) ){
-            4;
-        } else {
-            1;
-        }
-        ctx.setColor( col, col  );
-        drawSquare( 0, ctx, verts[0] );
-        drawVerticesPoints( shape, ctx, 0, col, 5 );
-        ctx.render( thick, false );
-    }
-    // Don't really understand this one but looks like it's working!!
-    function angleCompareTest(){
-        var shape = angleCompareShape;
-        var vert = shape.vertices;
-        var v0 = vert[0];
-        var v1 = vert[1];
-        var v2 = vert[2];
-        var v3 = vert[3];
-        var cmp = Geom2.angleCompare( v0, v1 );
-        var r = cmp( v2, v3 );
-        var thick = 4;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        drawEdges( shape.edges, shape, ctx, true );
-        drawVerticesPoints( shape, ctx, 0, 0, 5 );
-        var c2 = r < 0 ? 1 : 0;
-        var c3 = r > 0 ? 1 : 0;
-        ctx.setColor( c2, c2  );
-        drawSquare( 0, ctx, v2 );
-        ctx.setColor( c3, c3  );
-        drawSquare( 0, ctx, v3 );
-        ctx.render( thick, false );
-    }
-    function pointInTriangleTest(){
-        var shape = pointInTriangleShape;
-        var vert = shape.vertices;
-        var v0 = vert[0];
-        var v1 = vert[1];
-        var v2 = vert[2];
-        var v3 = vert[3];
-        var v4 = vert[4];
-        var inTriangle = Geom2.pointInTriangle( v1, v2, v3 );
-        vert[4] = Geom2.circumcenter( v1, v2, v3 );
-        v4 = vert[4];
-        var thick = 4;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        // draw outer circle
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );// red 
-        ctx.fill = false;// just border?
-        ctx.regularPoly( PolySides.hexacontagon, v4.x, v4.y, Math.sqrt( v4.distSq(v1) ), 0 ); // 20 sides
-        ctx.moveTo( v4.x, v4.y );
         
-        ctx.setColor( 1, 2 );
-        ctx.fill = true; // with polyK
-        drawFaces( shape, ctx, false );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        drawVerticesPoints( shape, ctx, 0, 0, 5 );
-        var c0 = inTriangle(v0) ? 1 : 4;
-        ctx.setColor( c0, c0  );
-        drawSquare( 0, ctx, v0 );
-        trace( 'd ' + Geom2.pointToEdgeDistSq( v1, v2 )( v0 ) );
-        ctx.render( thick, false );
-    }
-    function edgeIntersectTest(){
-        var shape = edgeIntersectShape;
-        var vert = shape.vertices;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.fill = false;
-        var v0 = vert[0];
-        var v1 = vert[1];
-        var v2 = vert[2];
-        var v3 = vert[3];
-        if( Geom2.edgesIntersect( v0, v1, v2, v3 ) == true ){
-            ctx.setColor( 1);
-        } else {
-            ctx.setColor( 4 );
-        }
-        drawEdges( shape.edges, shape, ctx, true );
-        ctx.render( thick, false );
-    }
-    function triangulateTest(){
-        var shape = triangulateShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var diags = Triangulate.triangulateFace( vert, face[0] );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.fill = true;
-        ctx.setColor( 0, 3 );
-        drawFaces( shape, ctx, false );
-        ctx.fill = false;
-        ctx.setColor( 4, 3 );
-        ctx.moveTo( 0, 0 );
-        var edges = shape.edges.clone().add( diags );
-        drawEdges( edges, shape, ctx, true );
-        ctx.setColor( 0, 3 );
-        drawFaces( shape, ctx, false );
-        ctx.render( thick, false );
-    }
-    function quadEdgeTest(){
-        var shape = quadEdgeShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var edges = shape.edges;
-        var coEdges = new Edges();
-        var sideEdges = new Array<SideEdge>();
-        Triangulate.makeQuadEdge( vert, edges, coEdges, sideEdges );
-        //edges.flipEdge( coEdges, sideEdges, 12 );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.fill = true;
-        ctx.setColor( 0, 3 );
-        ctx.moveTo( 0, 0 );
-        drawEdges( edges, shape, ctx, true );
-        ctx.fill = true;
-        ctx.setColor( 5, 2 );
-        ctx.moveTo( 0, 0 );
-        edges.flipEdge( coEdges, sideEdges, 12 );
-        drawEdges( edges, shape, ctx, true );
-        ctx.render( thick, false );
-    }
-    function delaunayTest(){
-        var shape = delaunayShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var edges = shape.edges;
-        var diags = Triangulate.triangulateFace( vert, face[0] );
-        var all = edges.clone().add( diags );
-        var coEdges = new Edges();
-        var sideEdges = new Array<SideEdge>();
-        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.setColor( 4, 0 );
-        ctx.fill = false;
-        for( j in edges.length...all.length ){
-          var edge = all[j];
-          var coEdge = coEdges[j];
-          var w = vert[edge.p];
-          var y = vert[edge.q];
-          var x = vert[coEdge.p];
-          var z = vert[coEdge.q];
-          var p = Geom2.circumcenter( w, y, x );
-          var r = Math.sqrt( w.distSq( p ) );
-          ctx.regularPoly( PolySides.hexacontagon, p.x, p.y, r, 0 );
-        }
-        ctx.fill = false;
-        ctx.setColor( 0, 3 );
-        ctx.moveTo( 0, 0 );
-        //drawFaces( shape, ctx );
-        drawEdges( all, shape, ctx, true );
-        ctx.setColor( 1, 3 );
-        ctx.moveTo( 0, 0 );
-        drawEdges( edges, shape, ctx, true );
-        ctx.render( thick, false );
-    }
-    var all: Edges;
-    var vert: Vertices;
-    var shape: FillShape;
-    var coEdges: Edges;
-    var sideEdges: Array<SideEdge>;
-    public function enclosingTriangleTest(){
-        shape = enclosingTriangleShape;
-        vert = shape.vertices;//.clone();
-        var face = shape.faces;
-        var edges = shape.edges;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.lineType = TriangleJoinCurve;
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.setColor( 4, 3 );
-        ctx.fill = true; // with polyK
-        var diags = Triangulate.triangulateFace( vert, face[0] );
-        all = edges.clone().add( diags );
-        coEdges = new Edges();
-        sideEdges = new Array<SideEdge>();
-        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        ctx.moveTo( 0, 0 );
-        //drawVertices( shape, ctx, false );
-        drawFaces( shape, ctx, false );
-        //drawEdges( edges, shape, ctx, false );
-        ctx.setColor( 0 );
-        ctx.fill = true; // with polyK 
-        ctx.lineType = TriangleJoinCurve; // - default
-        drawVerticesPoints( shape, ctx, -1, 1, 5 );
-        ctx.render( thick, false );
-        encloseTriangleDraw();
-    }
-    
-    // TODO: Refactor to be only called rather than method above when triangle moves.
-    public function encloseTriangleDraw(){
-        var p = new Vector2( mX, mY );
-        //drawSquare( 0, ctx, p );
-        var ctx2 = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx2.setThickness( 4 );
-        var findTri = new FindEnclosingTriangle();
-        var triangle = findTri.getFace( vert, all, coEdges, sideEdges, p, 0 )();
-        ctx2.setColor( 7, 7 );
-        ctx2.fill = true; // with polyK 
-        if( triangle != null ) drawFace( triangle, shape, ctx2, false );
-        ctx2.render( thick, false );
-    }
-    
-    public function splitTest(){
-        sevenSegOnEdges = true;
-        sevenSegOnPoints = false;
-        var shape = splitShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var edges = shape.edges;
-        var diags = Triangulate.triangulateFace( vert, face[0] );
-        var all = edges.clone().add( diags );
-        var coEdges = new Edges();
-        var sideEdges = new Array<SideEdge>();
-        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        Triangulate.refineToDelaunay( vert, all, coEdges, sideEdges );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.setColor( 4, 0 );
-        ctx.moveTo( 0, 0 );
-        ctx.fill = false;
-        Triangulate.splitEdge( vert, all, coEdges, sideEdges, 23 );
-        ctx.fill = false;
-        ctx.setColor( 0, 3 );
-        ctx.moveTo( 0, 0 );
-        //drawFaces( shape, ctx );
-        drawEdges( all, shape, ctx, true );
-        ctx.setColor( 1, 3 );
-        ctx.moveTo( 0, 0 );
-        drawEdges( edges, shape, ctx, true );
-        ctx.render( thick, false );
-        sevenSegOnEdges = false;
-        sevenSegOnPoints = true;
-    }
-    static var sevenSegPoints: SevenSeg;
-    static var sevenSegEdges: SevenSeg;
-    public function bananaTest(){
-        var thick = 4;
-        
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        ctx.lineType = TriangleJoinCurve;
-        drawVertices( banana, ctx, false );
-        ctx.setColor( 0 );
-        ctx.fill = true; // with polyK 
-        ctx.lineType = TriangleJoinCurve; // - default
-        //drawVertices( banana, ctx );
-        //drawFaces( guitar, ctx );
-        drawVerticesPoints( banana, ctx, -1, 1, 5 );
-        ctx.render( thick, false );
-    }
-    
-    public static inline function drawSquare( i: Int, ctx: PathContext, v: Vector2 ){
-        ctx.regularPoly( PolySides.square, v.x, v.y, 10, Math.PI/4 );
-        ctx.moveTo( v.x, v.y );
-    }
-    
-    public static inline function drawPoint( i: Int, ctx: PathContext, v: Vector2 ){
-        if( sevenSegOnPoints ){
-            var p: justTriangles.Point = { x: v.x, y: v.y };
-            p = ctx.pt( p.x, p.y );
-            var w = sevenSegPoints.numberWidth( i );
-            sevenSegPoints.addNumber( i, p.x - 2*w, p.y - sevenSegPoints.height );
-        }
-        ctx.regularPoly( PolySides.icosagon, v.x, v.y, 5, 0 ); // 20 sides
-        ctx.moveTo( v.x, v.y );
-    }
-    @:access( justTriangles.PathContext )
-    public inline function transform( x: Float, y: Float ): Point {
-       return ctx.pt( x, y );
-    }
-        
-    public function drawFaces( fillShape: FillShape, ctx_: PathContext, showPoints: Bool = true ){
-        var faces = fillShape.faces;
-        var somefaces: Array<Face>;
-        var face: Face;
-        for( j in 0...faces.length ){
-            somefaces = faces[j];
-            for( k in 0...somefaces.length ){
-                face = somefaces[k];
-                for( i in 0...face.length ) drawFace( face, fillShape, ctx_, showPoints );
+        // We handle only the outer polygons. We start with only one, but more are
+        // to come because of splitting. The holes are eventually merged in.
+        // In each iteration a diagonal is added.
+        var diagonals = new Edges();
+        while( polies.length > 0 ){
+            var poly = polies.pop();
+            // First we find a locally convex vertex.
+            var node = poly;
+            var a: Vector2;
+            var b: Vector2;
+            var c: Vector2;
+            var convex = false;
+            do {
+                a = vertices[ node.prev.value ];
+                b = vertices[ node.value ];
+                c = vertices[ node.next.value ];
+                convex = (a.span(b)).cross(b.span(c)) < 0;
+                node = node.next;
+            } while( !convex && node != poly);
+
+            if(!convex) continue;
+            var aDllNode = node.prev.prev;
+            var bDllNode = node.prev;
+            var cDllNode = node;
+
+            // We try to make a diagonal out of ac. This is possible only if it lies
+            // completely inside the polygon.
+            var acOK = true;
+
+            // Ensuring there are no intersections of ac with other edges doesn't
+            // guarantee that ac lies within the poly. It is also possible that the
+            // whole polygon is inside the triangle abc. Therefore we early reject the
+            // case when the immediate neighbors of vertices a and c are inside abc.
+            // Note that if ac is already an edge, it will also be rejected.
+            var inabc = Geom2.pointInTriangle( a, b, c );
+            acOK = !inabc( vertices[ aDllNode.prev.value ] ) && !inabc( vertices[ cDllNode.next.value ] );
+            
+            // Now we proceed with checking the intersections with ac.
+            if( acOK ) acOK = !intersects( a, c, vertices, cDllNode.next, aDllNode.prev );
+            var holesLen = holes.length;
+            for( l in 0...holesLen ){
+                acOK = !intersects( a, c, vertices, holes[ l ] );
+                if( !acOK ) break; // moved this to get same out as example but unsure if correct.
             }
-        }
-    }
-    public function drawFace( face: Face, fillShape: FillShape, ctx_: PathContext, showPoints: Bool = true ){
-        var verts = fillShape.vertices;
-        var l: Int = face.length;
-        var f0 = face[0];
-        var v0 = verts[f0];
-        var f: Int;
-        ctx_.moveTo( v0.x, v0.y );
-        if( showPoints ) drawPoint( f0, ctx_, v0 );
-        var v: Vector2;
-        for( i in 1...l ){
-            f = face[i];
-            v = verts[f];
-            ctx_.lineTo( v.x, v.y );
-            if( showPoints ) drawPoint( f, ctx_, v );
-        }
-        ctx_.lineTo( v0.x, v0.y );
-    }
-    public function drawEdges( edges: Edges, fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
-        var verts = fillShape.vertices;
-        var l: Int = edges.length;
-        var e: Edge;
-        var v0: Vector2;
-        var v1: Vector2;
-        var p: Int;
-        var q: Int;
-        var mid: Vector2;
-        var w: Float;
-        var point: Point;
-        for( i in 0...l ){
-            e = edges[i];
-            if( e.isNull() ) continue;
-            p = e.p;
-            q = e.q;
-            v0 = verts[p];
-            if( v0 == null ) continue;
-            ctx.moveTo( v0.x, v0.y );
-            if( showPoints ) drawPoint( p, ctx, v0 );
-            v1 = verts[q];
-            if( v1 == null ) continue;
-            ctx.lineTo( v1.x, v1.y );
-            if( showPoints ) drawPoint( q, ctx, v1 );
-            if( sevenSegOnEdges ){
-                mid = v0.mid( v1 );
-                point = { x: mid.x, y: mid.y };
-                point = ctx.pt( point.x, point.y );
-                w = sevenSegEdges.numberWidth( i );
-                sevenSegEdges.addNumber( i, point.x, point.y, true );
-            }
-        }
-    }
-    public function drawVerticesPoints( fillShape: FillShape, ctx: PathContext, specialPoint: Int = -1, specialColor: Int, normalColor: Int ){
-        verts = fillShape.vertices;
-        var v: Vector2;
-        var v0 = verts[0];
-        if( specialPoint == 0 ){
-            ctx.setColor( specialColor, specialColor );
-            drawPoint( 0, ctx, v0 );
-        } else {
-            ctx.setColor( normalColor, normalColor );
-            drawPoint( 0, ctx, v0 );
-        }
-        var l = verts.length;
-        for( i in 1...l ){
-            v = verts[i];
-            if( specialPoint == i ){
-                ctx.setColor( specialColor, specialColor );
-                drawPoint( i, ctx, v );
-                
+            
+            var split;
+            var fromDllNode;
+            var toDllNode;
+            if( acOK ){
+              // No intersections. We can easily connect a and c.
+              fromDllNode = cDllNode;
+              toDllNode = aDllNode;
+              split = true;
             } else {
-                ctx.setColor( normalColor, normalColor );
-                drawPoint( i, ctx, v );
-            }
+              // If there are intersections, we have to find the closes vertex to b in
+              // the direction perpendicular to ac, i.e., furthest from ac. It is
+              // guaranteed that such a vertex forms a legal diagonal with b.
+              var findBest = findDeepestInside(a, b, c);
+              var best = 
+                  if( cDllNode.next != aDllNode ){
+                      findBest( vertices, cDllNode.next, aDllNode );
+                  } else {
+                      null; 
+                  }
+              var lHole = -1;
+              var holesLen = holes.length;// TODO: check if need to redefine does findBest effect?
+              for( l in 0...holesLen ) {
+                  var newBest = findBest( vertices, holes[l], holes[l], best );
+                  if( newBest != best ) lHole = l;
+                  best = newBest;
+              }
+              
+              fromDllNode = bDllNode;
+              toDllNode = best;
+              if( lHole < 0 ){
+                // The nearest vertex does not come from a hole. It is lies on the outer
+                // polygon itself (or is undefined).
+                split = true;
+              } else {
+                // The nearest vertex is found on a hole. The hole will be merged into
+                // the currently processed poly, so we remove it from the hole list.
+                holes.splice( lHole, 1 );
+                split = false;
+              }
+          }
+
+          if( toDllNode == null ) {
+            // It was a triangle all along!
+            continue;
+          }
+
+          diagonals.push( new Edge( fromDllNode.value, toDllNode.value ) );
+          //if (trace !== undefined) {
+            //trace.push({
+              //selectFace: makeArrayPoly( poly ),
+              //addDiag: [fromDllNode.value, toDllNode.value ]
+            //});
+          //}
+
+          // TODO: Elaborate
+          var poly1 = new DllNode( fromDllNode.value );
+          poly1.next = fromDllNode.next; 
+          var tempDllNode = new DllNode( toDllNode.value );
+          tempDllNode.prev = toDllNode.prev;
+          tempDllNode.next = poly1;
+          poly1.prev = tempDllNode;
+          fromDllNode.next.prev = poly1;
+          toDllNode.prev.next = poly1.prev;
+
+          fromDllNode.next = toDllNode;
+          toDllNode.prev = fromDllNode;
+          var poly2 = fromDllNode;
+          if( split ){
+              polies.push( poly1 );
+              polies.push( poly2 );
+          } else {
+              polies.push( poly2 );
+          }
         }
+        return diagonals;
     }
-    public function drawVertices( fillShape: FillShape, ctx: PathContext, showPoints: Bool = true ){
-        verts = fillShape.vertices;
-        var v0 = verts[0];
-        var v: Vector2;
-        ctx.moveTo( v0.x, v0.y );
-        if( showPoints ) drawPoint( 0, ctx, v0 );
-        var l = verts.length;
-        for( i in 1...l ){
-            v = verts[i];
-            ctx.lineTo( v.x, v.y );
-            if( showPoints ) drawPoint( i, ctx, v );
+    
+    // Given a polygon as a list of vertex indices, returns it in a form of
+    // a doubly linked list.
+    public static inline
+    function makeLinkedPoly( face: Array<Int> ): DllNodeInt {
+        var linkedPoly = new DllNodeInt( face[ 0 ] );
+        var node = linkedPoly;
+        var l = face.length;
+        for( i in 1...l ) {
+            var prevDllNode = node;
+            node = new DllNodeInt( face[ i ] );
+            prevDllNode.next = node;
+            node.prev = prevDllNode;
         }
-        ctx.lineTo( v0.x, v0.y );
+        node.next = linkedPoly;
+        linkedPoly.prev = node;
+        return linkedPoly;
+    }
+        
+    // Checks wether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
+    // If nodeEnd is not provided, nodeBeg is interpreted as lying on a cycle and
+    // the whole cycle is tested. Edges spanned on equal (===) vertices are not
+    // considered intersecting.
+    public static inline
+    function intersects(    a:          Vector2
+                        ,   b:          Vector2
+                        ,   vertices:   Vertices
+                        ,   nodeBeg:    DllNodeInt
+                        ,   ?nodeEnd:    DllNodeInt = null ): Bool {
+       var out = false;
+       if( nodeEnd == null ) {
+         if( aux( vertices, a, b, nodeBeg ) ){
+             out = true;
+         } else {
+             nodeEnd = nodeBeg;
+             nodeBeg = nodeBeg.next;
+         }
+      }
+      if( out!= true ){
+          var node = nodeBeg;
+          while( node!= nodeEnd ){
+              if( aux( vertices, a, b, node ) ){ 
+                  out = true;
+                  break;
+              } else {
+                  node = node.next;
+              }
+          }
+      }
+      return out;
+    }
+    
+    public static inline
+    function aux( vertices: Vertices, a: Vector2, b: Vector2, node: DllNodeInt ): Bool {
+        var c = vertices[ node.value ];
+        var d = vertices[ node.next.value ];
+        return c != a && c != b && d != a && d != b && Geom2.edgesIntersect( a, b, c, d );
+    }
+    
+    public static inline
+    function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
+                            : Vertices -> DllNodeInt -> DllNodeInt -> ?DllNodeInt -> DllNodeInt {
+      
+      var inabc     = Geom2.pointInTriangle( a, b, c );
+      var acDistSq  = Geom2.pointToEdgeDistSq( a, c );
+      
+      return 
+          function( vertices: Vertices
+                  , nodeBeg: DllNodeInt
+                  , nodeEnd: DllNodeInt
+                  , ?bestDllNode: DllNodeInt = null ): DllNodeInt {
+                      
+              var v: Int; 
+              var maxDepthSq = 
+                  if( bestDllNode != null ){
+                      v = bestDllNode.value;
+                      acDistSq( vertices[ v ] );
+                  } else {
+                    -1;
+                  }
+              
+              var node = nodeBeg;
+              do {
+                  var v = vertices[ node.value ];
+                  if(v != a && v != b && v != c && inabc( v )) {
+                      var depthSq = acDistSq( v );
+                      if( depthSq > maxDepthSq ) {
+                          maxDepthSq = depthSq;
+                          bestDllNode = node;
+                      }
+                  }
+                  node = node.next;
+               } while (node != nodeEnd);
+               
+               return bestDllNode;
+           };
+    }
+    
+    // Given a triangulation graph, produces the quad-edge datastructure for fast
+    // local traversal. The result consists of two arrays: coEdges and sideEdges
+    // with one entry per edge each. The coEdges array is returned as list of vertex
+    // index pairs, whereas sideEdges are represented by edge index quadruples.
+    //
+    // Consider edge ac enclosed by the quad abcd. Then its co-edge is bd and the
+    // side edges are: bc, cd, da, ab, in that order. Although the graph is not
+    // directed, the edges have direction implied by the implementation. The order
+    // of side edges is determined by the de facto orientation of the primary edge
+    // ac and its co-edge bd, but the directions of the side edges are arbitrary.
+    //
+    // External edges are handled by setting indices describing one supported
+    // triangle to undefined. Which triangle it will be is not determined.
+    //
+    // WARNING: The procedure will change the orientation of edges.
+    // 
+    public static 
+    function makeQuadEdge( vertices: Vertices
+                        ,  edges: Edges
+                        , coEdges: Edges
+                        , sideEdges: Array<SideEdge> ) {
+      // Prepare datas tructures for fast graph traversal.  
+      // !!!! pass coEdges and SideEdges in rather than return object of them.  !!!
+      //var coEdges = [];
+      //var sideEdges = [];
+      for( j in 0...edges.length ){
+        coEdges[ j ] = new Edge( null, null );
+        sideEdges[ j ] = SideEdge.getEmpty();
+      }
+
+      // Find the outgoing edges for each vertex
+      var outEdges = new Array<Array<Int>>();
+      for( i in 0...vertices.length )
+        outEdges[ i ] = new Array<Int>();
+      for( j in 0...edges.length ){
+        var e = edges[ j ];
+        outEdges[ e.p ].push( j );
+        outEdges[ e.q ].push( j );
+      }
+      var l = vertices.length;
+      // Process edges around each vertex.
+      for( i in 0...l ){
+        var v = vertices[i];
+        var js = outEdges[i];
+        // Reverse edges, so that they point outward and sort them angularily.
+        for( k in 0...js.length ) {
+          var e = edges[js[k]];
+          if( e.p != i ) {
+            e.q = e.p;
+            e.p = i;
+          }
+        }
+        
+        var angleCmp = Geom2.angleCompare( v, vertices[ edges[ js[ 0 ] ].q ] );
+        js.sort(function (j1: Int, j2: Int) {
+          return Std.int( angleCmp( vertices[ edges[j1].q ], vertices[ edges[j2].q ]) );
+        });
+
+        // Associate each edge with neighbouring edges appropriately.
+        for( k in 0...js.length ) {
+          var jPrev = js[(js.length + k - 1) % js.length];
+          var j     = js[k];
+          var jNext = js[(k + 1) % js.length];
+          // DllNode that although we could determine the whole co-edge just now, we
+          // we choose to push only the endpoint edges[jPrev][1]. The other end,
+          // i.e., edges[jNext][1] will be, or already was, put while processing the
+          // edges of the opporite vertex, i.e., edges[j][1].
+          coEdges[j].push( edges[ jPrev ].q );
+          sideEdges[j].push( jPrev );
+          sideEdges[j].push( jNext );  
+        }
+        
+      }
+
+      // Amend external edges
+      // THIS DOES NOT SEEM TO BE USED???
+      function disjoint( i: Int, j: Int ) { 
+          return edges[j].p != i && edges[j].q != i;
+      }
+      
+      for( j in 0...edges.length ){
+        if( !edges[j].external ) continue;
+        var ce = coEdges[ j ]; 
+        var ses = sideEdges[ j ];
+
+        // NOT Working?? Comment out ...
+        
+        // If the whole mesh is a triangle, just remove one of the duplicate entries
+        if( ce.p == ce.q ) {
+          ce.q = ses.b = ses.c = null;
+          continue;
+        }
+        
+        // TODO: Fix / Rework
+        // This seems to partially destroy half an Edge and sideEdge from coEdges/sideEdges,
+        // surely they need to be removed for safety once that is done otherwise easily break rendering?
+        // 
+        // NOT Working!! Comment out ...
+        // problematic if the connector is between the two sides rather than along edge.
+        /*
+        // If the arms of a supported triangle are also external, remove.
+        if( edges[ ses.a ].external && edges[ ses.d ].external)
+          ce.p = ses.a = ses.d = null;
+        if( edges[ ses.b ].external && edges[ ses.c ].external)
+          ce.q = ses.b = ses.c = null;  
+        */
+      }
+    }
+        
+    // makeArrayPoly
+    public static inline
+    function faceFromDllNode( linkedPoly: DllNodeInt ): Face {
+        var face = new Face();
+        var node = linkedPoly;
+        var l = 0;
+        do {
+            face[ l ] = node.value;
+            ++l;
+            node = node.next;
+        } while (node != linkedPoly);
+        return face;
+    }
+    
+    // "Maybe OK"
+    public static inline
+    function splitEdge(     vertices:   Vertices
+                        ,   edges:      Edges
+                        ,   coEdges:    Edges
+                        ,   sideEdges:  Array<SideEdge>
+                        ,   j ) {
+      var edge   = edges[j];
+      var coEdge = coEdges[j];
+      var ia = edge.p;
+      var ic = edge.q;
+      var ib = coEdge.p;
+      var id = coEdge.q;
+      var p = (vertices[ia]).mid( vertices[ic] ) ;
+      var unsureEdges = [];
+      vertices.push( p );
+      var ip = vertices.length - 1;
+      edges[ j ] = new Edge( ia, ip ); 
+      var ja = j; // Reuse the index
+      edges.push( new Edge( ip, ic ) );
+      var jc = edges.length - 1;
+      // One of the supported triangles is is not present if the edge is external,
+      // which is typical for fixed edges.
+      var jb = null;
+      var j0 = null;
+      var j3 = null;
+      if( ib != null ){
+        edges.push( new Edge( ib, ip ) );
+        jb =  edges.length - 1;
+        j0 = sideEdges[j].a; 
+        j3 = sideEdges[j].d;
+        coEdges[j0].substitute( ia, ip );
+        sideEdges[j0].substitute( j, jc );
+        sideEdges[j0].substitute( j3, jb );
+        coEdges[j3].substitute( ic, ip );
+      //arraySubst4(sideEdges[j3],  j, ja); // Not needed, ja == j
+        sideEdges[j3].substitute( j0, jb );
+        coEdges[jb] = new Edge( ia, ic );
+        sideEdges[jb] = new SideEdge( ja, jc, j0, j3 );
+        if( !edges[j0].fixed ) unsureEdges.push( j0 );
+        if (!edges[j3].fixed)  unsureEdges.push( j3 );
+      }
+      var jd = null;
+      var j1 = null;
+      var j2 = null;
+      
+      if (id != null ) {
+        edges.push( new Edge( ip, id) );
+        jd = edges.length - 1;
+        j1 = sideEdges[j].b; 
+        j2 = sideEdges[j].c;
+        coEdges[j1].substitute( ia, ip );
+        sideEdges[j1].substitute( j, jc );
+        sideEdges[j1].substitute( j2, jd );
+        coEdges[j2].substitute( ic, ip );
+      //arraySubst4(sideEdges[j2],  j, ja); // Not needed, ja == j
+        sideEdges[j2].substitute( j1, jd );
+        coEdges[ jd ] = new Edge( ia, ic );
+        sideEdges[ jd ] = new SideEdge( j2, j1, jc, ja );
+        if( !edges[j1].fixed ) unsureEdges.push( j1 );
+        if( !edges[j2].fixed ) unsureEdges.push( j2 );
+      }
+    //coEdges[ja] = [ib, id]; // Not needed, already there.
+      sideEdges[ ja ] = new SideEdge( jb, jd, j2, j3 );
+      coEdges[ jc ]   = new Edge( ib, id );
+      sideEdges[ jc ] = new SideEdge( j0, j1, jd, jb );
+      // Splitting a fixed edge yields fixed edges. Same with external.
+      if( edge.fixed ) {
+          edges[ ja ].fixed = true;
+          edges[ jc ].fixed = true;
+      }
+      if( edge.external ){
+        edges[ ja ].external = true;
+        edges[ jc ].external = true;
+     }
+      var delaunay = new Delaunay();
+      var affectedEdges = delaunay.calculate(   vertices
+                                            ,   edges
+                                            ,   coEdges
+                                            ,   sideEdges
+                                            ,   unsureEdges );
+      affectedEdges.push( ja );
+      affectedEdges.push( jc );
+      if (jb != null ) affectedEdges.push( jb );
+      if (jd != null ) affectedEdges.push( jd );
+      return affectedEdges;
     }
 }
