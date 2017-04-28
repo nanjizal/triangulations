@@ -39,7 +39,17 @@ import js.html.DivElement;
 import js.html.Event;
 import js.html.KeyboardEvent;
 import js.html.MouseEvent;
-    
+// tests
+import tests.visualTests.TestShape;
+import tests.visualTests.TestAngleCompare;
+import tests.visualTests.TestSplit;
+import tests.visualTests.TestTriangulate;
+import tests.visualTests.TestQuadEdge;
+import tests.visualTests.TestDelaunay;
+import tests.visualTests.TestEdgeIntersect;
+import tests.visualTests.TestPointInTriangle;
+import tests.visualTests.TestPointInPoly;
+
 class MainTestSetup {
     static function main(){
         new MainTestSetup();
@@ -104,54 +114,29 @@ class MainTestSetup {
         }
     }
     var drawHelper: DrawHelper;
+    var navHelper: NavHelper;
     public function new(){
         trace( 'Testing Triangulations ');
         createFillData();
         drawHelper = new DrawHelper();
         interactionSurface = new InteractionSurface( 1024, 1024, '0xcccccc' );
-        sceneSetup();
-        js.Browser.document.onkeydown = keyDownHandler;
+        navSetup();
     }
-    var updateFunction: Void->Void;
-    var mX: Float;
-    var mY: Float;
-    var theta: Float = 0;
-    inline function spinForwards(): Matrix4 {
-        if( theta > Math.PI/2 ) {
-            drawHelper.webgl.transformationFunc = null;
-            theta = 0;
-            if( scene++ == sceneMax ) scene = 0;
-            js.Browser.document.onkeydown = keyDownHandler;
-            sceneSetup();
-        }
-        return Matrix4.rotationX( theta += Math.PI/75 ).multmat( Matrix4.rotationY( theta ) );
+    function navSetup(){
+        var startScene = 0;
+        var maxScene = 10;
+        var mouseScenes = [8];
+        navHelper = new NavHelper( startScene, maxScene, mouseScenes );
+        navHelper.onSceneChange = sceneSetup;
+        navHelper.setTransform = animateAssign;
+        navHelper.mouseMoveUpdate = drawHelper.render;
+        navHelper.start();
     }
-    inline function spinBackwards(): Matrix4 {
-        if( theta > Math.PI/2 ) {
-            drawHelper.webgl.transformationFunc = null;
-            theta = 0;
-            if( scene-- == 0 ) scene = sceneMax;
-            js.Browser.document.onkeydown = keyDownHandler;
-            sceneSetup();
-        }
-        return Matrix4.rotationY( theta += Math.PI/75 ).multmat( Matrix4.rotationX( theta ) );
+    public function animateAssign( animation: Void -> Matrix4 ) {
+        drawHelper.webgl.transformationFunc = animation;
     }
-    
-    var scene = 0;
-    var sceneMax = 10;
-    function keyDownHandler( e: KeyboardEvent ) {
-        e.preventDefault();
-        if( e.keyCode == KeyboardEvent.DOM_VK_LEFT ){
-            trace( "LEFT" );
-            drawHelper.webgl.transformationFunc = spinBackwards;
-        } else if( e.keyCode == KeyboardEvent.DOM_VK_RIGHT ){
-            trace( "RIGHT" );
-            drawHelper.webgl.transformationFunc = spinForwards;
-        }
-        trace( e.keyCode );  
-    }
-    
-    function sceneSetup(){
+    function sceneSetup( val: Int ){
+        var scene = val;
         var vert: Vertices =
         switch( scene ){
             case 0:
@@ -219,202 +204,30 @@ class MainTestSetup {
         }
         drawHelper.render();
         interactionSurface.setup( vert, transform, drawHelper.render );
-        if( scene == 8 ) {
-            js.Browser.document.onmousemove = function ( e: MouseEvent ){
-                mX = e.clientX * 2;
-                mY = e.clientY * 2;
-                if( updateFunction != null ) {
-                    updateFunction();
-                }
-            }
-            // excessive don't really need to redraw all the triangles could use a secondary PathContext 
-            // save the triangles before drawing in then add extra on.
-            updateFunction = drawHelper.render;
-        } else {
-            updateFunction = null;
-            js.Browser.document.onmousemove = null;
-        }
     }
     public var testScene: Void -> Void;
     
     function pointInPolyTest(){
-        var thick = 4;
-        var shape = pointInPolyShape;
-        var verts = shape.vertices;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        ctx.lineType = TriangleJoinCurve;
-        drawHelper.faces( shape, ctx, false );
-        ctx.fill = true; // with polyK 
-        ctx.lineType = TriangleJoinCurve; // - default
-        var col = if( verts.pointInPolygon( shape.faces[0][0], verts[0] ) ){
-            4;
-        } else {
-            1;
-        }
-        ctx.setColor( col, col  );
-        drawHelper.square( 0, ctx, verts[0] );
-        drawHelper.verticesPoints( shape, ctx, 0, col, 5 );
-        ctx.render( thick, false );
+        ctx = TestPointInPoly.draw( pointInPolyShape, drawHelper );
     }
     // Don't really understand this one but looks like it's working!!
     function angleCompareTest(){
-        var shape = angleCompareShape;
-        var vert = shape.vertices;
-        var v0 = vert[0];
-        var v1 = vert[1];
-        var v2 = vert[2];
-        var v3 = vert[3];
-        var cmp = Geom2.angleCompare( v0, v1 );
-        var r = cmp( v2, v3 );
-        var thick = 4;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        drawHelper.edges( shape.edges, shape, ctx, true );
-        drawHelper.verticesPoints( shape, ctx, 0, 0, 5 );
-        var c2 = r < 0 ? 1 : 0;
-        var c3 = r > 0 ? 1 : 0;
-        ctx.setColor( c2, c2  );
-        drawHelper.square( 0, ctx, v2 );
-        ctx.setColor( c3, c3  );
-        drawHelper.square( 0, ctx, v3 );
-        ctx.render( thick, false );
+        ctx = TestAngleCompare.draw( angleCompareShape, drawHelper );
     }
     function pointInTriangleTest(){
-        var shape = pointInTriangleShape;
-        var vert = shape.vertices;
-        var v0 = vert[0];
-        var v1 = vert[1];
-        var v2 = vert[2];
-        var v3 = vert[3];
-        var v4 = vert[4];
-        var inTriangle = Geom2.pointInTriangle( v1, v2, v3 );
-        vert[4] = Geom2.circumcenter( v1, v2, v3 );
-        v4 = vert[4];
-        var thick = 4;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        // draw outer circle
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );// red 
-        ctx.fill = false;// just border?
-        ctx.regularPoly( PolySides.hexacontagon, v4.x, v4.y, Math.sqrt( v4.distSq(v1) ), 0 ); // 20 sides
-        ctx.moveTo( v4.x, v4.y );
-        
-        ctx.setColor( 1, 2 );
-        ctx.fill = true; // with polyK
-        drawHelper.faces( shape, ctx, false );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        drawHelper.verticesPoints( shape, ctx, 0, 0, 5 );
-        var c0 = inTriangle(v0) ? 1 : 4;
-        ctx.setColor( c0, c0  );
-        drawHelper.square( 0, ctx, v0 );
-        trace( 'd ' + Geom2.pointToEdgeDistSq( v1, v2 )( v0 ) );
-        ctx.render( thick, false );
+        ctx = TestPointInTriangle.draw( pointInTriangleShape, drawHelper );
     }
     function edgeIntersectTest(){
-        var shape = edgeIntersectShape;
-        var vert = shape.vertices;
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.fill = false;
-        var v0 = vert[0];
-        var v1 = vert[1];
-        var v2 = vert[2];
-        var v3 = vert[3];
-        if( Geom2.edgesIntersect( v0, v1, v2, v3 ) == true ){
-            ctx.setColor( 1);
-        } else {
-            ctx.setColor( 4 );
-        }
-        drawHelper.edges( shape.edges, shape, ctx, true );
-        ctx.render( thick, false );
+        ctx = TestEdgeIntersect.draw( edgeIntersectShape, drawHelper );
     }
     function triangulateTest(){
-        var shape = triangulateShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var diags = Triangulate.triangulateFace( vert, face[0] );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.fill = true;
-        ctx.setColor( 0, 3 );
-        drawHelper.faces( shape, ctx, false );
-        ctx.fill = false;
-        ctx.setColor( 4, 3 );
-        ctx.moveTo( 0, 0 );
-        var edges = shape.edges.clone().add( diags );
-        drawHelper.edges( edges, shape, ctx, true );
-        ctx.setColor( 0, 3 );
-        drawHelper.faces( shape, ctx, false );
-        ctx.render( thick, false );
+        ctx = TestTriangulate.draw( triangulateShape, drawHelper );
     }
     function quadEdgeTest(){
-        var shape = quadEdgeShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var edges = shape.edges;
-        var coEdges = new Edges();
-        var sideEdges = new Array<SideEdge>();
-        Triangulate.makeQuadEdge( vert, edges, coEdges, sideEdges );
-        //edges.flipEdge( coEdges, sideEdges, 12 );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.fill = true;
-        ctx.setColor( 0, 3 );
-        ctx.moveTo( 0, 0 );
-        drawHelper.edges( edges, shape, ctx, true );
-        ctx.fill = true;
-        ctx.setColor( 5, 2 );
-        ctx.moveTo( 0, 0 );
-        edges.flipEdge( coEdges, sideEdges, 12 );
-        drawHelper.edges( edges, shape, ctx, true );
-        ctx.render( thick, false );
+        ctx = TestQuadEdge.draw( quadEdgeShape, drawHelper );
     }
     function delaunayTest(){
-        var shape = delaunayShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var edges = shape.edges;
-        var diags = Triangulate.triangulateFace( vert, face[0] );
-        var all = edges.clone().add( diags );
-        var coEdges = new Edges();
-        var sideEdges = new Array<SideEdge>();
-        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        var delaunay = new Delaunay();
-        delaunay.refineToDelaunay( vert, all, coEdges, sideEdges );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.setColor( 4, 0 );
-        ctx.fill = false;
-        for( j in edges.length...all.length ){
-          var edge = all[j];
-          var coEdge = coEdges[j];
-          var w = vert[edge.p];
-          var y = vert[edge.q];
-          var x = vert[coEdge.p];
-          var z = vert[coEdge.q];
-          var p = Geom2.circumcenter( w, y, x );
-          var r = Math.sqrt( w.distSq( p ) );
-          ctx.regularPoly( PolySides.hexacontagon, p.x, p.y, r, 0 );
-        }
-        ctx.fill = false;
-        ctx.setColor( 0, 3 );
-        ctx.moveTo( 0, 0 );
-        //faces( shape, ctx );
-        drawHelper.edges( all, shape, ctx, true );
-        ctx.setColor( 1, 3 );
-        ctx.moveTo( 0, 0 );
-        drawHelper.edges( edges, shape, ctx, true );
-        ctx.render( thick, false );
+        ctx = TestDelaunay.draw( delaunayShape, drawHelper );
     }
     var all: Edges;
     var vert: Vertices;
@@ -451,7 +264,7 @@ class MainTestSetup {
     
     // TODO: Refactor to be only called rather than method above when triangle moves.
     public function encloseTriangleDraw(){
-        var p = new Vector2( mX, mY );
+        var p = new Vector2( navHelper.mX, navHelper.mY );
         //square( 0, ctx, p );
         var ctx2 = new PathContext( 1, 1024, 0, 0 );
         var thick = 4;
@@ -506,44 +319,7 @@ class MainTestSetup {
     }
     
     public function splitTest(){
-        drawHelper.sevenSegOnEdges = true;
-        drawHelper.sevenSegOnPoints = false;
-        var shape = splitShape;
-        var vert = shape.vertices;
-        var face = shape.faces;
-        var edges = shape.edges;
-        var diags = Triangulate.triangulateFace( vert, face[0] );
-        var all = edges.clone().add( diags );
-        var coEdges = new Edges();
-        var sideEdges = new Array<SideEdge>();
-        Triangulate.makeQuadEdge( vert, all, coEdges, sideEdges );
-        var delaunay = new Delaunay();
-        delaunay.refineToDelaunay( vert, all, coEdges, sideEdges );
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        var thick = 4;
-        ctx.setThickness( 4 );
-        ctx.setColor( 4, 0 );
-        ctx.moveTo( 0, 0 );
-        ctx.fill = false;
-        var extra = all.clone();
-        //for( i in 0...10 ){
-            Triangulate.splitEdge( vert, extra, coEdges, sideEdges, 19 );
-            Triangulate.splitEdge( vert, extra, coEdges, sideEdges, 16 );
-            Triangulate.splitEdge( vert, extra, coEdges, sideEdges, 21 );
-            //}
-        //all.clone().add( extra );
-        ctx.fill = false;
-        ctx.setColor( 0, 3 );
-        ctx.moveTo( 0, 0 );
-        //faces( shape, ctx );
-        drawHelper.edges( all, shape, ctx, true );
-        drawHelper.edges( extra, shape, ctx, true );
-        ctx.setColor( 1, 3 );
-        ctx.moveTo( 0, 0 );
-        drawHelper.edges( edges, shape, ctx, true );
-        ctx.render( thick, false );
-        drawHelper.sevenSegOnEdges = false;
-        drawHelper.sevenSegOnPoints = true;
+        TestSplit.draw( splitShape, drawHelper );
     }
     
     public inline function transform( x: Float, y: Float ): Point {
@@ -551,20 +327,6 @@ class MainTestSetup {
     }
     
     public function bananaTest(){
-        var thick = 4;
-        
-        ctx = new PathContext( 1, 1024, 0, 0 );
-        ctx.setThickness( 4 );
-        ctx.setColor( 0, 3 );
-        ctx.fill = true; // with polyK
-        ctx.lineType = TriangleJoinCurve;
-        drawHelper.vertices( banana, ctx, false );
-        ctx.setColor( 0 );
-        ctx.fill = true; // with polyK 
-        ctx.lineType = TriangleJoinCurve; // - default
-        //drawHelper.drawVertices( banana, ctx );
-        //drawHelper.faces( guitar, ctx );
-        drawHelper.verticesPoints( banana, ctx, -1, 1, 5 );
-        ctx.render( thick, false );
+        ctx = TestShape.draw( banana, drawHelper );
     }
 }
