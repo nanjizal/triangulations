@@ -15,4 +15,6 @@ I am still working on the triangulate algorithm class, but basic triangulation a
  - Currently the 'Rupert' visual test is failing to render but compiles.
  - Demo link needs to be moved to test repository.
 
-<sup>**note: The Queue class has inline licence as it is ported from it's own project, and required that form of licence.**</sup>
+
+
+<sup>**note:  The Queue class has inline licence as it is ported from it's own project, and required that form of licence.**</sup>
