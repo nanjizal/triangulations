@@ -117,4 +117,15 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         out += ' )';
         return out;
     }
+    // light trace 
+    public function out(){
+        var out = '';
+        var e: Edge;
+        var l = this.length;
+        for( i in 0...l ){
+            out += this[i].out() + ',';
+        }
+        out = out.substr( 0, out.length - 1 );
+        return out;
+    }
 }
