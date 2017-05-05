@@ -109,7 +109,7 @@ class EdgesVertices {
                 vertexId = i;
             }
         }
-        trace( 'vertexId ' + vertexId + ' edgeId ' + edgeId );
+        // trace( 'vertexId ' + vertexId + ' edgeId ' + edgeId );
         // check if it's near
         var out: Null<Int> = null;
         if( nearVertex <= nearEdge ){
