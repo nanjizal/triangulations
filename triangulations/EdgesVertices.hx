@@ -62,7 +62,7 @@ class EdgesVertices {
     //
     /* example use
         var i = edgesVertices.hitTestId( hitVector2, distance );
-        if( i != null ) return;
+        if( i == null ) return;
         if( i < 0 ) {
             i = -i - 1; 
             trace( 'edge found ' + i );
