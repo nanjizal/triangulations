@@ -73,4 +73,11 @@ class Edge {
         }
         return out;
     }
+    // alternate minimal trace useful for viewing lots of edges with less noise
+    @:keep    @:keep
+    public function out() {
+        var p0 = p;
+        var q0 = q;
+        return '($p0,$q0 )';
+    }  
 }
