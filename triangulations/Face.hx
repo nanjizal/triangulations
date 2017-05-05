@@ -10,4 +10,13 @@ abstract Face( Array<Int> ) from Array<Int> to Array<Int> {
     function getEmpty(){
         return new Face( new Array<Int>() );
     }
+    public inline
+    function clone(){
+        var f: Face = getEmpty();
+        var l = this.length;
+        for( i in 0...l ){
+            f[i] = this[i];
+        }
+        return f;
+    }
 }
