@@ -6,7 +6,7 @@ One important aspect of the port is that I have separated graphics tests from th
 
 ### [git for visual testing and WebGL use](https://github.com/nanjizal/triangulationsWebGLtest).
 
-[WebGL tests](https://rawgit.com/nanjizal/triangulations/master/index.html) 
+[WebGL tests](https://rawgit.com/nanjizal/triangulationsWebGLtest/master/index.html) 
 Use <- Arrow -> keys for navigation and you can normally drag vertices with the mouse.
 
 I am still working on the triangulate algorithm class, but basic triangulation and Delaunay work, Rupert functionality still requires some debugging.
