@@ -13,7 +13,6 @@ I am still working on the triangulate algorithm class, but basic triangulation a
 
 # Issues
  - Currently the 'Rupert' visual test is failing to render but compiles.
- - Demo link needs to be moved to test repository.
 
 
 
