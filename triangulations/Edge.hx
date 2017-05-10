@@ -15,7 +15,7 @@ class Edge {
         return new Edge( null, null );
     } 
     public inline function isNull(): Bool {
-        return ( p == null && q == null );
+        return ( p == null || q == null );
     }
     public inline
     function clone(): Edge {
@@ -45,7 +45,7 @@ class Edge {
         if( p == x ){
             p = y;
         } else {
-            p = y;
+            q = y;
         }
     }
     public inline
