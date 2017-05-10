@@ -8,7 +8,7 @@ Haxe port of [triangulations](https://github.com/mkacz91/Triangulations) *( base
 
 Use <- Arrow -> keys for navigation and you can normally drag vertices with the mouse.
 
-Covered Topics
+Covered Topics - see original version, hopefully covered in port.
 --------------
 
   * Polygon Triangulation,
