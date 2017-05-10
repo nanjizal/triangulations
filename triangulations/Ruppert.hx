@@ -1,9 +1,30 @@
+// Ruppert's algorithm
+// https://en.wikipedia.org/wiki/Ruppert%27s_algorithm
+/*  Pseudocode
+ 1  function Ruppert(points,segments,threshold):
+ 2      T := DelaunayTriangulation(points);
+ 3      Q := the set of encroached segments and poor quality triangles;
+ 4      while Q is not empty:                 // The main loop
+ 5          if Q contains a segment s:
+ 6              insert the midpoint of s into T;
+ 7          else Q contains poor quality triangle t:
+ 8              if the circumcenter of t encroaches a segment s:
+ 9                  add s to Q;
+10              else:
+11                  insert the circumcenter of t into T;
+12              end if;
+13          end if;
+14          update Q;
+15      end while;
+16      return T;
+17  end Ruppert.
+*/
 package triangulations;
 import triangulations.Geom2;
 import khaMath.Vector2;
 import triangulations.Triangulate;
 import triangulations.FindEnclosingTriangle;
-class Rupert {
+class Rupperts {
     
     // "ok"
     private static inline 
