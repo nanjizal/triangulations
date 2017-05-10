@@ -1,6 +1,6 @@
 # triangulations
 
-### Delaunay screenshot.
+### Delaunay screenshot
 <img width="972" alt="delaunay" src="https://cloud.githubusercontent.com/assets/20134338/25845345/7e720c90-34a5-11e7-9b2a-d3655dce2d84.png">
 
 [DEMO - WebGL test using justTriangles](https://rawgit.com/nanjizal/triangulationsWebGLtest/master/index.html) 
