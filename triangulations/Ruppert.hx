@@ -158,9 +158,7 @@ class Ruppert {
                             , j0: Int ):Array<Int> {
       var findTri = new FindEnclosingTriangle();
       var t = findTri.triangleIndex( vertices, edges, coEdges, sideEdges, p, j0 );
-      if (t == null)
-        throw "impossibru";//return { success: true, affectedEdges: [] };
-
+      if (t == null) return null;
       //var k = t % 2, j = (t - k) / 2;
       var ev = t.edgeVertexTriangle();
       var edgeId = ev.edgeId;
