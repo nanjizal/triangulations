@@ -1,5 +1,6 @@
 # triangulations
 
+### Delaunay screenshot.
 <img width="972" alt="delaunay" src="https://cloud.githubusercontent.com/assets/20134338/25845345/7e720c90-34a5-11e7-9b2a-d3655dce2d84.png">
 
 [DEMO - WebGL test using justTriangles](https://rawgit.com/nanjizal/triangulationsWebGLtest/master/index.html) 
@@ -9,6 +10,9 @@ Use <- Arrow -> keys for navigation and you can normally drag vertices with the 
 Haxe port of [triangulations](https://github.com/mkacz91/Triangulations) *( based on the work by Marcin Kaczmarek )*
 
 One important aspect of the port is that I have separated graphics tests from the core algorithms. In this repository there is no platform dependant code.  The code relies on [khaMath](https://github.com/nanjizal/khaMath) for Vector2 functionality. The port also seeks to swap extensive *arrays* and very functional code for *classes* and *abstracts* while still keeping some functional aspects, hopefully the changes have improve both speed and readability?
+
+### Rupert screenshot
+<img width="468" alt="ruppert" src="https://cloud.githubusercontent.com/assets/20134338/25898625/d14d6b00-3584-11e7-9066-e9859b5b8a01.png">
 
 ### [triangulationsWebGLtest - git for visual testing and WebGL use](https://github.com/nanjizal/triangulationsWebGLtest).
 
