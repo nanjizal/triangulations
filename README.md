@@ -2,7 +2,9 @@
 
 Haxe port of [triangulations](https://github.com/mkacz91/Triangulations) *( based on the work by Marcin Kaczmarek )*
 
-   [> HAXE WEBGL DEMO/Test using justTriangles](https://rawgit.com/nanjizal/triangulationsWebGLtest/master/index.html) 
+*many thanks for Azarfe7 for tracking down some Edge bugs related to Delaunay*
+
+[HAXE WEBGL DEMO/Test using justTriangles](https://rawgit.com/nanjizal/triangulationsWebGLtest/master/index.html) 
 
 Use <- Arrow -> keys for navigation and you can normally drag vertices with the mouse.
 
