@@ -1,5 +1,7 @@
 # triangulations 
 
+### TODO: review reduce inline use consider better text.
+
 Haxe port of [triangulations](https://github.com/mkacz91/Triangulations) *( based on the work by Marcin Kaczmarek )*
 
 *many thanks for Azarfe7 for tracking down some Edge bugs related to Delaunay*
