@@ -24,7 +24,7 @@ import triangulations.Geom2;
 import khaMath.Vector2;
 import triangulations.Triangulate;
 import triangulations.FindEnclosingTriangle;
-class Rupperts {
+class Ruppert {
     
     // "ok"
     private static inline 
