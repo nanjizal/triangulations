@@ -86,7 +86,7 @@ class Ruppert {
                 #if ruppertNotRandom
                 var s = 0;
                 #else
-                var s = Math.floor(Math.random() * encroachedEdges.length);
+                var s = Math.floor(Math.random() * badTriangles.length);
                 #end
                 arrToBack( badTriangles, s );
                 var j = badTriangles[badTriangles.length - 1];
