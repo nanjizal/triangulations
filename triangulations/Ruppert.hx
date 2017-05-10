@@ -60,15 +60,20 @@ class Ruppert {
             badTriangles.push(j);
             bad[j] = true;
         }
-
+        var count = 0;
         while (
             steinerLeft > 0 && (encroachedEdges.length > 0 || badTriangles.length > 0)
         ){
+            trace( 'ruppert iteratations' + count++ ); // used to help debug.
             var affectedEdges = [];
             var forceSplit = [];
             var traceEntry = {};
             if (encroachedEdges.length > 0) {
+                #if ruppertNotRandom
+                var s = 0;
+                #else
                 var s = Math.floor(Math.random() * encroachedEdges.length);
+                #end
                 arrToBack(encroachedEdges, s);
                 var j = encroachedEdges.pop();
                 encroached[j] = false;
@@ -78,7 +83,11 @@ class Ruppert {
                     //traceEntry.split = [j];
                 }
             } else if (badTriangles.length > 0) {
-                var s = Math.floor(Math.random() * badTriangles.length);
+                #if ruppertNotRandom
+                var s = 0;
+                #else
+                var s = Math.floor(Math.random() * encroachedEdges.length);
+                #end
                 arrToBack( badTriangles, s );
                 var j = badTriangles[badTriangles.length - 1];
                 var edge = edges[j];
