@@ -3,8 +3,10 @@ import khaMath.Vector2;
 import triangulations.Vertices;
 import triangulations.Edges;
 import triangulations.Face;
-// Don't think Graph is used in any of the tests so far, 
-// it is more related to original and perhaps nolonger relevant to this implementation.
+/**
+ * Don't think Graph is used in any of the tests so far, 
+ * it is more related to original and perhaps nolonger relevant to this implementation.
+ **/
 class Graph {
     public var vertices:    Vertices;
     public var edges:       Edges;
