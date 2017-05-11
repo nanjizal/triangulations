@@ -16,9 +16,10 @@ class Triangulate {
     /** 
      * Simple triangulatation for an array of faces, loops through to triangulateFace
      * 
-     * @param	vertices		Array of Vertex data in the form Vector2
-     * @param   edges           Array of Edge, where an Edge contains indices to Vertices.
+     * @param	vertices		coordinates as Vector2
+     * @param   edges           edges, each edge is two vertices indicies
      * @param   face            Array of faces
+     * @return                  diagonals as Edges.
      **/
     public static
     function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> ) {
@@ -30,9 +31,9 @@ class Triangulate {
     /** 
      * Simple triangulation of Face, assumes other faces are holes.
      * 
-     * @param vertices          Array of Vertex data in the form Vector2
+     * @param vertices          coordinates as Vector2
      * @param face              Array of face, first is assume the main face others holes.
-     * @return
+     * @return                  diagonals as Edges.
      **/
     public static
     function triangulateFace(  vertices:   Vertices
@@ -171,8 +172,8 @@ class Triangulate {
      * Given a polygon as a list of vertex indices, returns it in a form of
      * a doubly linked list.
      * 
-     * @param   face        Array of Vertices indicies used to define a Face
-     * @return  returns face in the form of double linked list 
+     * @param   face        Array of Vertices indicies used to define a Face or graph
+     * @return  returns     converts face in the form of double linked list 
      **/
     public static inline
     function makeLinkedPoly( face: Array<Int> ): DllNodeInt {
@@ -283,6 +284,8 @@ class Triangulate {
            };
     }
     /**
+     * Creates quad edges
+     *
      * Given a triangulation graph, produces the quad-edge datastructure for fast
      * local traversal. The result consists of two arrays: coEdges and sideEdges
      * with one entry per edge each. The coEdges array is returned as list of vertex
@@ -298,6 +301,11 @@ class Triangulate {
      * triangle to undefined. Which triangle it will be is not determined.
      *
      *  WARNING: The procedure will change the orientation of edges.
+     *  
+     * @param   vertices            coordinates as Vector2
+     * @param   edges               edges, each edge is two vertices indicies
+     * @param   coEdges             normally pass in empty Edges for populating
+     * @param   sideEdges           normally pass in empty Array<SideEdge> for populating
      **/
     public static 
     function makeQuadEdge( vertices: Vertices
@@ -391,8 +399,11 @@ class Triangulate {
         
       }
     }
-    /**    
-     * makeArrayPoly
+    /**  
+     * Linked list to Face - makeArrayPoly
+     * 
+     * @param   linkedPoly              Double linked list of path.
+     * @return  face                    Face
      **/
     public static inline
     function faceFromDllNode( linkedPoly: DllNodeInt ): Face {
@@ -409,10 +420,10 @@ class Triangulate {
     /**
      * Splits an edge creating new vertices and edges.
      *
-     * @param   vertices             coordinates of Vector2
-     * @param   edges                edges, each edge is two vertices indicies
-     * @param   coEdges
-     * @param   sideEdges          
+     * @param   vertices            coordinates of Vector2
+     * @param   edges               edges, each edge is two vertices indicies, modifies edges
+     * @param   coEdges             pass in coEdges by reference
+     * @param   sideEdges           pass in sideEdges by reference
      **/
     public static
     function splitEdge(     vertices:   Vertices
