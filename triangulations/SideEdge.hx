@@ -1,5 +1,7 @@
 package triangulations;
-
+/**
+ *  SideEdge used in quad
+ **/
 class SideEdge {
     public var length: Int = 4;
     public var a: Null<Int>;
@@ -13,16 +15,25 @@ class SideEdge {
         c = c_;
         d = d_;
     }
+    /**
+     * create empty side edge to put values on later
+     **/
     public static inline 
     function getEmpty(){
         var sideEdge = new SideEdge( null, null, null, null );
         return sideEdge;
     }
+    /**
+     * to allow iteration on SideEdge as if it's an array!
+     **/
     public inline
     function iterator<Int>():Iterator<Int> { 
         count = 0;
         return cast this;
     }
+    /**
+     * special push that emulates array where you can push on to the next side that is empty
+     **/
     public inline
     function push( val: Int ){
         if( a == null ){
@@ -37,11 +48,16 @@ class SideEdge {
             throw "Error SideEdge already full can't push";
         }
     }
+    /**
+     * checks if you can keep iterating through a,b,c,d 
+     **/
     public inline
     function hasNext(): Bool {
         return count < length;
     }
-    
+    /**
+     * get next with count helping it to be like an array your can loop through
+     **/
     public inline
     function next(): Null<Int> { 
         var out: Null<Int>;
@@ -60,7 +76,9 @@ class SideEdge {
         count++;
         return out; 
     }
-    
+    /**
+     * allows you to get value by it's index rather than a,b,c,d
+     **/
     public inline 
     function getByIndex( i: Int ): Null<Int> {
         var out: Int;
@@ -78,7 +96,9 @@ class SideEdge {
         }
         return out;
     }
-    
+    /**
+     * used in flipping edges
+     **/
     public inline
     function substitute( x: Null<Int>, y: Null<Int> ) {
         if( this == null ) return;
