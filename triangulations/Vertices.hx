@@ -12,6 +12,8 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
     }
     /**
      * creates empty Vertices
+     * 
+     * @param   empty vertices
      **/
     public inline static 
     function getEmpty(){
