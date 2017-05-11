@@ -9,9 +9,17 @@ import triangulations.Vertices;
 import triangulations.Queue;
 import triangulations.Face;
 import triangulations.Triangulate;
-
+/**
+ * Core static functions used for simple and delaunay triangulation
+ **/
 class Triangulate {
-    
+    /** 
+     * Simple triangulatation for an array of faces, loops through to triangulateFace
+     * 
+     * @param	vertices		Array of Vertex data in the form Vector2
+     * @param   edges           Array of Edge, where an Edge contains indices to Vertices.
+     * @param   face            Array of faces
+     **/
     public static
     function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> ) {
         for ( k in 0...face.length ) {
@@ -19,7 +27,13 @@ class Triangulate {
             edges.add( diags );
         }
     }
-    
+    /** 
+     * Simple triangulation of Face, assumes other faces are holes.
+     * 
+     * @param vertices          Array of Vertex data in the form Vector2
+     * @param face              Array of face, first is assume the main face others holes.
+     * @return
+     **/
     public static
     function triangulateFace(  vertices:   Vertices
                             ,  face:      Array<Face> ){
@@ -153,9 +167,13 @@ class Triangulate {
         }
         return diagonals;
     }
-    
-    // Given a polygon as a list of vertex indices, returns it in a form of
-    // a doubly linked list.
+    /**
+     * Given a polygon as a list of vertex indices, returns it in a form of
+     * a doubly linked list.
+     * 
+     * @param   face        Array of Vertices indicies used to define a Face
+     * @return  returns face in the form of double linked list 
+     **/
     public static inline
     function makeLinkedPoly( face: Array<Int> ): DllNodeInt {
         var linkedPoly = new DllNodeInt( face[ 0 ] );
@@ -171,11 +189,18 @@ class Triangulate {
         linkedPoly.prev = node;
         return linkedPoly;
     }
-        
-    // Checks wether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
-    // If nodeEnd is not provided, nodeBeg is interpreted as lying on a cycle and
-    // the whole cycle is tested. Edges spanned on equal (===) vertices are not
-    // considered intersecting.
+    /**
+     * Checks whether any edge on path [nodeBeg, nodeEnd] intersects the segment ab.
+     * If nodeEnd is not provided, nodeBeg is interpreted as lying on a cycle and
+     * the whole cycle is tested. Edges spanned on equal (===) vertices are not
+     * considered intersecting.
+     * 
+     * @param   a           First point defining a segment
+     * @param   b           Second point defining a segment
+     * @param   vertices    coordinates as Vector2
+     * @param   nodeBeg     Start of path
+     * @param   nodeEnd     End of path optional
+     **/
     public static inline
     function intersects(    a:          Vector2
                         ,   b:          Vector2
@@ -204,7 +229,14 @@ class Triangulate {
       }
       return out;
     }
-    
+    /**
+     * Helper function  
+     *
+     * @param   vertices            coordinates as Vector2
+     * @param   a                   segment start
+     * @param   b                   segment end
+     * @param   node                on linked list path
+     **/ 
     public static inline
     function aux( vertices: Vertices, a: Vector2, b: Vector2, node: DllNodeInt ): Bool {
         var c = vertices[ node.value ];
@@ -250,23 +282,23 @@ class Triangulate {
                return bestDllNode;
            };
     }
-    
-    // Given a triangulation graph, produces the quad-edge datastructure for fast
-    // local traversal. The result consists of two arrays: coEdges and sideEdges
-    // with one entry per edge each. The coEdges array is returned as list of vertex
-    // index pairs, whereas sideEdges are represented by edge index quadruples.
-    //
-    // Consider edge ac enclosed by the quad abcd. Then its co-edge is bd and the
-    // side edges are: bc, cd, da, ab, in that order. Although the graph is not
-    // directed, the edges have direction implied by the implementation. The order
-    // of side edges is determined by the de facto orientation of the primary edge
-    // ac and its co-edge bd, but the directions of the side edges are arbitrary.
-    //
-    // External edges are handled by setting indices describing one supported
-    // triangle to undefined. Which triangle it will be is not determined.
-    //
-    // WARNING: The procedure will change the orientation of edges.
-    // 
+    /**
+     * Given a triangulation graph, produces the quad-edge datastructure for fast
+     * local traversal. The result consists of two arrays: coEdges and sideEdges
+     * with one entry per edge each. The coEdges array is returned as list of vertex
+     * index pairs, whereas sideEdges are represented by edge index quadruples.
+     *
+     * Consider edge ac enclosed by the quad abcd. Then its co-edge is bd and the
+     * side edges are: bc, cd, da, ab, in that order. Although the graph is not
+     * directed, the edges have direction implied by the implementation. The order
+     * of side edges is determined by the de facto orientation of the primary edge
+     * ac and its co-edge bd, but the directions of the side edges are arbitrary.
+     * 
+     * External edges are handled by setting indices describing one supported
+     * triangle to undefined. Which triangle it will be is not determined.
+     *
+     *  WARNING: The procedure will change the orientation of edges.
+     **/
     public static 
     function makeQuadEdge( vertices: Vertices
                         ,  edges: Edges
@@ -359,8 +391,9 @@ class Triangulate {
         
       }
     }
-        
-    // makeArrayPoly
+    /**    
+     * makeArrayPoly
+     **/
     public static inline
     function faceFromDllNode( linkedPoly: DllNodeInt ): Face {
         var face = new Face();
@@ -373,7 +406,14 @@ class Triangulate {
         } while (node != linkedPoly);
         return face;
     }
-    
+    /**
+     * Splits an edge creating new vertices and edges.
+     *
+     * @param   vertices             coordinates of Vector2
+     * @param   edges                edges, each edge is two vertices indicies
+     * @param   coEdges
+     * @param   sideEdges          
+     **/
     public static
     function splitEdge(     vertices:   Vertices
                         ,   edges:      Edges
