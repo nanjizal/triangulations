@@ -7,6 +7,9 @@ import khaMath.Vector2;
 
 class Geom2 {
     
+    /*
+    // Not currently used but perhaps useful.
+    //
     // Copyright 2001 softSurfer, 2012 Dan Sunday
     // This code may be freely used and modified for any purpose
     // providing that this copyright notice is included with it.
@@ -31,6 +34,7 @@ class Geom2 {
         }
         return out;
     }
+    */
     
     public static inline
     function pointEncroachesEdge( a: Vector2, b: Vector2, p: Vector2 ):Bool {
