@@ -7,10 +7,21 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         if( v == null ) v = getEmpty();
         this = v;
     }
+    /**
+     * allow simple creation of empty Edges
+     * @return      Edges
+     **/
     public inline static 
     function getEmpty(){
         return new Edges( new Array<Edge>() );
     }
+    /**
+     * loops through all the edges and sets them up as external and fixed if val is true
+     * often used just after creating a new shape.
+     * 
+     * @param val    set to true for external and fixed.
+     * @return   true
+     **/
     public /*inline*/ function set_fixedExternal( val: Bool ){
         for( e in this ) {
             e.fixed = val;
@@ -18,8 +29,13 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         }
         return val;
     }
+    /**
+     * fixed and external setter 
+     **/
     public var fixedExternal( never, set ):Bool;
-    
+    /**
+     * clones edges to new instance 
+     **/
     public inline
     function clone(): Edges {
         var e = new Edges();
@@ -31,7 +47,9 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         }
         return e;
     }
-    
+    /**
+     * @return unsure edges
+     **/
     public inline
     function getUnsure(): Array<Int> {
         var unsureEdges = new Array<Int>();
@@ -45,7 +63,9 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         }
         return unsureEdges;
     }
-    
+    /**
+     * fast ( ? ) concat for edges
+     **/
     public inline
     function add( e: Edges ): Edges {
         var l = this.length;
@@ -53,6 +73,12 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         for( i in 0...el ) this[ l + i ] = e[ i ];
         return this;
     }
+    /** 
+     * function for creating Edges from nested Array structures
+     * 
+     * @param   arr             Array of Array of Int structure 
+     * @return  edges
+     **/
     @:from
     static public function fromArrayArray( arr: Array<Array<Null<Int>>> ) {
         var edges: Edges = getEmpty();
@@ -62,10 +88,15 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         }
         return edges;
     }
-    
-    // "ok"
-    // Given edges along with their quad-edge datastructure, flips the chosen edge
-    // j, maintaining the quad-edge structure integrity.
+    /**
+     *  Flips edge j.
+     *  Given edges along with their quad-edge datastructure, flips the chosen edge
+     *  j, maintaining the quad-edge structure integrity.
+     *
+     * @param   coEdges
+     * @param   sideEdges
+     * @param   j               edge index
+     **/
     public inline
     function flipEdge( coEdges: Edges, sideEdges: Array<SideEdge>, j: Int ) {
       var edge = this[j].clone();
@@ -106,6 +137,9 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
       sideEdges[j].a = sideEdges[j].c;
       sideEdges[j].c = tmp;
     }
+    /**
+     * @return      verbose string representation
+     **/
     public function toString() {
         var out = 'Edges( ';
         var e: Edge;
@@ -117,7 +151,9 @@ abstract Edges( Array<Edge> ) from Array<Edge> to Array<Edge> {
         out += ' )';
         return out;
     }
-    // light trace 
+    /** 
+     * @return      light string reprentation easy to read but less descriptive.
+     */
     public function out(){
         var out = '';
         var e: Edge;
