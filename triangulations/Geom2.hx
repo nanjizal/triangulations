@@ -2,8 +2,10 @@ package triangulations;
 
 import khaMath.Vector2;
 
-// static inline functions related to multiple Vector2D and triangulation
-// https://github.com/mkacz91/Triangulations/blob/master/js/geometry.js
+/**
+ * static inline functions related to multiple Vector2D and triangulation
+ * https://github.com/mkacz91/Triangulations/blob/master/js/geometry.js
+ **/
 
 class Geom2 {
     
@@ -36,19 +38,38 @@ class Geom2 {
     }
     */
     
+    /**
+     * if point encroaches edge
+     *
+     * @param   a           first corner of triangle
+     * @param   b           second corner of triangle
+     * @param   c           third corner of triangle
+     **/
     public static inline
     function pointEncroachesEdge( a: Vector2, b: Vector2, p: Vector2 ):Bool {
         var c = a.mid(b);
         return c.distSq(p) <= c.distSq(a);
     }
-    
+    /**
+     * find the area of triangle
+     * 
+     * @param   a           first corner of triangle
+     * @param   b           second corner of triangle
+     * @param   c           third corner of triangle
+     **/
     public static inline
     function triangleArea(a: Vector2, b: Vector2, c: Vector2 ): Float {
         return ( a.x * (b.y - c.y)
          + b.x * (c.y - a.y)
          + c.x * (a.y - b.y) ) / 2;
     }
-    
+    /**
+     * returns a function for checking if triangle is good based on minimum angle and max area
+     * 
+     * @param   minAngle        pre specify angle
+     * @param   maxArea         pre specify area
+     * @return  function to check triangles are good and bad against takes vector2 corners.
+     **/
     public static inline
     function triangleIsBad( minAngle: Float, maxArea: Float )
             : Vector2 -> Vector2 -> Vector2 -> Bool {
@@ -73,7 +94,14 @@ class Geom2 {
                 return bcxca * bcxca < sinSqMinAngle * bcLenSq * caLenSq;
       }
     }
-    // Return the center of the circumscribed circle of triangle abc.
+    /**
+      * Return the center of the circumscribed circle of triangle abc.
+      *
+     * @param   a           first corner of triangle
+     * @param   b           second corner of triangle
+     * @param   c           third corner of triangle
+     * @return              centre
+      **/
     public static inline
     function circumcenter(a: Vector2, b: Vector2, c: Vector2 ): Vector2 {
         // Taken from https://www.ics.uci.edu/~eppstein/junkyard/circumcenter.html
@@ -91,14 +119,28 @@ class Geom2 {
         return new Vector2( xp / d, yp / d );
     }    
     
-    // Check whether v is strictly in the interior of the circumcircle of the
-    // triangle abc.
+    /**
+      * Check whether v is strictly in the interior of the circumcircle of the
+      * triangle abc.
+      *
+      * @param  a       first corner of triangle
+      * @param  b       second corner of triangle
+      * @param  c       third corner of triangle
+      * @param  v       point checking if inside triangle
+      * @return         if point is inside triangle
+      **/
     public static inline
     function pointInCircumcircle(a: Vector2, b: Vector2, c: Vector2, v: Vector2): Bool {
         var p = circumcenter( a, b, c );
         return p.distSq(v) < a.distSq(p);
     }
-    
+    /**
+     * edgeVSRay
+     * 
+     * @param   u
+     * @param   v
+     * @param   y
+     **/
     public static inline
     function edgeVSRay( u: Vector2, v: Vector2, y: Float ): Null<Float> {
         var val: Float;
@@ -115,8 +157,15 @@ class Geom2 {
         }
         return val;
     }   
-    
-    // Returns boolean indicating whether edges ab and cd intersect.
+    /**
+     * Returns boolean indicating whether edges ab and cd intersect.
+     * 
+     * @param   a      a vertex of ab edge
+     * @param   b      b vertex of ab edge
+     * @param   c      c vertex of cd edge
+     * @param   d      d vertex of cd edge
+     * @return         true if edges intersect
+     **/
     public static inline
     function edgesIntersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2 ): Bool {
         // The edges intersect only if the endpoints of one edge are on the opposite
@@ -146,7 +195,14 @@ class Geom2 {
     
     //// Functions that return a function. ////
     
-    // Check wether point p is within triangle abc or on its border.
+    /**
+     * returns a function that gheck whether point p is within prefefined triangle abc or on its border.
+     * 
+     * @param   a           first corner of triangle
+     * @param   b           second corner of triangle
+     * @param   c           third corner of triangle
+     * @return              function to check point if point is in triangle
+     **/
     public static inline
     function pointInTriangle(a: Vector2, b: Vector2, c: Vector2): Vector2 -> Bool {
         var u = a.span(b);
@@ -162,7 +218,13 @@ class Geom2 {
             return Math.abs(uxw) + Math.abs(vxw) <= Math.abs(uxv);
         };
     }
-    
+    /**
+     * returns a function to finds the square distance between a point and predefined Edge
+     * 
+     * @param   u
+     * @param   v
+     * @return      function that takes a point and returns square distance
+     **/
     public static inline
     function pointToEdgeDistSq(u: Vector2, v: Vector2): Vector2 -> Float {
         var uv = u.span(v);
@@ -172,11 +234,15 @@ class Geom2 {
             return uvxpu * uvxpu / uvLenSq;
         };
     }
-    
-// TODO: check if Float is ideal return.
-    // Given an origin c and direction defining vertex d, returns a comparator for
-    // points. The points are compared according to the angle they create with
-    // the vector cd.
+    /**
+     * Given an origin c and direction defining vertex d, returns a comparator for
+     * points. The points are compared according to the angle they create with
+     * the vector cd.
+     *
+     * @param c
+     * @param d
+     * @return   function
+     **/
     public static inline
     function angleCompare(c: Vector2, d: Vector2 ): Vector2 -> Vector2 -> Float {
         var cd = c.span(d);
