@@ -13,7 +13,8 @@ class Geom2 {
     // SoftSurfer makes no warranty for this code, and cannot be held
     // liable for any real or imagined damage resulting from its use.
     // Users of this code must verify correctness for their application.
-    public static inline function inSegment( a: Vector2, b: Vector2, p: Vector2 ): Bool {
+    public static inline
+    function inSegment( a: Vector2, b: Vector2, p: Vector2 ): Bool {
         var out = false;
         if( a.x != b.x ) {    // S is not  vertical
             if( a.x <= p.x && p.x <= b.x ) { 
@@ -31,18 +32,21 @@ class Geom2 {
         return out;
     }
     
-    public static inline function pointEncroachesEdge( a: Vector2, b: Vector2, p: Vector2 ):Bool {
+    public static inline
+    function pointEncroachesEdge( a: Vector2, b: Vector2, p: Vector2 ):Bool {
         var c = a.mid(b);
         return c.distSq(p) <= c.distSq(a);
     }
     
-    public static inline function triangleArea(a: Vector2, b: Vector2, c: Vector2 ): Float {
+    public static inline
+    function triangleArea(a: Vector2, b: Vector2, c: Vector2 ): Float {
         return ( a.x * (b.y - c.y)
          + b.x * (c.y - a.y)
          + c.x * (a.y - b.y) ) / 2;
     }
     
-    public static inline function triangleIsBad( minAngle: Float, maxArea: Float )
+    public static inline
+    function triangleIsBad( minAngle: Float, maxArea: Float )
             : Vector2 -> Vector2 -> Vector2 -> Bool {
         minAngle *= Math.PI / 180;
         var sinSqMinAngle = Math.sin( minAngle );
@@ -66,7 +70,8 @@ class Geom2 {
       }
     }
     // Return the center of the circumscribed circle of triangle abc.
-    public static inline function circumcenter(a: Vector2, b: Vector2, c: Vector2 ): Vector2 {
+    public static inline
+    function circumcenter(a: Vector2, b: Vector2, c: Vector2 ): Vector2 {
         // Taken from https://www.ics.uci.edu/~eppstein/junkyard/circumcenter.html
         var xa = a.x;
         var ya = a.y;
@@ -84,12 +89,14 @@ class Geom2 {
     
     // Check whether v is strictly in the interior of the circumcircle of the
     // triangle abc.
-    public static inline function pointInCircumcircle(a: Vector2, b: Vector2, c: Vector2, v: Vector2): Bool {
+    public static inline
+    function pointInCircumcircle(a: Vector2, b: Vector2, c: Vector2, v: Vector2): Bool {
         var p = circumcenter( a, b, c );
         return p.distSq(v) < a.distSq(p);
     }
     
-    public static inline function edgeVSRay( u: Vector2, v: Vector2, y: Float ): Null<Float> {
+    public static inline
+    function edgeVSRay( u: Vector2, v: Vector2, y: Float ): Null<Float> {
         var val: Float;
         if(u.y > v.y) {
             var tmp = u;
@@ -106,7 +113,8 @@ class Geom2 {
     }   
     
     // Returns boolean indicating whether edges ab and cd intersect.
-    public static inline function edgesIntersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2 ): Bool {
+    public static inline
+    function edgesIntersect(a: Vector2, b: Vector2, c: Vector2, d: Vector2 ): Bool {
         // The edges intersect only if the endpoints of one edge are on the opposite
         // sides of the other (both ways).
         var out = true;
@@ -135,7 +143,8 @@ class Geom2 {
     //// Functions that return a function. ////
     
     // Check wether point p is within triangle abc or on its border.
-    public static inline function pointInTriangle(a: Vector2, b: Vector2, c: Vector2): Vector2 -> Bool {
+    public static inline
+    function pointInTriangle(a: Vector2, b: Vector2, c: Vector2): Vector2 -> Bool {
         var u = a.span(b);
         var v = a.span(c);
         var vxu = v.cross(u);
@@ -150,7 +159,8 @@ class Geom2 {
         };
     }
     
-    public static inline function pointToEdgeDistSq(u: Vector2, v: Vector2): Vector2 -> Float {
+    public static inline
+    function pointToEdgeDistSq(u: Vector2, v: Vector2): Vector2 -> Float {
         var uv = u.span(v);
         var uvLenSq = uv.lenSq();
         return function(p: Vector2){
@@ -163,7 +173,8 @@ class Geom2 {
     // Given an origin c and direction defining vertex d, returns a comparator for
     // points. The points are compared according to the angle they create with
     // the vector cd.
-    public static inline function angleCompare(c: Vector2, d: Vector2 ): Vector2 -> Vector2 -> Float {
+    public static inline
+    function angleCompare(c: Vector2, d: Vector2 ): Vector2 -> Vector2 -> Float {
         var cd = c.span(d);
         // Compare angles ucd and vcd
         return function (u: Vector2, v: Vector2): Float {
