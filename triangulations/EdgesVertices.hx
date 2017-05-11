@@ -3,17 +3,34 @@ import triangulations.Edges;
 import triangulations.Vertices;
 import triangulations.Edge;
 import khaMath.Vector2;
-// just used for hitTest edges and vertices
+/**
+ * just used for hitTest edges and vertices
+ **/
 class EdgesVertices {
     public var edges: Edges;
     public var vertices: Vertices;
+    /**
+     * Easy way to construct from an existing FillShape
+     *  
+     * @param   f           a fillShape for hit testing vertices and edges.
+     **/
     public static function fromShape( f: FillShape ): EdgesVertices {
         return new EdgesVertices( f.edges, f.vertices );
     }
+    /**
+     * @param   edges
+     * @param   vertices
+     **/
     public function new( edges_: Edges, vertices_: Vertices ){
         edges = edges_;
         vertices = vertices_;
     }
+    /**
+     * Check nearest Edge centre to point v, within specific distance dist
+     *
+     * @param   v           point as Vector2 to hit against
+     * @param   dist        minimal distance acceptable as hit
+     **/
     inline public 
     function hitTestEdgeId( v: Vector2, dist: Float ): Int {
         var l = edges.length;
@@ -38,6 +55,12 @@ class EdgesVertices {
         if( near > Math.pow( dist,2 ) ) out = null;
         return out;
     }
+    /**
+     * Check nearest Vertex to point v, within specific distance dist
+     *
+     * @param   v           point as Vector2 to hit against
+     * @param   dist        minimal distance acceptable as hit
+     **/
     inline public 
     function hitTestVertexId( v: Vector2, dist: Float ): Int {
         var l = vertices.length;
@@ -58,18 +81,26 @@ class EdgesVertices {
         if( near > Math.pow( dist,2 ) ) out = null;
         return out;
     }
-    // negative for edge -1, positive for vertex 
-    //
-    /* example use
-        var i = edgesVertices.hitTestId( hitVector2, distance );
-        if( i == null ) return;
-        if( i < 0 ) {
-            i = -i - 1; 
-            trace( 'edge found ' + i );
-        } else {
-            trace( 'vertex found ' + i );
-        }
-    */
+    /**
+     * Check nearest Vertex or Edge centre to point v, within specific distance dist
+     *
+     * @param   v           point as Vector2 to hit against
+     * @param   dist        minimal distance acceptable as hit
+     * negative for edge -1, positive for vertex 
+     *
+     *  example use
+     *  var i = edgesVertices.hitTestId( hitVector2, distance );
+     *  if( i == null ) return;
+     *  if( i < 0 ) {
+     *      i = -i - 1; 
+     *      trace( 'edge found ' + i );
+     *  } else {
+     *      trace( 'vertex found ' + i );
+     *  }
+     *
+     * @param   v           point as Vector2 to hit against
+     * @param   dist        minimal distance acceptable as hit
+     **/
     inline public 
     function hitTestId( v: Vector2, dist: Float ): Int {
         var l: Int;
