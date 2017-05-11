@@ -7,18 +7,20 @@ import triangulations.Face;
 import triangulations.TriangleIndex;
 import triangulations.EdgeVertexTriangle;
 import khaMath.Vector2;
-
-    // Finds the triangle enclosing the given point p. The quad-edge datastructure
-    // has to be provided. The search is started from the triangles adjecent to
-    // edge j0 and proceeds to to neighboring triangles. Falling through fixed
-    // edges, i.e., with property fixed = true, is not permitted, so providing a j0
-    // which is in another connected component won't yield any result.
-    //
-    // The result is a triangle index. Indexing triangles here involves some evil
-    // hacking. A triangle is represented by an edge and a vertex of its co-edge.
-    // Suppose the edge in question has number j, and k is 0 or 1 depending on which
-    // co-edge vertex is chosen. Then the triangle index is t = 2 * j + k.
-    // Introduced some abstracts to reduce the hack - t now uses TriangleIndex and j, k is EdgeVertexTriangle 
+/**
+ * Finds the triangle enclosing the given point p. The quad-edge datastructure
+ * has to be provided. The search is started from the triangles adjecent to
+ * edge j0 and proceeds to to neighboring triangles. Falling through fixed
+ * edges, i.e., with property fixed = true, is not permitted, so providing a j0
+ * which is in another connected component won't yield any result.
+ *
+ * The result is a triangle index. Indexing triangles here involves some evil
+ * hacking. A triangle is represented by an edge and a vertex of its co-edge.
+ * Suppose the edge in question has number j, and k is 0 or 1 depending on which
+ * co-edge vertex is chosen. Then the triangle index is t = 2 * j + k.
+ * Introduced some abstracts to reduce the hack - t now uses TriangleIndex and j, k is EdgeVertexTriangle 
+ *
+ **/
 class FindEnclosingTriangle {
     var enqueued    = new Array<Int>();
     var cookie:     Int = 0;
@@ -28,10 +30,15 @@ class FindEnclosingTriangle {
     var sideEdges:  Array<SideEdge>;
     
     public function new(){}
-    // We use a helper function to enqueue triangles since our indexing is
-    // ambiguous -- each triangle has three indices. To prevent multiple visits,
-    // all three are marked as already enqueued. Trianglea already enqueued and
-    // Invalid triangles supported by external edges are rejected.
+    /** 
+      * We use a helper function to enqueue triangles since our indexing is
+      * ambiguous -- each triangle has three indices. To prevent multiple visits,
+      * all three are marked as already enqueued. Trianglea already enqueued and
+      * Invalid triangles supported by external edges are rejected.
+      * 
+      * @param ev   EdgeVertexTriangle
+      * @return   if can queue edge
+      **/
     inline
     function tryEnqueue( ev: EdgeVertexTriangle ): Bool {
         var t: TriangleIndex = ev;
@@ -56,6 +63,9 @@ class FindEnclosingTriangle {
         }
         return out;
     }
+    /**
+     *
+     **/
     public inline
     function triangleIndex(     vertices:   Vertices
                     ,     edges_:      Edges
@@ -109,8 +119,9 @@ class FindEnclosingTriangle {
         }
         return t_;
     }
-    
-    
+    /**
+     * turn TriangleIndex into Face
+     **/
     public inline
     function getFace(     vertices:   Vertices
                     ,     edges_:      Edges
