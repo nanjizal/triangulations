@@ -1,38 +1,51 @@
-// Ruppert's algorithm
-// https://en.wikipedia.org/wiki/Ruppert%27s_algorithm
-/*  Pseudocode
- 1  function Ruppert(points,segments,threshold):
- 2      T := DelaunayTriangulation(points);
- 3      Q := the set of encroached segments and poor quality triangles;
- 4      while Q is not empty:                 // The main loop
- 5          if Q contains a segment s:
- 6              insert the midpoint of s into T;
- 7          else Q contains poor quality triangle t:
- 8              if the circumcenter of t encroaches a segment s:
- 9                  add s to Q;
-10              else:
-11                  insert the circumcenter of t into T;
-12              end if;
-13          end if;
-14          update Q;
-15      end while;
-16      return T;
-17  end Ruppert.
-*/
 package triangulations;
 import triangulations.Geom2;
 import khaMath.Vector2;
 import triangulations.Triangulate;
 import triangulations.FindEnclosingTriangle;
+/**
+ * Ruppert's algorithm
+ * https://en.wikipedia.org/wiki/Ruppert%27s_algorithm
+ *  Pseudocode
+ *  function Ruppert(points,segments,threshold):
+ *      T := DelaunayTriangulation(points);
+ *      Q := the set of encroached segments and poor quality triangles;
+ *      while Q is not empty:                 // The main loop
+ *          if Q contains a segment s:
+ *              insert the midpoint of s into T;
+ *          else Q contains poor quality triangle t:
+ *              if the circumcenter of t encroaches a segment s:
+ *                  add s to Q;
+ *              else:
+ *                  insert the circumcenter of t into T;
+ *              end if;
+ *          end if;
+ *          update Q;
+ *      end while;
+ *      return T;
+ *  end Ruppert.
+ **/
 class Ruppert {
-    
+    /**
+     * @param   a
+     * @param   i
+     * @return  a
+     **/
     private static inline 
     function arrToBack( a:Array<Int>, i: Int ){
         var tmp = a[ i ];
         a[ i ] = a[ a.length - 1 ];
         a[ a.length - 1 ] = tmp;
     } 
-    
+    /**
+     * main ruppert function
+     * 
+     * @param   vertices      coordinates as Vector2
+     * @param   edges         each edge is 2 indices of vertices
+     * @param   coEdges       
+     * @param   sideEdges       
+     * @param   settings      controls the granularity of the iterations
+     **/
     public static 
     function refineTo( vertices:     Vertices
                             , edges:        Edges
@@ -146,7 +159,13 @@ class Ruppert {
         }
       }
     }
-    
+    /**
+     * faster ( ? ) concat 
+     * 
+     * @param   e0
+     * @param   e1
+     * @return  e0
+     **/
     public static inline
     function addArrayInt( e0: Array<Int>, e1: Array<Int> ): Array<Int> {
         var l = e0.length;
@@ -154,7 +173,17 @@ class Ruppert {
         for( i in 0...el ) e0[ l + i ] = e1[ i ];
         return e0;
     }
-    
+    /**
+     * try to insert point
+     * 
+     * @param   vertices
+     * @param   edges
+     * @param   coEdges
+     * @param   sideEdges
+     * @param   encroachedEdges
+     * @param   p                   point trying
+     * @param   j0
+     **/
     private static
     function tryInsertPoint ( vertices: Vertices
                             , edges: Edges
@@ -230,7 +259,14 @@ class Ruppert {
                                 ,   sideEdges
                                 ,   unsureEdges );
     }
-    
+    /**
+     * check if edge is encroaching 
+     *
+     * @param   vertices
+     * @param   edges
+     * @param   coEdges
+     * @param   edgesId
+     **/
     public static inline 
     function edgeIsEncroached(  vertices: Vertices
                             ,   edges:    Edges
