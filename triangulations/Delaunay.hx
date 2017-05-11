@@ -1,19 +1,26 @@
 package triangulations;
-
+/**
+ * Uses Delaunay to re-triangulate the edges.
+ **/
 class Delaunay {
-    
     var unsure = new Array<Bool>();
     var tried = new Array<Int>();
     var cookie: Int = 0;
-    
     public function new(){}
-    
-    // Refines the given triangulation graph to be a Conforming Delaunay
-    // Triangulation (abr. CDT). Edges with property fixed = true are not altered.
-    //
-    // The edges are modified in place and returned is an array of indices tried to
-    // flip. The flip was performed unless the edge was fixed. If a trace array is
-    // provided, the algorithm will log key actions into it.
+    /**
+     * Refines the given triangulation graph to be a Conforming Delaunay
+     * Triangulation (abr. CDT). Edges with property fixed = true are not altered.
+     * 
+     * The edges are modified in place and returned is an array of indices tried to
+     *  flip. The flip was performed unless the edge was fixed. If a trace array is
+     *  provided, the algorithm will log key actions into it.
+     * 
+     * @param   vertices
+     * @param   edges
+     * @param   coEdges
+     * @param   sideEdges
+     * @return                  tried edges
+     */
     public inline
     function refineToDelaunay(  vertices:   Vertices
                             ,   edges:      Edges
@@ -26,8 +33,15 @@ class Delaunay {
         var unsureEdges = edges.getUnsure();
         return calculate( vertices, edges, coEdges, sideEdges, unsureEdges );
     }
-    
-    
+    /**
+     * 
+     * @param   vertices
+     * @param   edges
+     * @param   coEdges
+     * @param   sideEdges
+     * @param   unsureEdges
+     * @return                  tried edges
+     */
     public inline
     function calculate(    vertices:   Vertices
                 ,   edges:      Edges
@@ -68,10 +82,18 @@ class Delaunay {
         }
         return triedEdges;
     }
-    
-    // Given edges along with their quad-edge datastructure, flips the chosen edge
-    // j if it doesn't form a Delaunay triangulation with its enclosing quad.
-    // Returns true if a flip was performed.
+    /**
+     * Given edges along with their quad-edge datastructure, flips the chosen edge
+     * j if it doesn't form a Delaunay triangulation with its enclosing quad.
+     * Returns true if a flip was performed.
+     *
+     * @param   vertices
+     * @param   edges
+     * @param   coEdges
+     * @param   sideEdges
+     * @param   j
+     * @return          true if flipped
+     */
     public static inline
     function ensureDelaunayEdge(  vertices:     Vertices
                                 , edges:        Edges
