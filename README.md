@@ -23,7 +23,7 @@ see original version, hopefully covered in port:
   * Ruppert's Delaunay Refine Algorithm for Quality Triangulation.
 
 ### Delaunay screenshot
-<img width="972" alt="delaunay" src="https://cloud.githubusercontent.com/assets/20134338/25845345/7e720c90-34a5-11e7-9b2a-d3655dce2d84.png">
+<img width="493" alt="delaunay" src="https://cloud.githubusercontent.com/assets/20134338/25939348/79578754-362a-11e7-8ff4-8b720799e857.png">
 
 ### Example of Delaunay Use
 
