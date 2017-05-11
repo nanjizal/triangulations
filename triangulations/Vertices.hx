@@ -1,36 +1,51 @@
 package triangulations;
 import triangulations.Geom2;
 import khaMath.Vector2;
+/**
+ * Vertices are an abstract over an Array<Vector2> and represent coordinates of the FillShape
+ **/
 @:forward
 abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
     inline public function new( ?v: Array<Vector2> ) {
         if( v == null ) v = getEmpty();
         this = v;
     }
-    
+    /**
+     * creates empty Vertices
+     **/
     public inline static 
     function getEmpty(){
         return new Vertices( new Array<Vector2>() );
     }
-    
+    /** 
+     * for scaling of vertices
+     * 
+     * @param   s     used to scale vertices
+     **/
     public inline
     function scale( f: Float ){
         var l = this.length;
-        for( i in 0...l ){
-            this[i] = this[i].mult( f ); 
-        }
+        for( i in 0...l ) this[i] = this[i].mult( f ); 
     }
+    /** 
+     * To translate vertices
+     * 
+     * @param dx     use to translate the vertices on the x axis by dx
+     * @param dy     use to translate the vertices on the y axis by dy
+     **/
     public inline
-    function translate( x: Float, y: Float ){
-        var t = new Vector2( x, y );
+    function translate( dx: Float, dy: Float ){
+        var t = new Vector2( dx, dy );
         var l = this.length;
-        for( i in 0...l ){
-            this[i] = this[i].add( t ); 
-        }
+        for( i in 0...l ) this[i] = this[i].add( t );
     }
-    // Given a simple polygon, returns its orientation, namely 1, if it's clockwise,
-    // -1, if it's counter-clockwise, and 0 if the orientation is undefined, i.e.,
-    // the area is 0.
+    /**
+      * Given a simple polygon, returns its orientation, namely 1, if it's clockwise,
+      * -1, if it's counter-clockwise, and 0 if the orientation is undefined, i.e.,
+      * the area is 0.
+      * 
+      * @param  poly
+      **/
     public inline
     function polygonOrientation( poly: Array<Int> ): Int {
         var area = 0.;
@@ -50,10 +65,16 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         }
     }
     
-    // Given a polygon a point, determines whether the point lies strictly inside
-    // the polygon using the even-odd rule.
-    // TODO: need to think about inline
-    public function pointInPolygon ( poly: Array<Int>, w: Vector2 ): Bool {
+    /**
+     * Given a polygon a point, determines whether the point lies strictly inside
+     * the polygon using the even-odd rule.
+     * 
+     * @param   poly
+     * @param   w    point
+     * @return  true if in poly
+     **/
+    public inline
+    function pointInPolygon ( poly: Array<Int>, w: Vector2 ): Bool {
         var l = poly.length;
         var v = this[ poly[ l - 1 ] ];
         var result = false;
@@ -75,24 +96,37 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
         }
         return result;
     }
-    
+    /**
+     * create clone instance of the vertices
+     **/
     public inline
     function clone(): Vertices {
         var v = getEmpty();
         var l = this.length;
-        for( i in 0...l ){
-            v[ i ] = new Vector2( this[ i ].x, this[ i ].y );
-        }
+        for( i in 0...l ) v[ i ] = new Vector2( this[ i ].x, this[ i ].y );
         return v;
     }
-
+    /**
+     * clone and fit within width, height and margin 
+     * 
+     * @param   width
+     * @param   height
+     * @param   margin
+     * @return  cloned and transformed vertices
+     **/
     public inline
     function fitClone( width: Float, height: Float, ?margin: Float = 10 ): Vertices {
         var v = clone();
         fit( width, height, margin );
         return v;
     }
-    
+    /**
+     * fit within width, height and margin
+     * 
+     * @param   width
+     * @param   height
+     * @param   margin
+     **/
     public inline 
     function fit( width: Float, height: Float, ?margin: Float = 10 ){
         var xMin = Math.POSITIVE_INFINITY;
@@ -122,6 +156,11 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
           v.y = marginY + scale * (v.y - yMin);
         }
     }
+    /**
+     * allow creation of vertices nest array of floats.
+     *
+     * @param arr       nest array of floats to turn into vertices
+     **/
     @:from
     static public function fromArrayArray( arr:Array<Array<Float>> ) {
         var v: Vertices = getEmpty();
