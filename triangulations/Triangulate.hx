@@ -12,7 +12,7 @@ import triangulations.Triangulate;
 
 class Triangulate {
     
-    public static inline
+    public static
     function triangulateSimple( vertices: Vertices, edges: Edges, face: Array<Array<Face>> ) {
         for ( k in 0...face.length ) {
             var diags = triangulateFace( vertices, face[ k ] );
@@ -20,7 +20,7 @@ class Triangulate {
         }
     }
     
-    public static inline
+    public static
     function triangulateFace(  vertices:   Vertices
                             ,  face:      Array<Face> ){
         // Convert the polygon components into linked lists. We assume the first
@@ -212,7 +212,7 @@ class Triangulate {
         return c != a && c != b && d != a && d != b && Geom2.edgesIntersect( a, b, c, d );
     }
     
-    public static inline
+    public static
     function findDeepestInside( a: Vector2, b: Vector2, c: Vector2 )
                             : Vertices -> DllNodeInt -> DllNodeInt -> ?DllNodeInt -> DllNodeInt {
       
@@ -374,8 +374,7 @@ class Triangulate {
         return face;
     }
     
-    // "Maybe OK"
-    public static inline
+    public static
     function splitEdge(     vertices:   Vertices
                         ,   edges:      Edges
                         ,   coEdges:    Edges
