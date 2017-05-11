@@ -26,7 +26,6 @@ import triangulations.Triangulate;
 import triangulations.FindEnclosingTriangle;
 class Ruppert {
     
-    // "ok"
     private static inline 
     function arrToBack( a:Array<Int>, i: Int ){
         var tmp = a[ i ];
@@ -34,8 +33,7 @@ class Ruppert {
         a[ a.length - 1 ] = tmp;
     } 
     
-    // "NOT OK!"
-    public static inline 
+    public static 
     function refineTo( vertices:     Vertices
                             , edges:        Edges
                             , coEdges:      Edges
