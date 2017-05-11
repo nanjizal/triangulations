@@ -1,22 +1,54 @@
 package triangulations;
-
+/**
+ * Edge holds two vertex indices p and q
+ * Also can be fixed and/or external
+ **/
 class Edge {
+    /**
+     * first vertex index
+     **/
     public var p: Null<Int> = null;
+    /**
+     * second vertex index
+     **/
     public var q: Null<Int> = null;
     // Defaults false?
+    /**
+     * edge that can't be changed ( flipped for instance ).
+     **/
     public var fixed: Bool = false;
+    /** 
+     * edge that is external to the shape
+     **/
     public var external: Bool = false;
+    /**
+     * create edge from to vertices indices
+     *
+     * @param   p           first index
+     * @param   q           second index
+     **/
     public function new( p_: Null<Int>, q_: Null<Int> ){
         p = p_;
         q = q_;
     }
+    /**
+     * creates empty Edge without content, where vertices indices will be pushed later.
+     **/
     public static inline
     function Null(): Edge {
         return new Edge( null, null );
-    } 
+    }
+    /**
+     * check if Edge is not valid, if either p or q are unset.
+     **/
     public inline function isNull(): Bool {
         return ( p == null || q == null );
     }
+    /**
+     * function to clone an Edge used when cloning a FillShape for instance or creating coEdges from Edges.
+     *
+     * @return      cloned version of the edge
+     **/
     public inline
     function clone(): Edge {
         var e = new Edge( this.p, this.q );
@@ -25,6 +57,12 @@ class Edge {
         return e;
         
     }
+    /**
+     * used to get edge index in an array style where 0 is p and 1 is q
+     *
+     * @param   k       0 is p and 1 is q
+     * @return   vertex index
+     **/
     public inline function getByIndex( k: Int ){
         return switch( k ){
             case 0:
@@ -36,9 +74,15 @@ class Edge {
                 return null;
         }
     }
+    /**
+     * to allow construction from array of two Integers
+     **/
     public static inline function fromArray( arr: Array<Int> ): Edge {
         return new Edge( arr[0], arr[1] );
     }
+    /**
+     * used in flipping for swapping values
+     **/
     public inline
     function substitute( x: Null<Int>, y: Null<Int> ) {
         if( this == null ) return;
@@ -48,6 +92,11 @@ class Edge {
             q = y;
         }
     }
+    /**
+     * push to emulate array in code that originally assumed an edge to be array and can't easily be refactored.
+     * 
+     * @param   val         value to be placed on the next empty edge place.
+     **/
     public inline
     function push( val: Int ) {
         if( p == null ) {
@@ -58,6 +107,9 @@ class Edge {
             throw "Edge already full can't push";
         }
     }
+    /** 
+     * toString verbose 
+     **/
     @:keep
     public function toString() {
         var p0 = p;
@@ -73,7 +125,10 @@ class Edge {
         }
         return out;
     }
-    // alternate minimal trace useful for viewing lots of edges with less noise
+    /**
+     * alternate minimal trace useful for viewing lots of edges with less noise
+     * but must be called directly when tracing
+     **/
     @:keep    @:keep
     public function out() {
         var p0 = p;
