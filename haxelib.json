@@ -1,0 +1,15 @@
+{
+	"name": "triangulations",
+	"license": "Copyright",
+	"tags": ["cross","js"],
+	"description": "Triangulations haxe library based on the work by Marcin Kaczmarek.",
+	"contributors": [
+    "Nanjizal"
+  ],
+	"releasenote": "See https://github.com/nanjizal/triangulations/blob/master/readme.md",
+	"version": "0.0.1",
+	"url": "https://github.com/nanjizal/triangulations",
+	"classPath": "/",
+	"dependencies": {
+  }
+}
