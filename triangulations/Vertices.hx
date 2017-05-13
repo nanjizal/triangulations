@@ -75,7 +75,7 @@ abstract Vertices( Array<Vector2> ) from Array<Vector2> to Array<Vector2> {
      * @param   w    point
      * @return  true if in poly
      **/
-    public inline
+    public
     function pointInPolygon ( poly: Array<Int>, w: Vector2 ): Bool {
         var l = poly.length;
         var v = this[ poly[ l - 1 ] ];
