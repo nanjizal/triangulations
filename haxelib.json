@@ -11,5 +11,6 @@
 	"url": "https://github.com/nanjizal/triangulations",
 	"classPath": "/",
 	"dependencies": {
-  }
+              "khaMath"
+        }
 }
