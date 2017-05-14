@@ -1,14 +1,20 @@
 # triangulations 
 
-### TODO: review reduce inline use consider better text.
-
 Haxe port of [triangulations](https://github.com/mkacz91/Triangulations) *( based on the work by Marcin Kaczmarek )*
 
 *many thanks for Azarfe7 for tracking down some Edge bugs related to Delaunay*
 
+Demo use
+--------
+
 [HAXE WEBGL DEMO/Test using justTriangles](https://rawgit.com/nanjizal/triangulationsWebGLtest/master/index.html) 
 
 Use <- Arrow -> keys for navigation and you can normally drag vertices with the mouse.
+
+Documentation
+-------------
+
+['triangulations' Documentation ( dox ) ](https://rawgit.com/nanjizal/triangulationsWebGLtest/master/doc/pages/index.html)
 
 Covered Topics 
 --------------
@@ -64,6 +70,11 @@ One important aspect of the port is that I have separated graphics tests from th
 ```
 ### Test Git repository:
 ### [triangulationsWebGLtest - git for visual testing and WebGL use](https://github.com/nanjizal/triangulationsWebGLtest).
+
+TODO 
+----
+- review reduce inline use.
+- consider better text implementation than the custom sixteen seg display.
 
 License
 -------
