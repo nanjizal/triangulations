@@ -77,6 +77,10 @@ TODO
 - review reduce inline use.
 - consider better text implementation than the custom sixteen seg display.
 
+Dependancies
+------------
+[khaMath](https://github.com/nanjizal/khaMath)
+
 License
 -------
 
