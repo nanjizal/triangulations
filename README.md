@@ -68,8 +68,8 @@ One important aspect of the port is that I have separated graphics tests from th
         // implement your own drawing of the delaunayEdges ( Array<Edge> )
         // each Edge contains two vertices indices.
 ```
-Test Git repository
--------------------
+Visual test and documentation repository
+----------------------------------------
 ### [triangulationsWebGLtest - git for visual testing and WebGL use](https://github.com/nanjizal/triangulationsWebGLtest).
 
 TODO 
